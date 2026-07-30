@@ -1,0 +1,43 @@
+{
+  "name": "sistema-venta",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Sistema de Ventas Web — Punto de Venta multi-sucursal",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "dev:server": "cd server && pnpm dev",
+    "build:server": "cd server && pnpm build",
+    "db:push": "drizzle-kit push --config=db/drizzle.config.cloud.ts",
+    "start": "node server/dist/index.js"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.21.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.15.0",
+    "xlsx": "^0.18.5",
+    "zod": "^4.4.3",
+    "zustand": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.20.0",
+    "@testing-library/jest-dom": "^6",
+    "@testing-library/react": "^16",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "autoprefixer": "^10.4.19",
+    "drizzle-kit": "^0.31.10",
+    "jsdom": "^25.0.1",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.4",
+    "typescript": "^5.5.2",
+    "vite": "^5.3.1",
+    "vitest": "^2.1.9"
+  }
+}
