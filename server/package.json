@@ -21,6 +21,7 @@
     "@types/express": "^4.17.25",
     "@types/express-serve-static-core": "^5.1.2",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^22.0.0",
     "@types/pg": "^8.20.0",
     "drizzle-kit": "^0.30.6",
     "tsx": "^4.23.1",

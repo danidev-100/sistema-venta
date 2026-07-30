@@ -5,3 +5,6 @@ server/dist/
 *.sqlite
 .env
 .env.local
+
+.vercel
+.env*

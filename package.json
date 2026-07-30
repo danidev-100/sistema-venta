@@ -11,6 +11,7 @@
     "dev:server": "cd server && pnpm dev",
     "build:server": "cd server && pnpm build",
     "db:push": "drizzle-kit push --config=db/drizzle.config.cloud.ts",
+    "db:push:local": "drizzle-kit push --config=db/drizzle.config.local.ts",
     "start": "node server/dist/index.js"
   },
   "dependencies": {
