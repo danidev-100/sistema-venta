@@ -2,7 +2,7 @@
 // API client — fetch wrapper for the Express backend
 // ──────────────────────────────────────────────
 
-const BASE_URL = ""; // same-origin: /api/*
+const BASE_URL = "/api"; // same-origin via Vite proxy
 
 function getToken(): string | null {
   try {
