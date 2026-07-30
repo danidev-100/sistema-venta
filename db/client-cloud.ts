@@ -1,5 +1,5 @@
 import { drizzle } from "drizzle-orm/pg-proxy";
-import * as schema from "./schema";
+import * as schema from "./cloud-schema";
 
 /**
  * Drizzle client targeting the cloud PostgreSQL database.
