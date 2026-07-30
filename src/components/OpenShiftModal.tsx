@@ -21,14 +21,14 @@ export default function OpenShiftModal({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  function handleOpen() {
+  async function handleOpen() {
     setError(null);
     setSaving(true);
 
     const balance = openingAmount;
 
     try {
-      openShift(employeeName, storeId, balance);
+      await openShift(employeeName, storeId, balance);
       onOpened();
       onClose();
     } catch (err) {

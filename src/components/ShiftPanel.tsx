@@ -30,7 +30,7 @@ export default function ShiftPanel({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  function handleOpen() {
+  async function handleOpen() {
     setError(null);
     setSuccess(null);
 
@@ -43,7 +43,7 @@ export default function ShiftPanel({
     const balance = openingAmount;
 
     try {
-      openShift(trimmed, storeId, balance);
+      await openShift(trimmed, storeId, balance);
       setSuccess(`Turno abierto para ${trimmed} — ${formatCurrency(balance)} de apertura`);
       setEmployee("");
       setOpeningAmount(0);

@@ -1,9 +1,12 @@
 import { Router, Request, Response } from "express";
 import { eq } from "drizzle-orm";
 import { getDb } from "../db.js";
+import { authMiddleware, requireRole } from "../middleware/auth.js";
 import * as schema from "../../../db/cloud-schema.js";
 
 const router = Router();
+
+router.use(authMiddleware, requireRole("admin"));
 
 router.get("/", async (req: Request, res: Response) => {
   try {

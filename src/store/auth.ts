@@ -54,6 +54,7 @@ export type AuthStore = {
   users: AuthUser[];
   currentUser: AuthUser | null;
 
+  normalizeUser: (raw: Record<string, unknown>) => AuthUser;
   loadUsers: () => Promise<void>;
   login: (name: string, password: string) => Promise<LoginResult>;
   logout: () => void;
@@ -84,10 +85,26 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   users: [],
   currentUser: null,
 
+  /** Normalize a user returned from the server: parse permissions string -> array */
+  normalizeUser(raw: Record<string, unknown>): AuthUser {
+    return {
+      id: raw.id as number,
+      name: raw.name as string,
+      passwordHash: raw.password_hash as string | undefined,
+      role: raw.role as Role,
+      permissions:
+        typeof raw.permissions === "string"
+          ? JSON.parse(raw.permissions)
+          : (raw.permissions as Permission[]),
+      active: raw.active === true || raw.active === 1,
+      createdAt: (raw.created_at ?? raw.createdAt ?? "") as string,
+    };
+  },
+
   loadUsers: async () => {
     try {
-      const users = await api.get<AuthUser[]>("/auth/users");
-      set({ users });
+      const raw = await api.get<Record<string, unknown>[]>("/users");
+      set({ users: raw.map(get().normalizeUser) });
     } catch (err) {
       console.error("[auth] loadUsers failed:", err);
     }
@@ -100,7 +117,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         { username: name, password },
       );
       setToken(token);
-      set({ currentUser: user });
+      set({ currentUser: user as AuthUser });
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message || "Error al iniciar sesión" };
@@ -113,18 +130,25 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   addUser: async (data) => {
-    const user = await api.post<AuthUser>("/auth/register", {
+    const raw = await api.post<Record<string, unknown>>("/users", {
       name: data.name,
       password: data.password,
       role: data.role,
       permissions: data.permissions ?? ROLE_PERMISSIONS[data.role],
       active: data.active,
     });
+    const user = get().normalizeUser(raw);
     set({ users: [...get().users, user] });
   },
 
   updateUser: async (id, data) => {
-    const updated = await api.put<AuthUser>(`/auth/users/${id}`, data);
+    // Stringify permissions array for the server
+    const body: Record<string, unknown> = { ...data };
+    if (Array.isArray(body.permissions)) {
+      body.permissions = JSON.stringify(body.permissions);
+    }
+    const raw = await api.put<Record<string, unknown>>(`/users/${id}`, body);
+    const updated = get().normalizeUser(raw);
     set({
       users: get().users.map((u) => (u.id === id ? updated : u)),
     });
@@ -139,7 +163,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     const user = users.find((u) => u.id === id);
     if (user && user.role === "admin") return;
 
-    await api.del(`/auth/users/${id}`);
+    await api.del(`/users/${id}`);
     set({ users: users.filter((u) => u.id !== id) });
 
     if (currentUser?.id === id) {

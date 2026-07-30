@@ -64,17 +64,21 @@ router.put("/:id", async (req: Request, res: Response) => {
     const db = getDb();
     const id = Number(req.params.id);
     const { name, phone, email, address, cuit, credit_balance } = req.body;
+    const updateData: Record<string, unknown> = {
+      name,
+      phone,
+      email,
+      address,
+      cuit,
+      updated_at: new Date(),
+    };
+    // Only update credit_balance when explicitly provided
+    if (credit_balance !== undefined) {
+      updateData.credit_balance = credit_balance;
+    }
     const [updated] = await db
       .update(schema.customers)
-      .set({
-        name,
-        phone,
-        email,
-        address,
-        cuit,
-        credit_balance,
-        updated_at: new Date(),
-      })
+      .set(updateData)
       .where(eq(schema.customers.id, id))
       .returning();
     if (!updated) {

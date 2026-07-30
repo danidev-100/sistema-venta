@@ -1,20 +1,37 @@
 import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
+import rateLimit from "express-rate-limit";
+import { z } from "zod";
 import { getDb } from "../db.js";
-import { generateToken } from "../middleware/auth.js";
+import { generateToken, authMiddleware } from "../middleware/auth.js";
 import * as schema from "../../../db/cloud-schema.js";
 
 const router = Router();
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "Demás intentos de login. Esperá 15 minutos." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const loginSchema = z.object({
+  username: z.string().min(1, "Usuario requerido"),
+  password: z.string().min(1, "Contraseña requerida"),
+});
+
 // POST /api/auth/login
-router.post("/login", async (req: Request, res: Response) => {
+router.post("/login", loginLimiter, async (req: Request, res: Response) => {
   try {
-    const { username, password } = req.body;
-    if (!username || !password) {
-      res.status(400).json({ error: "Usuario y contraseña requeridos" });
+    const parsed = loginSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.errors[0].message });
       return;
     }
+
+    const { username, password } = parsed.data;
 
     const db = getDb();
     const [user] = await db
@@ -54,6 +71,7 @@ router.post("/login", async (req: Request, res: Response) => {
       userId: user.id,
       username: user.name,
       role: user.role,
+      storeId: (user as any).store_id || undefined,
     });
 
     res.json({
@@ -72,7 +90,7 @@ router.post("/login", async (req: Request, res: Response) => {
 });
 
 // GET /api/auth/me
-router.get("/me", async (req: Request, res: Response) => {
+router.get("/me", authMiddleware, async (req: Request, res: Response) => {
   try {
     const db = getDb();
     const [user] = await db

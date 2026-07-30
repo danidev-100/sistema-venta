@@ -1,8 +1,10 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import path from "path";
 import { fileURLToPath } from "url";
-import { authMiddleware } from "./middleware/auth.js";
+import { authMiddleware, requireStoreAccess } from "./middleware/auth.js";
 import authRoutes from "./routes/auth.js";
 import productsRoutes from "./routes/products.js";
 import categoriesRoutes from "./routes/categories.js";
@@ -28,31 +30,55 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// ── Middleware ──
-app.use(cors());
-app.use(express.json({ limit: "50mb" }));
+// ── Security headers ──
+app.use(helmet());
+
+// ── CORS ──
+const CORS_ORIGINS = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(",")
+  : ["http://localhost:1420", "http://localhost:3000", "http://localhost:5173"];
+
+app.use(cors({
+  origin: CORS_ORIGINS,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
+// ── Body parser ──
+app.use(express.json({ limit: "5mb" }));
+
+// ── Global rate limiter ──
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 min
+  max: 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Demasiadas requests, intentá de nuevo más tarde" },
+});
+app.use(globalLimiter);
 
 // ── Public routes ──
 app.use("/api/auth", authRoutes);
 
 // ── Protected routes ──
-app.use("/api/products", authMiddleware, productsRoutes);
-app.use("/api/categories", authMiddleware, categoriesRoutes);
-app.use("/api/brands", authMiddleware, brandsRoutes);
-app.use("/api/customers", authMiddleware, customersRoutes);
-app.use("/api/sales", authMiddleware, salesRoutes);
-app.use("/api/cash", authMiddleware, cashRoutes);
-app.use("/api/expenses", authMiddleware, expensesRoutes);
-app.use("/api/proveedores", authMiddleware, proveedoresRoutes);
-app.use("/api/pedidos", authMiddleware, pedidosRoutes);
-app.use("/api/combos", authMiddleware, combosRoutes);
-app.use("/api/bultos", authMiddleware, bultosRoutes);
-app.use("/api/comprobantes", authMiddleware, comprobantesRoutes);
-app.use("/api/invoices", authMiddleware, invoicesRoutes);
-app.use("/api/plantillas", authMiddleware, plantillasRoutes);
-app.use("/api/company", authMiddleware, companyRoutes);
-app.use("/api/price-lists", authMiddleware, priceListsRoutes);
-app.use("/api/users", authMiddleware, usersRoutes);
+app.use("/api/products", authMiddleware, requireStoreAccess, productsRoutes);
+app.use("/api/categories", authMiddleware, requireStoreAccess, categoriesRoutes);
+app.use("/api/brands", authMiddleware, requireStoreAccess, brandsRoutes);
+app.use("/api/customers", authMiddleware, requireStoreAccess, customersRoutes);
+app.use("/api/sales", authMiddleware, requireStoreAccess, salesRoutes);
+app.use("/api/cash", authMiddleware, requireStoreAccess, cashRoutes);
+app.use("/api/expenses", authMiddleware, requireStoreAccess, expensesRoutes);
+app.use("/api/proveedores", authMiddleware, requireStoreAccess, proveedoresRoutes);
+app.use("/api/pedidos", authMiddleware, requireStoreAccess, pedidosRoutes);
+app.use("/api/combos", authMiddleware, requireStoreAccess, combosRoutes);
+app.use("/api/bultos", authMiddleware, requireStoreAccess, bultosRoutes);
+app.use("/api/comprobantes", authMiddleware, requireStoreAccess, comprobantesRoutes);
+app.use("/api/invoices", authMiddleware, requireStoreAccess, invoicesRoutes);
+app.use("/api/plantillas", authMiddleware, requireStoreAccess, plantillasRoutes);
+app.use("/api/company", authMiddleware, requireStoreAccess, companyRoutes);
+app.use("/api/price-lists", authMiddleware, requireStoreAccess, priceListsRoutes);
+app.use("/api/users", authMiddleware, requireStoreAccess, usersRoutes);
 app.use("/api/stores", authMiddleware, storesRoutes);
 
 // ── Serve frontend (only in non-Vercel environments) ──

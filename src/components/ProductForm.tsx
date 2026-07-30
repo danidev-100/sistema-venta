@@ -130,7 +130,7 @@ export default function ProductForm({
     }
   }, [scannedBarcode]);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
@@ -163,7 +163,7 @@ export default function ProductForm({
     setSaving(true);
     try {
       if (editProduct) {
-        updateProduct(editProduct.id, {
+        await updateProduct(editProduct.id, {
           name: result.data.name,
           barcode: result.data.barcode || null,
           image: result.data.image,
@@ -177,7 +177,7 @@ export default function ProductForm({
           saleUnit: form.saleUnit as "unit" | "gram" | "kilogram",
         });
       } else {
-        addProduct({
+        await addProduct({
           name: result.data.name,
           barcode: result.data.barcode || null,
           image: result.data.image,

@@ -8,11 +8,12 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "dev:server": "cd server && pnpm dev",
+    "dev:server": "pnpm -C server dev",
     "build:server": "cd server && pnpm build",
     "db:push": "drizzle-kit push --config=db/drizzle.config.cloud.ts",
     "db:push:local": "drizzle-kit push --config=db/drizzle.config.local.ts",
-    "start": "node server/dist/index.js"
+    "start": "node server/dist/index.js",
+    "dev:all": "concurrently -n front,api -c cyan,green \"pnpm dev\" \"pnpm dev:server\""
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",
@@ -25,14 +26,15 @@
     "zustand": "^4.5.0"
   },
   "devDependencies": {
-    "@types/pg": "^8.20.0",
     "@testing-library/jest-dom": "^6",
     "@testing-library/react": "^16",
     "@testing-library/user-event": "^14.6.1",
+    "@types/pg": "^8.20.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.0",
     "autoprefixer": "^10.4.19",
+    "concurrently": "^10.0.4",
     "drizzle-kit": "^0.31.10",
     "jsdom": "^25.0.1",
     "postcss": "^8.4.38",

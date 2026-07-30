@@ -1,8 +1,19 @@
 import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
+import { z } from "zod";
 import { getPool } from "../db.js";
+import { authMiddleware, requireRole } from "../middleware/auth.js";
 
 const router = Router();
+
+router.use(authMiddleware, requireRole("admin"));
+
+const createUserSchema = z.object({
+  name: z.string().min(3, "Nombre debe tener al menos 3 caracteres"),
+  password: z.string().min(6, "Contraseña debe tener al menos 6 caracteres"),
+  role: z.enum(["admin", "custom"]).optional().default("custom"),
+  permissions: z.union([z.string(), z.array(z.string())]).optional(),
+});
 
 router.get("/", async (_req: Request, res: Response) => {
   try {
@@ -19,11 +30,18 @@ router.get("/", async (_req: Request, res: Response) => {
 
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const { name, password, role, permissions } = req.body;
-    if (!name || !password) {
-      res.status(400).json({ error: "name y password son requeridos" });
+    const parsed = createUserSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.errors[0].message });
       return;
     }
+
+    const { name, password, role, permissions } = parsed.data;
+
+    // Normalize permissions to a JSON string for the text column
+    const permissionsStr = Array.isArray(permissions)
+      ? JSON.stringify(permissions)
+      : permissions ?? "[]";
 
     const password_hash = await bcrypt.hash(password, 10);
     const pool = getPool();
@@ -32,7 +50,7 @@ router.post("/", async (req: Request, res: Response) => {
       `INSERT INTO users (name, password_hash, role, permissions, created_at, updated_at)
        VALUES ($1, $2, $3, $4, NOW(), NOW())
        RETURNING id, name, role, permissions, active, created_at, updated_at`,
-      [name, password_hash, role || "custom", permissions || "[]"],
+      [name, password_hash, role, permissionsStr],
     );
 
     res.status(201).json(result.rows[0]);
@@ -57,7 +75,10 @@ router.put("/:id", async (req: Request, res: Response) => {
 
     if (name !== undefined) { sets.push(`name = $${idx++}`); params.push(name); }
     if (role !== undefined) { sets.push(`role = $${idx++}`); params.push(role); }
-    if (permissions !== undefined) { sets.push(`permissions = $${idx++}`); params.push(permissions); }
+    if (permissions !== undefined) {
+      sets.push(`permissions = $${idx++}`);
+      params.push(Array.isArray(permissions) ? JSON.stringify(permissions) : permissions);
+    }
     if (active !== undefined) { sets.push(`active = $${idx++}`); params.push(active); }
     if (password) {
       const hash = await bcrypt.hash(password, 10);

@@ -29,16 +29,16 @@ router.get("/shifts", async (req: Request, res: Response) => {
 
 router.post("/shifts", async (req: Request, res: Response) => {
   try {
-    const { storeId, employeeName } = req.body;
-    if (!storeId || !employeeName) {
-      res.status(400).json({ error: "storeId y employeeName requeridos" });
+    const { storeId, employee } = req.body;
+    if (!storeId || !employee) {
+      res.status(400).json({ error: "storeId y employee requeridos" });
       return;
     }
     const db = getDb();
     const [shift] = await db
       .insert(schema.shifts)
       .values({
-        employee: employeeName,
+        employee,
         store_id: storeId,
       })
       .returning();

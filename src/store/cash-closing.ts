@@ -136,6 +136,40 @@ export type CashClosingStore = {
 };
 
 // ──────────────────────────────────────────────
+// Normalize server responses (snake_case → camelCase)
+// ──────────────────────────────────────────────
+
+function normalizeShift(raw: Record<string, unknown>): Shift {
+  return {
+    id: raw.id as number,
+    employee: raw.employee as string,
+    openTime: (raw.open_time ?? raw.openTime) as string,
+    closeTime: (raw.close_time ?? raw.closeTime ?? null) as string | null,
+    status: raw.status as "open" | "closed",
+    storeId: (raw.store_id ?? raw.storeId) as string,
+    openingBalance: (raw.opening_balance ?? raw.openingBalance ?? 0) as number,
+    declaredCash: (raw.declared_cash ?? raw.declaredCash ?? null) as number | null,
+    variance: (raw.variance ?? null) as number | null,
+    reconciliationStatus: (raw.reconciliation_status ?? raw.reconciliationStatus ?? null) as Shift["reconciliationStatus"],
+    reconciledAt: (raw.reconciled_at ?? raw.reconciledAt ?? null) as string | null,
+  };
+}
+
+function normalizeMovement(raw: Record<string, unknown>): CashMovement {
+  return {
+    id: raw.id as number,
+    shiftId: (raw.shift_id ?? raw.shiftId) as number,
+    type: raw.type as CashMovementType,
+    amount: raw.amount as number,
+    method: (raw.method ?? "cash") as CashMovementMethod,
+    reason: (raw.reason ?? "") as string,
+    createdBy: (raw.created_by ?? raw.createdBy ?? "") as string,
+    storeId: (raw.store_id ?? raw.storeId) as string,
+    createdAt: (raw.created_at ?? raw.createdAt) as string,
+  };
+}
+
+// ──────────────────────────────────────────────
 // Store implementation
 // ──────────────────────────────────────────────
 
@@ -147,8 +181,8 @@ export const useCashClosingStore = create<CashClosingStore>((set, get) => ({
   loadShifts: async (storeId) => {
     set({ loading: true });
     try {
-      const shifts = await api.get<Shift[]>(`/cash/shifts?storeId=${encodeURIComponent(storeId)}`);
-      set({ shifts, loading: false });
+      const raw = await api.get<Record<string, unknown>[]>(`/cash/shifts?storeId=${encodeURIComponent(storeId)}`);
+      set({ shifts: raw.map(normalizeShift), loading: false });
     } catch (err) {
       console.error("[api] cash-closing.loadShifts failed:", err);
       set({ loading: false });
@@ -164,11 +198,12 @@ export const useCashClosingStore = create<CashClosingStore>((set, get) => ({
     }
 
     try {
-      const shift = await api.post<Shift>("/cash/shifts", {
+      const raw = await api.post<Record<string, unknown>>("/cash/shifts", {
         employee,
         storeId,
         openingBalance: Math.max(0, openingBalance),
       });
+      const shift = normalizeShift(raw);
       set({ shifts: [...get().shifts, shift] });
       return shift;
     } catch (err) {
@@ -203,7 +238,7 @@ export const useCashClosingStore = create<CashClosingStore>((set, get) => ({
 
   recordCashMovement: async (shiftId, type, amount, reason, createdBy, storeId, method = "cash") => {
     try {
-      const movement = await api.post<CashMovement>("/cash/movements", {
+      const raw = await api.post<Record<string, unknown>>("/cash/movements", {
         shiftId,
         type,
         amount,
@@ -212,6 +247,7 @@ export const useCashClosingStore = create<CashClosingStore>((set, get) => ({
         createdBy,
         storeId,
       });
+      const movement = normalizeMovement(raw);
       set({ cashMovements: [...get().cashMovements, movement] });
       return movement;
     } catch (err) {

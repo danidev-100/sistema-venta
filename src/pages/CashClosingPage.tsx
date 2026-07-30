@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useAppStore, type CompletedSale } from "@/store";
 import { useAuthStore } from "@/store/auth";
 import { useActiveStore } from "@/store/context";
@@ -17,6 +17,7 @@ export default function CashClosingPage() {
   const { storeId } = useActiveStore();
   const completedSales = useAppStore((s) => s.completedSales);
   const shifts = useCashClosingStore((s) => s.shifts);
+  const loadShifts = useCashClosingStore((s) => s.loadShifts);
   const getOpenShift = useCashClosingStore((s) => s.getOpenShift);
   const getShiftsByStore = useCashClosingStore((s) => s.getShiftsByStore);
 
@@ -28,6 +29,11 @@ export default function CashClosingPage() {
 
   const currentShift = getOpenShift(storeId);
   const storeShifts = getShiftsByStore(storeId);
+
+  // Load shifts on mount and when store changes
+  useEffect(() => {
+    loadShifts(storeId);
+  }, [storeId, loadShifts]);
 
   // Cuando se abre/cierra un turno, solo refrescamos sin pisar la selección
   const handleShiftChanged = useCallback(() => {

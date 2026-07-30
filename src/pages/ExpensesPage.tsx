@@ -231,7 +231,7 @@ export default function ExpensesPage() {
     setShowModal(true);
   }
 
-  function handleSave() {
+  async function handleSave() {
     const amount = parseFloat(form.amount);
     if (isNaN(amount) || amount <= 0) {
       setFormError("El importe debe ser mayor a 0");
@@ -253,9 +253,9 @@ export default function ExpensesPage() {
 
     try {
       if (editingId !== null) {
-        updateExpense(editingId, data);
+        await updateExpense(editingId, data);
       } else {
-        addExpense(data);
+        await addExpense(data);
       }
     } catch (e) {
       setFormError((e as Error).message);

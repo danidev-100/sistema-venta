@@ -53,7 +53,7 @@ export default function CustomerForm({
     }
   }, [editCustomer]);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
@@ -76,7 +76,7 @@ export default function CustomerForm({
     setSaving(true);
     try {
       if (editCustomer) {
-        updateCustomer(editCustomer.id, {
+        await updateCustomer(editCustomer.id, {
           name: result.data.name,
           phone: result.data.phone,
           email: result.data.email,
@@ -85,7 +85,7 @@ export default function CustomerForm({
           priceListId: selectedPriceListId,
         });
       } else {
-        addCustomer({
+        await addCustomer({
           name: result.data.name,
           phone: result.data.phone,
           email: result.data.email,

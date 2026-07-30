@@ -44,7 +44,7 @@ export default function ProveedorForm({
     }
   }, [editProveedor]);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
@@ -66,7 +66,7 @@ export default function ProveedorForm({
     setSaving(true);
     try {
       if (editProveedor) {
-        updateProveedor(editProveedor.id, {
+        await updateProveedor(editProveedor.id, {
           name: result.data.name,
           phone: result.data.phone,
           email: result.data.email,
@@ -74,7 +74,7 @@ export default function ProveedorForm({
           cuit: result.data.cuit,
         });
       } else {
-        addProveedor({
+        await addProveedor({
           name: result.data.name,
           phone: result.data.phone,
           email: result.data.email,

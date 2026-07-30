@@ -27,15 +27,15 @@ router.get("/", async (req: Request, res: Response) => {
 
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const { storeId, name, phone, email, address, cuit } = req.body;
-    if (!storeId || !name) {
-      res.status(400).json({ error: "storeId y name requeridos" });
+    const { store_id, name, phone, email, address, cuit } = req.body;
+    if (!store_id || !name) {
+      res.status(400).json({ error: "store_id y name requeridos" });
       return;
     }
     const db = getDb();
     const [proveedor] = await db
       .insert(schema.proveedores)
-      .values({ store_id: storeId, name, phone, email, address, cuit })
+      .values({ store_id, name, phone, email, address, cuit })
       .returning();
     res.status(201).json(proveedor);
   } catch (err) {

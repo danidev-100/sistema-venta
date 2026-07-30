@@ -161,7 +161,14 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
       }
     }
 
-    await api.put(`/products/${id}`, updates);
+    // Map camelCase fields to snake_case for the server
+    const serverUpdates: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(updates)) {
+      const snakeKey = key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
+      serverUpdates[snakeKey] = value;
+    }
+
+    await api.put(`/products/${id}`, serverUpdates);
 
     set({
       products: get().products.map((p) =>

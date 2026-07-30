@@ -1,9 +1,24 @@
 import { Router, Request, Response } from "express";
 import { eq, and, desc, sql } from "drizzle-orm";
+import { z } from "zod";
 import { getDb } from "../db.js";
 import * as schema from "../../../db/cloud-schema.js";
 
 const router = Router();
+
+const createProductSchema = z.object({
+  barcode: z.string().optional(),
+  name: z.string().min(1, "Nombre requerido"),
+  image: z.string().optional(),
+  price: z.number().min(0).optional().default(0),
+  cost_price: z.number().min(0).optional().default(0),
+  stock: z.number().int().min(0).optional().default(0),
+  min_stock: z.number().int().min(0).optional().default(0),
+  sale_unit: z.enum(["unit", "gram", "kilogram"]).optional().default("unit"),
+  category_id: z.number().int().nullable().optional().default(null),
+  brand_id: z.number().int().nullable().optional().default(null),
+  store_id: z.string().min(1, "Tienda requerida"),
+});
 
 // GET / — list products for store with category & brand names
 router.get("/", async (req: Request, res: Response) => {
@@ -69,11 +84,14 @@ router.get("/:id", async (req: Request, res: Response) => {
 // POST / — create product
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const { barcode, name, image, price, cost_price, stock, min_stock, sale_unit, category_id, brand_id, store_id } = req.body;
-    if (!name || !store_id) {
-      res.status(400).json({ error: "Nombre y store_id son requeridos" });
+    const parsed = createProductSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.errors[0].message });
       return;
     }
+
+    const { barcode, name, image, price, cost_price, stock, min_stock, sale_unit, category_id, brand_id, store_id } = parsed.data;
+
     const db = getDb();
     const [inserted] = await db
       .insert(schema.products)
@@ -81,11 +99,11 @@ router.post("/", async (req: Request, res: Response) => {
         barcode,
         name,
         image: image ?? "",
-        price: price ?? 0,
-        cost_price: cost_price ?? 0,
-        stock: stock ?? 0,
-        min_stock: min_stock ?? 0,
-        sale_unit: sale_unit ?? "unit",
+        price,
+        cost_price,
+        stock,
+        min_stock,
+        sale_unit,
         category_id: category_id ?? null,
         brand_id: brand_id ?? null,
         store_id,
