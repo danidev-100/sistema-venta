@@ -29,17 +29,19 @@ router.get("/shifts", async (req: Request, res: Response) => {
 
 router.post("/shifts", async (req: Request, res: Response) => {
   try {
-    const { storeId, employee } = req.body;
+    const { storeId, employee, openingBalance } = req.body;
     if (!storeId || !employee) {
       res.status(400).json({ error: "storeId y employee requeridos" });
       return;
     }
+    const openingBalanceNum = Math.max(0, Number(openingBalance) || 0);
     const db = getDb();
     const [shift] = await db
       .insert(schema.shifts)
       .values({
         employee,
         store_id: storeId,
+        opening_balance: openingBalanceNum,
       })
       .returning();
     res.status(201).json(shift);
@@ -125,6 +127,54 @@ router.post("/movements", async (req: Request, res: Response) => {
     res.status(201).json(movement);
   } catch (err) {
     console.error("[cash] create movement error:", err);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+// ── Reconcile ──
+
+router.post("/reconcile", async (req: Request, res: Response) => {
+  try {
+    const {
+      shiftId,
+      declaredCash,
+      expectedTotal,
+      variance,
+      reconciliationStatus,
+      storeId,
+      reconciledAt,
+    } = req.body;
+    if (!shiftId || !storeId) {
+      res.status(400).json({ error: "shiftId y storeId requeridos" });
+      return;
+    }
+    const db = getDb();
+    const num = (v: unknown) =>
+      v !== undefined && v !== null && Number.isFinite(Number(v))
+        ? Number(v)
+        : null;
+    const [shift] = await db
+      .update(schema.shifts)
+      .set({
+        declared_cash: num(declaredCash),
+        variance: num(variance),
+        reconciliation_status: reconciliationStatus || "pending",
+        reconciled_at: reconciledAt ? new Date(reconciledAt) : new Date(),
+      })
+      .where(
+        and(
+          eq(schema.shifts.id, Number(shiftId)),
+          eq(schema.shifts.store_id, storeId as string),
+        ),
+      )
+      .returning();
+    if (!shift) {
+      res.status(404).json({ error: "Turno no encontrado" });
+      return;
+    }
+    res.json(shift);
+  } catch (err) {
+    console.error("[cash] reconcile error:", err);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });

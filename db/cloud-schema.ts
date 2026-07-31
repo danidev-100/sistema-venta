@@ -213,6 +213,13 @@ export const shifts = pgTable(
     open_time: timestamp("open_time").notNull().defaultNow(),
     close_time: timestamp("close_time"),
     status: text("status", { enum: ["open", "closed"] }).notNull().default("open"),
+    opening_balance: doublePrecision("opening_balance").notNull().default(0),
+    declared_cash: doublePrecision("declared_cash"),
+    variance: doublePrecision("variance"),
+    reconciliation_status: text("reconciliation_status", {
+      enum: ["pending", "matched", "mismatch"],
+    }),
+    reconciled_at: timestamp("reconciled_at"),
     store_id: text("store_id").notNull(),
     created_at: timestamp("created_at").notNull().defaultNow(),
     updated_at: timestamp("updated_at").notNull().defaultNow(),
