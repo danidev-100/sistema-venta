@@ -7,9 +7,9 @@ import * as schema from "../../../db/cloud-schema.js";
 const router = Router();
 
 const createProductSchema = z.object({
-  barcode: z.string().optional(),
+  barcode: z.string().nullable().optional(),
   name: z.string().min(1, "Nombre requerido"),
-  image: z.string().optional(),
+  image: z.string().nullable().optional(),
   price: z.number().min(0).optional().default(0),
   cost_price: z.number().min(0).optional().default(0),
   stock: z.number().int().min(0).optional().default(0),

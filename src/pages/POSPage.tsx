@@ -218,6 +218,7 @@ export default function POSPage() {
   const shifts = useCashClosingStore((s) => s.shifts);
   const loadShifts = useCashClosingStore((s) => s.loadShifts);
   const openShiftAction = useCashClosingStore((s) => s.openShift);
+  const loadProducts = useProductsStore((s) => s.loadProducts);
 
   const [showCheckout, setShowCheckout] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
@@ -243,11 +244,12 @@ export default function POSPage() {
   ) ?? null;
   const hasOpenShift = openShiftData !== null;
 
-  // Load shifts and seed demo products on mount
+  // Load shifts, products, and seed demo products on mount
   useEffect(() => {
     loadShifts(storeId);
+    loadProducts(storeId).catch(console.error);
     seedDemoProducts();
-  }, [storeId, loadShifts]);
+  }, [storeId, loadShifts, loadProducts]);
 
   // Hint toast on first POS load
   useEffect(() => {
