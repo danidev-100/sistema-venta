@@ -166,6 +166,15 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
       }
     }
 
+    if (data.name) {
+      const dupName = get().products.find(
+        (p) => p.name.toLowerCase() === data.name.toLowerCase() && p.store_id === data.store_id,
+      );
+      if (dupName) {
+        throw new Error(`Product with name "${data.name}" already exists in this store`);
+      }
+    }
+
     // Send snake_case — the backend Zod schema expects these names
     const body: Record<string, unknown> = {
       barcode: data.barcode ?? null,
@@ -190,16 +199,19 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
 
   updateProduct: async (id, updates) => {
     if (updates.barcode) {
-      const dup = get().products.find(
-        (p) =>
-          p.barcode === updates.barcode &&
-          p.store_id === (updates.store_id ?? get().products.find((p) => p.id === id)?.store_id) &&
-          p.id !== id,
-      );
-      if (dup) {
-        throw new Error(
-          `Product with barcode "${updates.barcode}" already exists in this store`,
+      const current = get().products.find((p) => p.id === id);
+      if (current && updates.barcode !== (current.barcode ?? "")) {
+        const dup = get().products.find(
+          (p) =>
+            p.barcode === updates.barcode &&
+            p.store_id === (updates.store_id ?? current.store_id) &&
+            p.id !== id,
         );
+        if (dup) {
+          throw new Error(
+            `Product with barcode "${updates.barcode}" already exists in this store`,
+          );
+        }
       }
     }
 

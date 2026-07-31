@@ -445,7 +445,7 @@ export const pedidos = pgTable(
     id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
     proveedor_id: integer("proveedor_id").notNull(),
     date: timestamp("date").notNull().defaultNow(),
-    status: text("status", { enum: ["pending", "received", "cancelled"] })
+    status: text("status", { enum: ["pending", "received", "cancelled", "partial"] })
       .notNull()
       .default("pending"),
     total: doublePrecision("total").notNull().default(0),
@@ -476,6 +476,7 @@ export const pedidoItems = pgTable(
     product_id: integer("product_id"),
     product_name: text("product_name").notNull(),
     quantity: doublePrecision("quantity").notNull().default(1),
+    received_qty: doublePrecision("received_qty").notNull().default(0),
     unit_price: doublePrecision("unit_price").notNull(),
     subtotal: doublePrecision("subtotal").notNull(),
     store_id: text("store_id").notNull(),

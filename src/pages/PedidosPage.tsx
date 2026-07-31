@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useActiveStore } from "@/store/context";
 import { usePedidosStore, type Pedido, type PedidoStatus, getStatusLabel } from "@/store/pedidos";
 import { useProductsStore } from "@/store/products";
@@ -26,6 +26,15 @@ export default function PedidosPage() {
   const deletePedido = usePedidosStore((s) => s.deletePedido);
   const adjustStock = useProductsStore((s) => s.adjustStock);
   const products = useProductsStore((s) => s.products);
+  const loadPedidos = usePedidosStore((s) => s.loadPedidos);
+
+  const pedidosLoadedRef = useRef(false);
+  useEffect(() => {
+    if (pedidosLoadedRef.current) return;
+    pedidosLoadedRef.current = true;
+    loadPedidos(storeId).catch(console.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId]);
 
   const [view, setView] = useState<View>({ kind: "list" });
   const [search, setSearch] = useState("");

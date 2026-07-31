@@ -165,30 +165,37 @@ export const productSchema = z
   .superRefine((data, ctx) => {
     const products = useProductsStore.getState().products;
     const storeProducts = products.filter((p) => p.store_id === data.store_id);
+    const editing = data.editId != null ? storeProducts.find((p) => p.id === data.editId) : null;
 
-    // Duplicate name
-    const dupName = storeProducts.find(
-      (p) => p.name.toLowerCase() === data.name.toLowerCase() && p.id !== data.editId,
-    );
-    if (dupName) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `Ya existe un producto con el nombre "${data.name}"`,
-        path: ["name"],
-      });
-    }
-
-    // Duplicate barcode
-    if (data.barcode) {
-      const dupBarcode = storeProducts.find(
-        (p) => p.barcode === data.barcode && p.id !== data.editId,
+    // Duplicate name — only when the name changed vs the product being edited
+    const nameChanged = !editing || editing.name.toLowerCase() !== data.name.toLowerCase();
+    if (nameChanged) {
+      const dupName = storeProducts.find(
+        (p) => p.name.toLowerCase() === data.name.toLowerCase() && p.id !== data.editId,
       );
-      if (dupBarcode) {
+      if (dupName) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `El código "${data.barcode}" ya está registrado`,
-          path: ["barcode"],
+          message: `Ya existe un producto con el nombre "${data.name}"`,
+          path: ["name"],
         });
+      }
+    }
+
+    // Duplicate barcode — only when the barcode changed vs the product being edited
+    if (data.barcode) {
+      const barcodeChanged = !editing || (editing.barcode ?? "") !== data.barcode;
+      if (barcodeChanged) {
+        const dupBarcode = storeProducts.find(
+          (p) => p.barcode === data.barcode && p.id !== data.editId,
+        );
+        if (dupBarcode) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `El código "${data.barcode}" ya está registrado`,
+            path: ["barcode"],
+          });
+        }
       }
     }
   });

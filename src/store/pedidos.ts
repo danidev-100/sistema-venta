@@ -38,6 +38,22 @@ export function getStatusLabel(status: PedidoStatus): string {
   return STATUS_LABELS[status];
 }
 
+function normalizePedido(data: any): Pedido {
+  return {
+    id: data.id,
+    proveedor_id: data.proveedor_id,
+    proveedor_name: data.proveedor_name ?? "",
+    date: data.date,
+    status: data.status,
+    total: data.total,
+    notes: data.notes,
+    store_id: data.store_id,
+    items: Array.isArray(data.items)
+      ? data.items.map((it: any) => ({ ...it, received_qty: it.received_qty ?? 0 }))
+      : [],
+  };
+}
+
 export type PedidosStore = {
   pedidos: Pedido[];
   loading: boolean;
@@ -85,7 +101,7 @@ export const usePedidosStore = create<PedidosStore>((set, get) => ({
     set({ loading: true });
     try {
       const pedidos = await api.get<Pedido[]>(`/pedidos?storeId=${encodeURIComponent(storeId)}`);
-      set({ pedidos, loading: false });
+      set({ pedidos: pedidos.map(normalizePedido), loading: false });
     } catch (err) {
       console.error("[api] pedidos.loadPedidos failed:", err);
       set({ loading: false });
@@ -95,8 +111,9 @@ export const usePedidosStore = create<PedidosStore>((set, get) => ({
   addPedido: async (data) => {
     try {
       const pedido = await api.post<Pedido>("/pedidos", data);
-      set({ pedidos: [...get().pedidos, pedido] });
-      return pedido;
+      const normalized = normalizePedido(pedido);
+      set({ pedidos: [...get().pedidos, normalized] });
+      return normalized;
     } catch (err) {
       console.error("[api] pedidos.addPedido failed:", err);
       throw err;
@@ -109,7 +126,8 @@ export const usePedidosStore = create<PedidosStore>((set, get) => ({
 
     try {
       const updated = await api.put<Pedido>(`/pedidos/${id}`, data);
-      set({ pedidos: get().pedidos.map((p) => (p.id === id ? updated : p)) });
+      const normalized = normalizePedido(updated);
+      set({ pedidos: get().pedidos.map((p) => (p.id === id ? normalized : p)) });
     } catch (err) {
       console.error("[api] pedidos.updatePedido failed:", err);
       throw err;
