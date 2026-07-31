@@ -59,10 +59,13 @@ router.put("/shifts/:id/close", async (req: Request, res: Response) => {
       res.status(400).json({ error: "ID inválido" });
       return;
     }
+    const { closeTime } = req.body;
     const [shift] = await db
       .update(schema.shifts)
       .set({
-        close_time: new Date(),
+        // Prefer the timestamp sent by the client (matches the app's local
+        // timezone). Fall back to the server clock only if not provided.
+        close_time: closeTime ? new Date(closeTime) : new Date(),
         status: "closed",
       })
       .where(eq(schema.shifts.id, id))
