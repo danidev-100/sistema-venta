@@ -1,7 +1,17 @@
 import { Router, Request, Response } from "express";
+import { z } from "zod";
 import { eq, desc } from "drizzle-orm";
 import { getDb } from "../db.js";
 import * as schema from "../../../db/cloud-schema.js";
+
+const createProveedorSchema = z.object({
+  store_id: z.string().min(1, "Tienda requerida"),
+  name: z.string().min(1, "Nombre requerido").max(200),
+  phone: z.string().max(50).optional().default(""),
+  email: z.string().max(200).optional().default(""),
+  address: z.string().max(300).optional().default(""),
+  cuit: z.string().max(20).optional().default(""),
+});
 
 const router = Router();
 
@@ -27,11 +37,12 @@ router.get("/", async (req: Request, res: Response) => {
 
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const { store_id, name, phone, email, address, cuit } = req.body;
-    if (!store_id || !name) {
-      res.status(400).json({ error: "store_id y name requeridos" });
+    const parsed = createProveedorSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.errors[0].message });
       return;
     }
+    const { store_id, name, phone, email, address, cuit } = parsed.data;
     const db = getDb();
     const [proveedor] = await db
       .insert(schema.proveedores)

@@ -1,0 +1,2 @@
+$ tsx watch src/index.ts
+[auth] JWT_SECRET no está configurado — el servidor no arrancará

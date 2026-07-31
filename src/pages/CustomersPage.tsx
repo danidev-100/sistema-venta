@@ -25,6 +25,17 @@ export default function CustomersPage() {
   const { storeId } = useActiveStore();
   const customers = useCustomersStore((s) => s.customers);
   const deleteCustomer = useCustomersStore((s) => s.deleteCustomer);
+  const loadCustomers = useCustomersStore((s) => s.loadCustomers);
+  const loadCreditPayments = useCustomersStore((s) => s.loadCreditPayments);
+
+  const customersLoadedRef = useRef(false);
+  useEffect(() => {
+    if (customersLoadedRef.current) return;
+    customersLoadedRef.current = true;
+    loadCustomers(storeId).catch(console.error);
+    loadCreditPayments(storeId).catch(console.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId]);
 
   const [view, setView] = useState<View>({ kind: "list" });
   const [search, setSearch] = useState("");

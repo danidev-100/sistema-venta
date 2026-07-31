@@ -13,6 +13,15 @@ export default function ProveedoresPage() {
   const { storeId } = useActiveStore();
   const proveedores = useProveedoresStore((s) => s.proveedores);
   const deleteProveedor = useProveedoresStore((s) => s.deleteProveedor);
+  const loadProveedores = useProveedoresStore((s) => s.loadProveedores);
+
+  const proveedoresLoadedRef = useRef(false);
+  useEffect(() => {
+    if (proveedoresLoadedRef.current) return;
+    proveedoresLoadedRef.current = true;
+    loadProveedores(storeId).catch(console.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId]);
 
   const [view, setView] = useState<View>({ kind: "list" });
   const [search, setSearch] = useState("");

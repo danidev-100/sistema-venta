@@ -28,6 +28,9 @@ export type CustomersStore = {
   customers: Customer[];
   creditPayments: CreditPayment[];
 
+  normalizeCustomer: (raw: any) => Customer;
+  normalizeCreditPayment: (raw: any) => CreditPayment;
+
   loadCustomers: (storeId: string) => Promise<void>;
   loadCreditPayments: (storeId: string) => Promise<void>;
 
@@ -49,14 +52,43 @@ export const useCustomersStore = create<CustomersStore>((set, get) => ({
   customers: [],
   creditPayments: [],
 
+  /** Normalize a raw customer row from the API (snake_case) to the store type (camelCase). */
+  normalizeCustomer(raw: any): Customer {
+    return {
+      id: raw.id,
+      name: raw.name,
+      phone: raw.phone ?? "",
+      email: raw.email ?? "",
+      address: raw.address ?? "",
+      cuit: raw.cuit ?? "",
+      store_id: raw.store_id,
+      creditBalance: raw.credit_balance ?? 0,
+      priceListId: raw.price_list_id ?? null,
+    };
+  },
+
+  /** Normalize a raw credit_payment row from the API. */
+  normalizeCreditPayment(raw: any): CreditPayment {
+    return {
+      id: raw.id,
+      customer_id: raw.customer_id,
+      amount: raw.amount,
+      date: raw.date,
+      notes: raw.notes ?? "",
+      sale_id: raw.sale_id ?? null,
+      comprobante_id: raw.comprobante_id ?? null,
+      store_id: raw.store_id,
+    };
+  },
+
   loadCustomers: async (storeId) => {
-    const customers = await api.get<Customer[]>(`/customers?storeId=${storeId}`);
-    set({ customers });
+    const rows = await api.get<any[]>(`/customers?storeId=${storeId}`);
+    set({ customers: rows.map(get().normalizeCustomer) });
   },
 
   loadCreditPayments: async (storeId) => {
-    const creditPayments = await api.get<CreditPayment[]>(`/customers/credit-payments?storeId=${storeId}`);
-    set({ creditPayments });
+    const rows = await api.get<any[]>(`/customers/credit-payments?storeId=${storeId}`);
+    set({ creditPayments: rows.map(get().normalizeCreditPayment) });
   },
 
   addCustomer: async (data) => {
@@ -67,7 +99,18 @@ export const useCustomersStore = create<CustomersStore>((set, get) => ({
       throw new Error(`Ya existe un cliente "${data.name}" en esta tienda`);
     }
 
-    const customer = await api.post<Customer>("/customers", { ...data, priceListId: data.priceListId ?? null });
+    // Send snake_case for the backend
+    const body: Record<string, unknown> = {
+      name: data.name,
+      phone: data.phone,
+      email: data.email,
+      address: data.address,
+      cuit: data.cuit,
+      credit_balance: data.creditBalance ?? 0,
+      store_id: data.store_id,
+    };
+    const raw = await api.post<any>("/customers", body);
+    const customer = get().normalizeCustomer(raw);
     set({ customers: [...get().customers, customer] });
     return customer;
   },
@@ -88,7 +131,17 @@ export const useCustomersStore = create<CustomersStore>((set, get) => ({
       }
     }
 
-    await api.put(`/customers/${id}`, updates);
+    // Map camelCase updates to snake_case for the backend
+    const body: Record<string, unknown> = {};
+    if (updates.name !== undefined) body.name = updates.name;
+    if (updates.phone !== undefined) body.phone = updates.phone;
+    if (updates.email !== undefined) body.email = updates.email;
+    if (updates.address !== undefined) body.address = updates.address;
+    if (updates.cuit !== undefined) body.cuit = updates.cuit;
+    if (updates.creditBalance !== undefined) body.credit_balance = updates.creditBalance;
+    if (updates.store_id !== undefined) body.store_id = updates.store_id;
+
+    await api.put(`/customers/${id}`, body);
 
     set({
       customers: get().customers.map((c) =>

@@ -1,7 +1,16 @@
 import { Router, Request, Response } from "express";
+import { z } from "zod";
 import { eq, desc } from "drizzle-orm";
 import { getDb } from "../db.js";
 import * as schema from "../../../db/cloud-schema.js";
+
+const createBultoSchema = z.object({
+  name: z.string().min(1, "Nombre requerido").max(200),
+  product_id: z.number().int().nullable().optional().default(null),
+  quantity: z.number().int().min(1).default(1),
+  bulto_price: z.number().min(0).default(0),
+  store_id: z.string().min(1, "Tienda requerida"),
+});
 
 const router = Router();
 
@@ -48,11 +57,12 @@ router.get("/:id", async (req: Request, res: Response) => {
 // POST /
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const { name, product_id, quantity, bulto_price, store_id } = req.body;
-    if (!name || !store_id) {
-      res.status(400).json({ error: "name y store_id requeridos" });
+    const parsed = createBultoSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.errors[0].message });
       return;
     }
+    const { name, product_id, quantity, bulto_price, store_id } = parsed.data;
 
     const db = getDb();
     const [bulto] = await db

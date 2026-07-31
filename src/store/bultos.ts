@@ -14,7 +14,7 @@ export type BultosStore = {
   bultos: Bulto[];
   loading: boolean;
 
-  loadBultos: () => Promise<void>;
+  loadBultos: (storeId?: string) => Promise<void>;
   addBulto: (data: {
     name: string;
     productId: number;
@@ -39,11 +39,20 @@ export const useBultosStore = create<BultosStore>((set, get) => ({
   bultos: [],
   loading: false,
 
-  loadBultos: async () => {
+  loadBultos: async (storeId?: string) => {
     set({ loading: true });
     try {
-      const bultos = await api.get<Bulto[]>("/bultos");
-      set({ bultos, loading: false });
+      const query = storeId ? `?storeId=${encodeURIComponent(storeId)}` : "";
+      const rows = await api.get<any[]>(`/bultos${query}`);
+      const normalized: Bulto[] = rows.map((r: any) => ({
+        id: r.id,
+        name: r.name,
+        productId: r.product_id,
+        quantity: r.quantity,
+        bultoPrice: r.bulto_price ?? 0,
+        storeId: r.store_id,
+      }));
+      set({ bultos: normalized, loading: false });
     } catch (err) {
       console.error("[bultos] loadBultos failed:", err);
       set({ loading: false });
@@ -51,15 +60,44 @@ export const useBultosStore = create<BultosStore>((set, get) => ({
   },
 
   addBulto: async (data) => {
-    const bulto = await api.post<Bulto>("/bultos", data);
-    set({ bultos: [...get().bultos, bulto] });
-    return bulto;
+    const body = {
+      name: data.name,
+      product_id: data.productId,
+      quantity: data.quantity,
+      bulto_price: data.bultoPrice,
+      store_id: data.storeId,
+    };
+    const bulto = await api.post<any>("/bultos", body);
+    const normalized: Bulto = {
+      id: bulto.id,
+      name: bulto.name,
+      productId: bulto.product_id ?? bulto.productId,
+      quantity: bulto.quantity,
+      bultoPrice: bulto.bulto_price ?? bulto.bultoPrice,
+      storeId: bulto.store_id,
+    };
+    set({ bultos: [...get().bultos, normalized] });
+    return normalized;
   },
 
   updateBulto: async (id, data) => {
-    const updated = await api.put<Bulto>(`/bultos/${id}`, data);
+    const body = {
+      name: data.name,
+      product_id: data.productId,
+      quantity: data.quantity,
+      bulto_price: data.bultoPrice,
+    };
+    const updated = await api.put<any>(`/bultos/${id}`, body);
+    const normalized: Bulto = {
+      id: updated.id,
+      name: updated.name,
+      productId: updated.product_id ?? updated.productId,
+      quantity: updated.quantity,
+      bultoPrice: updated.bulto_price ?? updated.bultoPrice,
+      storeId: updated.store_id,
+    };
     set({
-      bultos: get().bultos.map((b) => (b.id === id ? updated : b)),
+      bultos: get().bultos.map((b) => (b.id === id ? normalized : b)),
     });
   },
 

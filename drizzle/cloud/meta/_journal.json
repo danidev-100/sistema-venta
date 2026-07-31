@@ -8,6 +8,20 @@
       "when": 1781735506697,
       "tag": "0000_young_firedrake",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781735600000,
+      "tag": "0001_cloud",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781735700000,
+      "tag": "0002_cloud_add_percentage_to_price_list_items",
+      "breakpoints": true
     }
   ]
 }

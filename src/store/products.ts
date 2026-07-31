@@ -50,6 +50,9 @@ export type ProductsStore = {
   categories: Category[];
   stockMovements: StockMovement[];
 
+  /** Normalize a raw product row from the API (snake_case) to the store type (camelCase). */
+  normalizeProduct: (raw: any) => Product;
+
   loadProducts: (storeId: string) => Promise<void>;
   loadCategories: (storeId: string) => Promise<void>;
   loadStockMovements: (storeId: string) => Promise<void>;
@@ -103,19 +106,50 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
   categories: [],
   stockMovements: [],
 
+  /** Normalize a raw product row from the API (snake_case) to the store type (camelCase). */
+  normalizeProduct(raw: any): Product {
+    return {
+      id: raw.id,
+      barcode: raw.barcode ?? null,
+      name: raw.name,
+      image: raw.image ?? "",
+      price: raw.price ?? 0,
+      stock: raw.stock ?? 0,
+      minStock: raw.min_stock ?? 0,
+      midStock: 0, // Not persisted in DB — frontend-only field
+      category_id: raw.category_id ?? null,
+      costPrice: raw.cost_price ?? 0,
+      brandId: raw.brand_id ?? null,
+      saleUnit: raw.sale_unit ?? "unit",
+      store_id: raw.store_id,
+    };
+  },
+
   loadProducts: async (storeId) => {
-    const products = await api.get<Product[]>(`/products?storeId=${storeId}`);
-    set({ products });
+    try {
+      const rows = await api.get<any[]>(`/products?storeId=${storeId}`);
+      set({ products: rows.map(get().normalizeProduct) });
+    } catch (err) {
+      console.error("[products] loadProducts failed:", err);
+    }
   },
 
   loadCategories: async (storeId) => {
-    const categories = await api.get<Category[]>(`/categories?storeId=${storeId}`);
-    set({ categories });
+    try {
+      const rows = await api.get<any[]>(`/categories?storeId=${storeId}`);
+      set({ categories: rows as Category[] });
+    } catch (err) {
+      console.error("[products] loadCategories failed:", err);
+    }
   },
 
   loadStockMovements: async (storeId) => {
-    const stockMovements = await api.get<StockMovement[]>(`/products/stock-movements?storeId=${storeId}`);
-    set({ stockMovements });
+    try {
+      const rows = await api.get<any[]>("/products/stock-movements?storeId=" + encodeURIComponent(storeId));
+      set({ stockMovements: rows as StockMovement[] });
+    } catch (err) {
+      console.error("[products] loadStockMovements failed:", err);
+    }
   },
 
   // ── Products ──
@@ -132,15 +166,23 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
       }
     }
 
-    const product = await api.post<Product>("/products", {
-      ...data,
+    // Send snake_case — the backend Zod schema expects these names
+    const body: Record<string, unknown> = {
+      barcode: data.barcode ?? null,
+      name: data.name,
       image: data.image ?? "",
-      minStock: data.minStock ?? 0,
-      midStock: data.midStock ?? 0,
-      costPrice: data.costPrice ?? 0,
-      brandId: data.brandId ?? null,
-      saleUnit: data.saleUnit ?? "unit",
-    });
+      price: data.price ?? 0,
+      stock: data.stock ?? 0,
+      cost_price: data.costPrice ?? 0,
+      min_stock: data.minStock ?? 0,
+      sale_unit: data.saleUnit ?? "unit",
+      category_id: data.category_id ?? null,
+      brand_id: data.brandId ?? null,
+      store_id: data.store_id,
+    };
+
+    const raw = await api.post<any>("/products", body);
+    const product = get().normalizeProduct(raw);
 
     set({ products: [...get().products, product] });
     return product;

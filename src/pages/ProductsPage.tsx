@@ -33,6 +33,17 @@ export default function ProductsPage() {
   const products = useProductsStore((s) => s.products);
   const categories = useProductsStore((s) => s.categories);
   const brandsList = useBrandsStore((s) => s.brands);
+  const loadProducts = useProductsStore((s) => s.loadProducts);
+  const loadCategories = useProductsStore((s) => s.loadCategories);
+
+  const productsLoadedRef = useRef(false);
+  useEffect(() => {
+    if (productsLoadedRef.current) return;
+    productsLoadedRef.current = true;
+    loadProducts(storeId).catch(console.error);
+    loadCategories(storeId).catch(console.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId]);
   const canViewCost = useAuthStore((s) => s.hasPermission("productos"));
   const adjustStock = useProductsStore((s) => s.adjustStock);
   const deleteProduct = useProductsStore((s) => s.deleteProduct);

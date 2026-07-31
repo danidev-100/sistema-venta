@@ -124,6 +124,9 @@ export type ExpensesStore = {
   expenses: Expense[];
   loading: boolean;
 
+  /** Normalize a raw API row (snake_case) to the store type (camelCase). */
+  normalizeExpense: (raw: any) => Expense;
+
   /** Load expenses for a store from the API. */
   loadExpenses: (storeId: string) => Promise<void>;
 
@@ -169,11 +172,26 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
   expenses: [],
   loading: false,
 
+  /** Normalize a raw expense row from the API (snake_case) to the store type (camelCase). */
+  normalizeExpense(raw: any): Expense {
+    return {
+      id: raw.id,
+      description: raw.description,
+      amount: raw.amount,
+      category: raw.category,
+      date: raw.date,
+      paymentMethod: raw.payment_method ?? raw.paymentMethod,
+      storeId: raw.store_id ?? raw.storeId,
+      createdAt: raw.created_at ?? raw.createdAt,
+      updatedAt: raw.updated_at ?? raw.updatedAt,
+    };
+  },
+
   loadExpenses: async (storeId) => {
     set({ loading: true });
     try {
-      const expenses = await api.get<Expense[]>(`/expenses?storeId=${encodeURIComponent(storeId)}`);
-      set({ expenses, loading: false });
+      const rows = await api.get<any[]>(`/expenses?storeId=${encodeURIComponent(storeId)}`);
+      set({ expenses: rows.map(get().normalizeExpense), loading: false });
     } catch (err) {
       console.error("[api] expenses.loadExpenses failed:", err);
       set({ loading: false });
@@ -184,7 +202,9 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
     validateExpense(data);
 
     try {
-      const expense = await api.post<Expense>("/expenses", data);
+      // Send camelCase — backend maps to snake_case internally
+      const raw = await api.post<any>("/expenses", data);
+      const expense = get().normalizeExpense(raw);
       set({ expenses: [...get().expenses, expense] });
       return expense;
     } catch (err) {
@@ -208,7 +228,8 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
     }
 
     try {
-      const updated = await api.put<Expense>(`/expenses/${id}`, data);
+      const raw = await api.put<any>(`/expenses/${id}`, data);
+      const updated = get().normalizeExpense(raw);
       set({
         expenses: get().expenses.map((e) =>
           e.id === id ? updated : e,

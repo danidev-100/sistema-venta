@@ -336,7 +336,16 @@ function BultosSection() {
   const addBulto = useBultosStore((s) => s.addBulto);
   const updateBulto = useBultosStore((s) => s.updateBulto);
   const deleteBulto = useBultosStore((s) => s.deleteBulto);
+  const loadBultos = useBultosStore((s) => s.loadBultos);
   const showNotification = useAppStore((s) => s.showNotification);
+
+  const bultosLoadedRef = useRef(false);
+  useEffect(() => {
+    if (bultosLoadedRef.current) return;
+    bultosLoadedRef.current = true;
+    loadBultos(storeId).catch(console.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId]);
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [name, setName] = useState("");
@@ -864,7 +873,16 @@ function CombosSection() {
   const addCombo = useCombosStore((s) => s.addCombo);
   const updateCombo = useCombosStore((s) => s.updateCombo);
   const deleteCombo = useCombosStore((s) => s.deleteCombo);
+  const loadCombos = useCombosStore((s) => s.loadCombos);
   const showNotification = useAppStore((s) => s.showNotification);
+
+  const combosLoadedRef = useRef(false);
+  useEffect(() => {
+    if (combosLoadedRef.current) return;
+    combosLoadedRef.current = true;
+    loadCombos(storeId).catch(console.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId]);
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [name, setName] = useState("");
@@ -1191,16 +1209,16 @@ function PriceListsSection() {
   const [bulkPctDraft, setBulkPctDraft] = useState("");
   const [confirmAction, setConfirmAction] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
 
-  const loadedRef = useRef(false);
+  const priceListsLoadedRef = useRef(false);
   useEffect(() => {
-    if (loadedRef.current) return;
+    if (priceListsLoadedRef.current) return;
     if (priceLists.length === 0 && !loading) {
-      loadedRef.current = true;
+      priceListsLoadedRef.current = true;
       setLoadError(false);
-      loadPriceLists().catch(() => setLoadError(true));
+      loadPriceLists(storeId).catch(() => setLoadError(true));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [storeId]);
 
   const storeLists = priceLists.filter((pl) => pl.storeId === storeId);
 
@@ -1334,7 +1352,7 @@ function PriceListsSection() {
             </div>
             <p className="text-sm text-pos-danger font-medium mb-3">Error al cargar las listas</p>
             <button
-              onClick={() => { setLoadError(false); loadPriceLists().catch(() => setLoadError(true)); }}
+              onClick={() => { setLoadError(false); loadPriceLists(storeId).catch(() => setLoadError(true)); }}
               className="px-4 py-2 bg-pos-secondary text-white rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity"
             >
               Reintentar
@@ -1353,7 +1371,7 @@ function PriceListsSection() {
             <p className="text-sm text-pos-muted font-medium mb-1">No hay listas de precio</p>
             <p className="text-xs text-pos-muted/60 mb-4">Cargá las listas predeterminadas o creá una nueva</p>
             <button
-              onClick={() => { setLoadError(false); loadPriceLists().catch(() => setLoadError(true)); }}
+              onClick={() => { setLoadError(false); loadPriceLists(storeId).catch(() => setLoadError(true)); }}
               className="px-4 py-2 bg-violet-500 text-white rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity"
             >
               Cargar listas

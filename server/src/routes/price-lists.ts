@@ -92,9 +92,23 @@ router.put("/:id", async (req: Request, res: Response) => {
 
 router.put("/:id/items/:productId", async (req: Request, res: Response) => {
   try {
-    const { price } = req.body;
-    if (price === undefined || price === null) {
-      res.status(400).json({ error: "price es requerido" });
+    const { price, percentage } = req.body;
+    if ((price === undefined || price === null) && (percentage === undefined || percentage === null)) {
+      // Delete override — remove the row so base price applies
+      const db = getDb();
+      const priceListId = Number(req.params.id);
+      const productId = Number(req.params.productId);
+
+      await db
+        .delete(schema.priceListItems)
+        .where(
+          and(
+            eq(schema.priceListItems.price_list_id, priceListId),
+            eq(schema.priceListItems.product_id, productId),
+          ),
+        );
+
+      res.json({ success: true });
       return;
     }
 
@@ -116,7 +130,11 @@ router.put("/:id/items/:productId", async (req: Request, res: Response) => {
     if (existing) {
       const [updated] = await db
         .update(schema.priceListItems)
-        .set({ price, updated_at: new Date() })
+        .set({
+          price: price ?? null,
+          percentage: percentage ?? null,
+          updated_at: new Date(),
+        })
         .where(eq(schema.priceListItems.id, existing.id))
         .returning();
 
@@ -135,7 +153,13 @@ router.put("/:id/items/:productId", async (req: Request, res: Response) => {
 
       const [created] = await db
         .insert(schema.priceListItems)
-        .values({ price_list_id: priceListId, product_id: productId, price, store_id: list.store_id })
+        .values({
+          price_list_id: priceListId,
+          product_id: productId,
+          price: price ?? null,
+          percentage: percentage ?? null,
+          store_id: list.store_id,
+        })
         .returning();
 
       res.status(201).json(created);

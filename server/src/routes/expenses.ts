@@ -1,7 +1,25 @@
 import { Router, Request, Response } from "express";
+import { z } from "zod";
 import { eq, desc } from "drizzle-orm";
 import { getDb } from "../db.js";
 import * as schema from "../../../db/cloud-schema.js";
+
+const createExpenseSchema = z.object({
+  storeId: z.string().min(1),
+  description: z.string().min(1, "Descripción requerida").max(500),
+  amount: z.number().positive("El importe debe ser mayor a 0"),
+  category: z.enum(["Alquiler", "Servicios", "Insumos", "Sueldos", "Impuestos", "Marketing", "Mantenimiento", "Varios"]),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida (use YYYY-MM-DD)"),
+  paymentMethod: z.enum(["cash", "card"]),
+});
+
+const updateExpenseSchema = z.object({
+  description: z.string().min(1).max(500).optional(),
+  amount: z.number().positive().optional(),
+  category: z.enum(["Alquiler", "Servicios", "Insumos", "Sueldos", "Impuestos", "Marketing", "Mantenimiento", "Varios"]).optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  paymentMethod: z.enum(["cash", "card"]).optional(),
+});
 
 const router = Router();
 
@@ -27,11 +45,12 @@ router.get("/", async (req: Request, res: Response) => {
 
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const { storeId, description, amount, category, date, paymentMethod } = req.body;
-    if (!storeId || !description || !amount || !category || !date || !paymentMethod) {
-      res.status(400).json({ error: "Faltan campos requeridos" });
+    const parsed = createExpenseSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.errors[0].message });
       return;
     }
+    const { storeId, description, amount, category, date, paymentMethod } = parsed.data;
     const db = getDb();
     const [expense] = await db
       .insert(schema.expenses)
@@ -59,18 +78,18 @@ router.put("/:id", async (req: Request, res: Response) => {
       res.status(400).json({ error: "ID inválido" });
       return;
     }
-    const { description, amount, category, date, paymentMethod } = req.body;
+    const parsed = updateExpenseSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.errors[0].message });
+      return;
+    }
+    const { description, amount, category, date, paymentMethod } = parsed.data;
     const updateData: Record<string, any> = {};
     if (description !== undefined) updateData.description = description;
     if (amount !== undefined) updateData.amount = amount;
     if (category !== undefined) updateData.category = category;
     if (date !== undefined) updateData.date = date;
     if (paymentMethod !== undefined) updateData.payment_method = paymentMethod;
-
-    if (Object.keys(updateData).length === 0) {
-      res.status(400).json({ error: "No hay campos para actualizar" });
-      return;
-    }
 
     const [expense] = await db
       .update(schema.expenses)

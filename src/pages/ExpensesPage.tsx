@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useActiveStore } from "@/store/context";
 import {
   useExpensesStore,
@@ -57,6 +57,15 @@ export default function ExpensesPage() {
   const getExpensesByDateRange = useExpensesStore((s) => s.getExpensesByDateRange);
   const getExpensesByCategory = useExpensesStore((s) => s.getExpensesByCategory);
   const getMonthlySummary = useExpensesStore((s) => s.getMonthlySummary);
+  const loadExpenses = useExpensesStore((s) => s.loadExpenses);
+
+  const expensesLoadedRef = useRef(false);
+  useEffect(() => {
+    if (expensesLoadedRef.current) return;
+    expensesLoadedRef.current = true;
+    loadExpenses(storeId).catch(console.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId]);
 
   // ── Tab state ──
   const [activeTab, setActiveTab] = useState<Tab>("register");

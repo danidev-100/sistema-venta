@@ -27,7 +27,7 @@ type PriceListsStore = {
   itemsByList: Record<number, PriceListItem[]>;
   loadingItems: Record<number, boolean>;
 
-  loadPriceLists: () => Promise<void>;
+  loadPriceLists: (storeId?: string) => Promise<void>;
   loadListItems: (listId: number) => Promise<PriceListItem[]>;
   createPriceList: (name: string, storeId: string) => Promise<PriceList>;
   updateItem: (listId: number, productId: number, data: { price?: number | null; percentage?: number | null }) => void;
@@ -45,12 +45,13 @@ export const usePriceListsStore = create<PriceListsStore>((set, get) => ({
   itemsByList: {},
   loadingItems: {},
 
-  loadPriceLists: async () => {
+  loadPriceLists: async (storeId?: string) => {
     set({ loading: true });
     try {
+      const sid = storeId ?? "store_1";
       let rows: any[];
       try {
-        rows = await api.get<any[]>("/price-lists");
+        rows = await api.get<any[]>(`/price-lists?storeId=${encodeURIComponent(sid)}`);
       } catch {
         rows = [];
       }
@@ -61,19 +62,14 @@ export const usePriceListsStore = create<PriceListsStore>((set, get) => ({
         storeId: r.store_id,
       }));
 
-      let storeId = "store_1";
-      if (priceLists.length > 0) {
-        storeId = priceLists[0].storeId;
-      }
-
       if (priceLists.length < 10) {
         const existing: PriceList[] = [...priceLists];
         let nextId = priceLists.reduce((max, pl) => Math.max(max, pl.id), 0) + 1;
         for (let i = existing.length + 1; i <= 10; i++) {
           const name = `Lista ${i}`;
           try {
-            const created = await api.post<any>("/price-lists", { name, storeId });
-            existing.push({ id: created.id ?? nextId++, name, storeId });
+            const created = await api.post<any>("/price-lists", { name, store_id: sid });
+            existing.push({ id: created.id ?? nextId++, name, storeId: sid });
           } catch { /* skip */ }
         }
         set({ priceLists: existing, loading: false });
@@ -90,14 +86,14 @@ export const usePriceListsStore = create<PriceListsStore>((set, get) => ({
     set((s) => ({ loadingItems: { ...s.loadingItems, [listId]: true } }));
     try {
       const rows = await api.get<any[]>(
-        `/price-list-items?listId=${listId}`,
+        `/price-lists/${listId}/items`,
       );
       const items: PriceListItem[] = rows.map((r: any) => ({
         id: r.id,
-        listId: r.list_id,
+        listId: r.price_list_id,
         productId: r.product_id,
-        price: r.price,
-        percentage: r.percentage,
+        price: r.price ?? null,
+        percentage: r.percentage ?? null,
         storeId: r.store_id,
       }));
 
@@ -112,7 +108,7 @@ export const usePriceListsStore = create<PriceListsStore>((set, get) => ({
   },
 
   createPriceList: async (name, storeId) => {
-    const created = await api.post<any>("/price-lists", { name, storeId });
+    const created = await api.post<any>("/price-lists", { name, store_id: storeId });
     const listId = created.id;
 
     const list: PriceList = { id: listId, name, storeId };
@@ -134,8 +130,10 @@ export const usePriceListsStore = create<PriceListsStore>((set, get) => ({
   },
 
   updateItem: (listId, productId, data) => {
-    if (data.price !== undefined) data.percentage = null;
-    else if (data.percentage !== undefined) data.price = null;
+    // Resolve mutual exclusion: price and percentage can't both be set
+    const resolved = { ...data };
+    if (resolved.price !== undefined) resolved.percentage = null;
+    else if (resolved.percentage !== undefined) resolved.price = null;
 
     const state = get();
     const items = [...(state.itemsByList[listId] ?? [])];
@@ -145,10 +143,10 @@ export const usePriceListsStore = create<PriceListsStore>((set, get) => ({
     if (!list) return;
 
     if (existing) {
-      const updated = { ...existing, ...data };
+      const updated = { ...existing, ...resolved };
       items[idx] = updated;
       set({ itemsByList: { ...state.itemsByList, [listId]: items } });
-      api.put(`/price-list-items/${updated.id}`, {
+      api.put(`/price-lists/${listId}/items/${productId}`, {
         price: updated.price,
         percentage: updated.percentage,
       });
@@ -160,17 +158,13 @@ export const usePriceListsStore = create<PriceListsStore>((set, get) => ({
         price: null,
         percentage: null,
         storeId: list.storeId,
-        ...data,
+        ...resolved,
       };
       items.push(newItem);
       set({ itemsByList: { ...state.itemsByList, [listId]: items } });
-      api.post("/price-list-items", {
-        id: newItem.id,
-        listId,
-        productId,
+      api.put(`/price-lists/${listId}/items/${productId}`, {
         price: newItem.price,
         percentage: newItem.percentage,
-        storeId: list.storeId,
       });
     }
   },
@@ -210,15 +204,10 @@ export const usePriceListsStore = create<PriceListsStore>((set, get) => ({
     }));
 
     try {
-      await api.del(`/price-list-items?listId=${listId}`);
       for (const item of updated) {
-        await api.post("/price-list-items", {
-          id: item.id,
-          listId,
-          productId: item.productId,
+        await api.put(`/price-lists/${listId}/items/${item.productId}`, {
           price: null,
           percentage,
-          storeId: list.storeId,
         });
       }
     } catch (err) {
@@ -238,7 +227,14 @@ export const usePriceListsStore = create<PriceListsStore>((set, get) => ({
     }
 
     try {
-      await api.del(`/price-list-items?listId=${listId}`);
+      // Delete all overrides by clearing each one via upsert with null both fields
+      const products = useProductsStore.getState().products.filter((p) => p.store_id === list.storeId);
+      for (const product of products) {
+        await api.put(`/price-lists/${listId}/items/${product.id}`, {
+          price: null,
+          percentage: null,
+        });
+      }
     } catch (err) {
       console.error("[price-lists] clearOverrides api failed:", err);
     }
@@ -255,7 +251,6 @@ export const usePriceListsStore = create<PriceListsStore>((set, get) => ({
     set({ itemsByList: rest });
 
     api.del(`/price-lists/${id}`);
-    api.del(`/price-list-items?listId=${id}`);
   },
 
   getEffectivePrice: (listId, productId, basePrice) => {

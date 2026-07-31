@@ -171,13 +171,24 @@ router.delete("/:id", async (req: Request, res: Response) => {
 });
 
 // POST /stock-movement — record movement & update stock
+const stockMovementSchema = z.object({
+  product_id: z.number().int().positive("Producto requerido"),
+  type: z.enum(["purchase", "sale", "adjustment"], { errorMap: () => ({ message: "Tipo inválido (purchase/sale/adjustment)" }) }),
+  quantity: z.number().int().min(0).optional().default(0),
+  delta: z.number().int("Delta debe ser un número entero"),
+  reference_id: z.string().nullable().optional().default(null),
+  user_id: z.string().nullable().optional().default(null),
+  store_id: z.string().min(1, "Tienda requerida"),
+});
+
 router.post("/stock-movement", async (req: Request, res: Response) => {
   try {
-    const { product_id, type, quantity, delta, reference_id, user_id, store_id } = req.body;
-    if (!product_id || !type || delta == null || !store_id) {
-      res.status(400).json({ error: "product_id, type, delta y store_id son requeridos" });
+    const parsed = stockMovementSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.errors[0].message });
       return;
     }
+    const { product_id, type, quantity, delta, reference_id, user_id, store_id } = parsed.data;
     const db = getDb();
     const [movement] = await db
       .insert(schema.stockMovements)

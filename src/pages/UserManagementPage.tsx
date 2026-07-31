@@ -73,6 +73,9 @@ export default function UserManagementPage() {
   const addUser = useAuthStore((s) => s.addUser);
   const updateUser = useAuthStore((s) => s.updateUser);
   const deleteUser = useAuthStore((s) => s.deleteUser);
+  const loadUsers = useAuthStore((s) => s.loadUsers);
+
+  useEffect(() => { loadUsers().catch(console.error); }, [loadUsers]);
 
   const [modalMode, setModalMode] = useState<ModalMode | null>(null);
   const [search, setSearch] = useState("");

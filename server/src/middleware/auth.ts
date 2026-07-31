@@ -1,20 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-let JWT_SECRET: string;
-
-const envSecret = process.env.JWT_SECRET;
-if (envSecret) {
-  JWT_SECRET = envSecret;
-} else {
-  console.error("[auth] JWT_SECRET no está configurado — el servidor no arrancará de forma segura");
-  if (process.env.NODE_ENV !== "production") {
-    console.warn("[auth] ⚠️  Usando JWT_SECRET por defecto. Setealo en .env para producción.");
-    JWT_SECRET = "sistema-venta-secret-change-me";
-  } else {
-    JWT_SECRET = "";
+const JWT_SECRET: string = (() => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    console.error("[auth] JWT_SECRET no está configurado — el servidor no arrancará");
+    process.exit(1);
   }
-}
+  return secret;
+})();
 
 export interface AuthPayload {
   userId: number;
@@ -72,7 +66,8 @@ export function requireStoreAccess(req: Request, res: Response, next: NextFuncti
   }
 
   if (!req.user?.storeId) {
-    return next();
+    res.status(403).json({ error: "Token sin tienda — acceso denegado" });
+    return;
   }
 
   const requestedStoreId = req.query.storeId as string || req.body.storeId || req.body.store_id;
