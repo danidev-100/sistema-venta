@@ -35,6 +35,7 @@ export default function ProductsPage() {
   const brandsList = useBrandsStore((s) => s.brands);
   const loadProducts = useProductsStore((s) => s.loadProducts);
   const loadCategories = useProductsStore((s) => s.loadCategories);
+  const loadBrands = useBrandsStore((s) => s.loadBrands);
 
   const productsLoadedRef = useRef(false);
   useEffect(() => {
@@ -42,6 +43,7 @@ export default function ProductsPage() {
     productsLoadedRef.current = true;
     loadProducts(storeId).catch(console.error);
     loadCategories(storeId).catch(console.error);
+    loadBrands(storeId).catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId]);
   const canViewCost = useAuthStore((s) => s.hasPermission("productos"));

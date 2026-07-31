@@ -1201,6 +1201,7 @@ function PriceListsSection() {
   const showNotification = useAppStore((s) => s.showNotification);
 
   const allProducts = useProductsStore((s) => s.products);
+  const loadProducts = useProductsStore((s) => s.loadProducts);
 
   const [editingListId, setEditingListId] = useState<number | null>(null);
   const [listNameDraft, setListNameDraft] = useState("");
@@ -1217,6 +1218,14 @@ function PriceListsSection() {
       setLoadError(false);
       loadPriceLists(storeId).catch(() => setLoadError(true));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId]);
+
+  const productsLoadedRef = useRef(false);
+  useEffect(() => {
+    if (productsLoadedRef.current) return;
+    productsLoadedRef.current = true;
+    loadProducts(storeId).catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId]);
 

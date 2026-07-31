@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useProductsStore, type Category } from "@/store/products";
 import { useActiveStore } from "@/store/context";
 import { exportTableToPdf, exportToExcel, type ExportColumn } from "@/lib/export-utils";
@@ -13,6 +13,15 @@ export default function CategoryList() {
   const addCategory = useProductsStore((s) => s.addCategory);
   const updateCategory = useProductsStore((s) => s.updateCategory);
   const deleteCategory = useProductsStore((s) => s.deleteCategory);
+  const loadCategories = useProductsStore((s) => s.loadCategories);
+
+  const categoriesLoadedRef = useRef(false);
+  useEffect(() => {
+    if (categoriesLoadedRef.current) return;
+    categoriesLoadedRef.current = true;
+    loadCategories(storeId).catch(console.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId]);
 
   const [editingCat, setEditingCat] = useState<Category | null>(null);
   const [isCreating, setIsCreating] = useState(false);

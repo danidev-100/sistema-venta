@@ -7,6 +7,7 @@ import { useComprobantesStore } from "@/store/comprobantes";
 import { useAuthStore } from "@/store/auth";
 import { useCashClosingStore } from "@/store/cash-closing";
 import { exportInvoicePdf, printComprobante } from "@/lib/pdf-export";
+import { api } from "@/lib/api";
 import ProductSearchModal from "@/components/ProductSearchModal";
 import CartPanel from "@/components/CartPanel";
 import CheckoutModal from "@/components/CheckoutModal";
@@ -28,8 +29,10 @@ async function seedDemoProducts() {
   if (seeded) return;
   seeded = true;
 
+  const existing = await api.get<any[]>("/products?storeId=store_1").catch(() => []);
+  if (existing.length > 0) return; // database already has products
+
   const store = useProductsStore.getState();
-  if (store.products.length > 0) return; // already has data
 
   const bebidas = await store.addCategory({
     name: "Bebidas",

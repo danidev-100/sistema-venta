@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useBrandsStore, type Brand } from "@/store/brands";
 import { useActiveStore } from "@/store/context";
 import BrandForm from "./BrandForm";
@@ -12,6 +12,15 @@ export default function BrandList() {
   const { storeId } = useActiveStore();
   const brands = useBrandsStore((s) => s.brands);
   const deleteBrand = useBrandsStore((s) => s.deleteBrand);
+  const loadBrands = useBrandsStore((s) => s.loadBrands);
+
+  const brandsLoadedRef = useRef(false);
+  useEffect(() => {
+    if (brandsLoadedRef.current) return;
+    brandsLoadedRef.current = true;
+    loadBrands(storeId).catch(console.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId]);
 
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [isCreating, setIsCreating] = useState(false);
