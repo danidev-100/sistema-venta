@@ -421,7 +421,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     const paidAmount = paymentMethod === "mixed" ? (cashAmount ?? 0) + (cardAmount ?? 0) + (mercadopagoAmount ?? 0) : paymentMethod === "mercadopago" ? total : (amountPaid ?? null);
 
     // ── Persist sale via API ──
-    const sale = await api.post<CompletedSale>("/sales", {
+    const created = await api.post<any>("/sales", {
       items: items.map((i) => ({ ...i })),
       createdBy: currentUserName,
       total,
@@ -438,9 +438,34 @@ export const useAppStore = create<AppStore>((set, get) => ({
       priceListId: get().selectedPriceListId,
     });
 
+    // ── Normalize snake_case API response to the frontend CompletedSale shape ──
+    const sale: CompletedSale = {
+      id: created.id,
+      items: items.map((i) => ({ ...i })),
+      total,
+      subtotal,
+      discountPercent: globalDiscountPercent,
+      discountAmount,
+      paymentMethod: resolvedPayment,
+      amountPaid: paidAmount,
+      cashAmount: paymentMethod === "mixed" ? (cashAmount ?? 0) : (paymentMethod === "cash" ? amountPaid ?? null : null),
+      cardAmount: paymentMethod === "mixed" ? (cardAmount ?? 0) + (mercadopagoAmount ?? 0) : paymentMethod === "card" || paymentMethod === "mercadopago" ? total : null,
+      mercadopagoAmount: mercadopagoAmount ?? null,
+      change,
+      date: created.created_at ?? new Date().toISOString(),
+      storeId: resolvedStoreId,
+      customerName: customerName ?? null,
+      createdBy: currentUserName,
+      status: "completed",
+      priceListId: get().selectedPriceListId,
+    };
+
     // ── Record stock movements for each item ──
+    // Items with a negative product id are free-sale entries with no real
+    // product behind them — skip stock movement entirely.
     const { recordMovement } = useProductsStore.getState();
     for (const item of items) {
+      if (item.productId < 0) continue;
       await recordMovement({
         product_id: item.productId,
         type: "sale",
@@ -485,6 +510,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
         created_by: currentUserName,
         store_id: resolvedStoreId,
         sale_id: sale.id,
+        subtotal: sale.subtotal,
+        total: sale.total,
+        iva: 0,
         items: sale.items.map((i) => ({
           product_name: i.productName,
           quantity: i.quantity,
@@ -529,8 +557,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
     await api.post(`/sales/${saleId}/refund`);
 
     // Reverse stock movements
+    // Negative product ids are free-sale items — no real product to restore.
     const { recordMovement } = useProductsStore.getState();
     for (const item of sale.items) {
+      if (item.productId < 0) continue;
       await recordMovement({
         product_id: item.productId,
         type: "adjustment",

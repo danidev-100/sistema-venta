@@ -113,11 +113,6 @@ router.post("/", async (req: Request, res: Response) => {
           subtotal: item.subtotal ?? item.quantity * item.unitPrice,
           store_id: storeId,
         });
-
-        await tx
-          .update(schema.products)
-          .set({ stock: sql`stock - ${item.quantity}` })
-          .where(eq(schema.products.id, item.productId));
       }
 
       if (customerName && paymentMethod === "credit") {

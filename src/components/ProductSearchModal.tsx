@@ -16,7 +16,7 @@ type ProductSearchModalProps = {
     price: number;
   }) => void;
   onClose: () => void;
-  /** Called when user wants to quick-add an unregistered product from the empty state. */
+  /** Called when the cashier wants a free-sale item (no catalog product) from the empty state. */
   onQuickAdd?: (name: string) => void;
 };
 
@@ -236,7 +236,8 @@ export default function ProductSearchModal({
               {onQuickAdd ? (
                 <>
                   <p className="text-xs text-pos-muted/50 mt-1 mb-4">
-                    ¿No encontraste lo que buscabas? Agregalo al toque.
+                    ¿No encontraste lo que buscabas? Puede venderlo sin
+                    registrarlo en el catálogo.
                   </p>
                   <button
                     onClick={() => onQuickAdd(search)}
@@ -254,7 +255,7 @@ export default function ProductSearchModal({
                       <line x1="12" y1="5" x2="12" y2="19" />
                       <line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
-                    Agregar producto
+                    Vender sin producto
                   </button>
                 </>
               ) : (

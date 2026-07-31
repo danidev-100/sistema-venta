@@ -48,6 +48,29 @@ const TIPO_LABELS: Record<ComprobanteTipo, string> = {
   ticket: "Ticket",
 };
 
+/** Normalize a raw comprobante row from the API (snake_case) to the store type (camelCase). */
+function normalizeComprobante(data: any): Comprobante {
+  return {
+    id: data.id,
+    tipo: data.tipo,
+    numero: data.numero,
+    sequentialNumber: data.sequentialNumber ?? 0,
+    cliente_nombre: data.cliente_nombre,
+    cliente_cuit: data.cliente_cuit,
+    cliente_direccion: data.cliente_direccion,
+    fecha: data.fecha,
+    payment_method: data.payment_method ?? null,
+    subtotal: data.subtotal ?? 0,
+    iva: data.iva ?? 0,
+    total: data.total ?? 0,
+    sale_id: data.sale_id ?? null,
+    notes: data.notes ?? "",
+    createdBy: data.created_by ?? "",
+    items: Array.isArray(data.items) ? data.items : [],
+    store_id: data.store_id,
+  };
+}
+
 export function getTipoLabel(tipo: ComprobanteTipo): string {
   return TIPO_LABELS[tipo];
 }
@@ -55,7 +78,7 @@ export function getTipoLabel(tipo: ComprobanteTipo): string {
 export type ComprobantesStore = {
   comprobantes: Comprobante[];
 
-  loadComprobantes: () => Promise<void>;
+  loadComprobantes: (storeId: string) => Promise<void>;
   createComprobante: (data: {
     tipo: ComprobanteTipo;
     cliente_nombre: string;
@@ -66,6 +89,9 @@ export type ComprobantesStore = {
     created_by?: string;
     sale_id?: number;
     store_id: string;
+    subtotal?: number;
+    iva?: number;
+    total?: number;
     items: Array<{
       product_id?: number;
       product_name: string;
@@ -85,17 +111,17 @@ export type ComprobantesStore = {
 export const useComprobantesStore = create<ComprobantesStore>((set, get) => ({
   comprobantes: [],
 
-  loadComprobantes: async () => {
+  loadComprobantes: async (storeId) => {
     try {
-      const comprobantes = await api.get<Comprobante[]>("/comprobantes");
-      set({ comprobantes });
+      const rows = await api.get<Comprobante[]>(`/comprobantes?storeId=${encodeURIComponent(storeId)}`);
+      set({ comprobantes: rows.map(normalizeComprobante) });
     } catch (err) {
       console.error("[comprobantes] loadComprobantes failed:", err);
     }
   },
 
   createComprobante: async (data) => {
-    const comprobante = await api.post<Comprobante>("/comprobantes", data);
+    const comprobante = normalizeComprobante(await api.post<Comprobante>("/comprobantes", data));
     set({ comprobantes: [...get().comprobantes, comprobante] });
     return comprobante;
   },

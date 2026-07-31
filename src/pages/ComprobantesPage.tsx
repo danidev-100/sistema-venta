@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useActiveStore } from "@/store/context";
 import { useCustomersStore } from "@/store/customers";
 import { useProductsStore } from "@/store/products";
@@ -55,12 +55,21 @@ let nextItemKey = 1;
 export default function ComprobantesPage() {
   const { storeId } = useActiveStore();
   const comprobantes = useComprobantesStore((s) => s.comprobantes);
+  const loadComprobantes = useComprobantesStore((s) => s.loadComprobantes);
   const [view, setView] = useState<View>({ kind: "list" });
   const [search, setSearch] = useState("");
   const [filterTipo, setFilterTipo] = useState<ComprobanteTipo[]>([]);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [filterCreatedBy, setFilterCreatedBy] = useState("");
+
+  const comprobantesLoadedRef = useRef(false);
+  useEffect(() => {
+    if (comprobantesLoadedRef.current) return;
+    comprobantesLoadedRef.current = true;
+    loadComprobantes(storeId).catch(console.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId]);
 
   const storeComprobantes = useMemo(
     () => comprobantes.filter((c) => c.store_id === storeId).sort((a, b) => b.id - a.id),

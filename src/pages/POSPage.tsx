@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState, useRef } from "react";
-import { useAppStore, usePriceListsStore } from "@/store";
+import { useAppStore, usePriceListsStore, useCustomersStore } from "@/store";
 import { useProductsStore } from "@/store/products";
 import { useActiveStore } from "@/store/context";
 import { useInvoicesStore } from "@/store/invoices";
@@ -14,7 +14,7 @@ import CheckoutModal from "@/components/CheckoutModal";
 import CustomerSelectModal from "@/components/CustomerSelectModal";
 import OpenShiftModal from "@/components/OpenShiftModal";
 import NoStockModal from "@/components/NoStockModal";
-import QuickAddProductModal from "@/components/QuickAddProductModal";
+import QuickSaleModal from "@/components/QuickSaleModal";
 import ReceiptPreview from "@/components/ReceiptPreview";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useBarcodeScan } from "@/hooks/useBarcodeScan";
@@ -219,6 +219,7 @@ export default function POSPage() {
   const loadShifts = useCashClosingStore((s) => s.loadShifts);
   const openShiftAction = useCashClosingStore((s) => s.openShift);
   const loadProducts = useProductsStore((s) => s.loadProducts);
+  const loadCustomers = useCustomersStore((s) => s.loadCustomers);
 
   const [showCheckout, setShowCheckout] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
@@ -244,12 +245,13 @@ export default function POSPage() {
   ) ?? null;
   const hasOpenShift = openShiftData !== null;
 
-  // Load shifts, products, and seed demo products on mount
+  // Load shifts, products, customers, and seed demo products on mount
   useEffect(() => {
     loadShifts(storeId);
     loadProducts(storeId).catch(console.error);
+    loadCustomers(storeId).catch(console.error);
     seedDemoProducts();
-  }, [storeId, loadShifts, loadProducts]);
+  }, [storeId, loadShifts, loadProducts, loadCustomers]);
 
   // Hint toast on first POS load
   useEffect(() => {
@@ -412,14 +414,17 @@ export default function POSPage() {
     setQuickAddData({ name, barcode: "" });
   }
 
-  function handleQuickAddConfirm(product: {
+  // Receives a free-sale item ({ id, name, price }) and adds it straight to the
+  // cart. The id is a negative synthetic value (no real product exists), so no
+  // catalog product is created and no stock is touched.
+  function handleQuickAddConfirm(sale: {
     id: number;
     name: string;
     price: number;
   }) {
     setQuickAddData(null);
-    addItem(product.id, product.name, product.price);
-    showNotification(`✓ ${product.name} agregado al carrito`);
+    addItem(sale.id, sale.name, sale.price);
+    showNotification(`✓ ${sale.name} agregado al carrito`);
     setTimeout(() => dismissNotification(), 2500);
   }
 
@@ -622,9 +627,9 @@ export default function POSPage() {
         />
       )}
 
-      {/* ── Quick Add Product Modal ── */}
+      {/* ── Quick Sale Modal (free sale — no catalog product) ── */}
       {quickAddData !== null && (
-        <QuickAddProductModal
+        <QuickSaleModal
           initialName={quickAddData.name}
           initialBarcode={quickAddData.barcode}
           onClose={() => setQuickAddData(null)}

@@ -84,7 +84,7 @@ export default function CheckoutModal({
     }
   }
 
-  function handleConfirm() {
+  async function handleConfirm() {
     if (isEmpty) {
       setError("El carrito está vacío");
       return;
@@ -120,19 +120,20 @@ export default function CheckoutModal({
 
     try {
       if (paymentMethod === "mixed") {
-        checkout("mixed", total, storeId, selectedCustomer?.name, parsedCash, parsedCard, parsedMercadopago);
+        await checkout("mixed", total, storeId, selectedCustomer?.name, parsedCash, parsedCard, parsedMercadopago);
       } else if (paymentMethod === "credit") {
-        checkout("credit", total, storeId, selectedCustomer?.name);
+        await checkout("credit", total, storeId, selectedCustomer?.name);
       } else if (paymentMethod === "mercadopago") {
-        checkout("mercadopago", total, storeId, selectedCustomer?.name);
+        await checkout("mercadopago", total, storeId, selectedCustomer?.name);
       } else {
-        checkout(
+        await checkout(
           paymentMethod,
           paymentMethod === "cash" ? parsedCash : undefined,
           storeId,
           selectedCustomer?.name,
         );
       }
+      // Sale completed — only now close the modal and let the receipt show.
       resetState();
       onComplete();
     } catch (err) {

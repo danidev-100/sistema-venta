@@ -71,7 +71,8 @@ export default function CartPanel({
   // Returns max quantity available for a product based on stock
   function getMaxQuantity(productId: number): number {
     const product = products.find((p) => p.id === productId);
-    if (!product) return Infinity;
+    // Free-sale items have no catalog product, so no stock cap applies.
+    if (!product) return 99999;
     return Math.max(0, product.stock);
   }
 

@@ -1,35 +1,43 @@
 import { useState, useEffect, useRef } from "react";
-import { useProductsStore } from "@/store/products";
-import { useActiveStore } from "@/store/context";
+
+// ──────────────────────────────────────────────
+// Free-sale synthetic ids
+// ──────────────────────────────────────────────
+// Free-sale items carry a negative product id so checkout/refund can tell them
+// apart from real products (and skip stock movements). The id MUST fit a
+// PostgreSQL `integer` (int4: -2147483648..2147483647). A timestamp is way out
+// of that range, so we use a per-session decrementing counter instead.
+let freeSaleIdCounter = 0;
+
+function nextFreeSaleId(): number {
+  freeSaleIdCounter -= 1;
+  return freeSaleIdCounter;
+}
 
 // ──────────────────────────────────────────────
 // Props
 // ──────────────────────────────────────────────
 
-type QuickAddProductModalProps = {
+type QuickSaleModalProps = {
   initialName?: string;
+  /** Scanned barcode, shown as reference only — NOT persisted as a product. */
   initialBarcode?: string;
   onClose: () => void;
-  onConfirm: (product: { id: number; name: string; price: number }) => void;
+  onConfirm: (sale: { id: number; name: string; price: number }) => void;
 };
 
 // ──────────────────────────────────────────────
 // Component
 // ──────────────────────────────────────────────
 
-export default function QuickAddProductModal({
+export default function QuickSaleModal({
   initialName = "",
   initialBarcode = "",
   onClose,
   onConfirm,
-}: QuickAddProductModalProps) {
-  const { storeId } = useActiveStore();
-  const addProduct = useProductsStore((s) => s.addProduct);
-
+}: QuickSaleModalProps) {
   const [name, setName] = useState(initialName);
   const [price, setPrice] = useState("");
-  const [stock, setStock] = useState("1");
-  const [barcode, setBarcode] = useState(initialBarcode);
   const [error, setError] = useState("");
   const [animOut, setAnimOut] = useState(false);
 
@@ -42,40 +50,26 @@ export default function QuickAddProductModal({
 
   // ── Submit ──
 
-  async function handleSubmit() {
+  function handleSubmit() {
     setError("");
 
     if (!name.trim()) {
-      setError("El nombre del producto es obligatorio");
+      setError("El nombre es obligatorio");
       nameRef.current?.focus();
       return;
     }
 
     const parsedPrice = parseFloat(price);
     if (isNaN(parsedPrice) || parsedPrice <= 0) {
-      setError("Precio inválido — ingresá un número mayor a 0");
+      setError("Precio inválido — ingrese un número mayor a 0");
       return;
     }
 
-    const parsedStock = parseInt(stock, 10);
-    if (isNaN(parsedStock) || parsedStock < 0) {
-      setError("Cantidad inválida");
-      return;
-    }
-
-    try {
-      const product = await addProduct({
-        name: name.trim(),
-        price: parsedPrice,
-        stock: parsedStock,
-        barcode: barcode.trim() || null,
-        category_id: null,
-        store_id: storeId,
-      });
-      onConfirm({ id: product.id, name: product.name, price: product.price });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al crear el producto");
-    }
+    // Negative synthetic id: marks this cart item as a free sale with no real
+    // product behind it, so checkout/refund skip any stock movement for it.
+    // Decrementing counter keeps it unique per session AND inside int4 range.
+    const freeId = nextFreeSaleId();
+    onConfirm({ id: freeId, name: name.trim(), price: parsedPrice });
   }
 
   // ── Animations ──
@@ -115,11 +109,10 @@ export default function QuickAddProductModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ── */}
-        <h2 className="text-lg font-bold text-pos-text mb-1">
-          Agregar producto rápido
-        </h2>
+        <h2 className="text-lg font-bold text-pos-text mb-1">Venta libre</h2>
         <p className="text-xs text-pos-muted/60 mb-5">
-          El producto se agrega al listado y queda en el carrito
+          Se agrega al carrito sin registrarse en el catálogo ni afectar el
+          stock
         </p>
 
         {/* ── Error ── */}
@@ -144,65 +137,39 @@ export default function QuickAddProductModal({
                 setName(e.target.value);
                 setError("");
               }}
-              placeholder="Ej: Alfajor Jorgito"
+              placeholder="Ej: Producto sin registrar"
               className="w-full border border-pos-muted/25 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-pos-secondary bg-pos-background transition-shadow"
             />
           </div>
 
-          {/* Price + Stock inline */}
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="block text-xs font-medium text-pos-muted mb-1">
-                Precio <span className="text-pos-danger">*</span>
-              </label>
-              <input
-                type="number"
-                value={price}
-                onChange={(e) => {
-                  setPrice(e.target.value);
-                  setError("");
-                }}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                className="w-full border border-pos-muted/25 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-pos-secondary bg-pos-background transition-shadow [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-            </div>
-            <div className="w-24">
-              <label className="block text-xs font-medium text-pos-muted mb-1">
-                Cantidad
-              </label>
-              <input
-                type="number"
-                value={stock}
-                onChange={(e) => {
-                  setStock(e.target.value);
-                  setError("");
-                }}
-                placeholder="1"
-                min="0"
-                className="w-full border border-pos-muted/25 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-pos-secondary bg-pos-background transition-shadow [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-            </div>
-          </div>
-
-          {/* Barcode (optional) */}
+          {/* Price */}
           <div>
             <label className="block text-xs font-medium text-pos-muted mb-1">
-              Código de barras{" "}
-              <span className="text-pos-muted/40">(opcional)</span>
+              Precio <span className="text-pos-danger">*</span>
             </label>
             <input
-              type="text"
-              value={barcode}
+              type="number"
+              value={price}
               onChange={(e) => {
-                setBarcode(e.target.value);
+                setPrice(e.target.value);
                 setError("");
               }}
-              placeholder="Ej: 77912345678"
-              className="w-full border border-pos-muted/25 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-pos-secondary bg-pos-background transition-shadow"
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              className="w-full border border-pos-muted/25 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-pos-secondary bg-pos-background transition-shadow [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
+
+          {/* Barcode (reference only — not saved) */}
+          {initialBarcode && (
+            <div className="flex items-center justify-between rounded-xl bg-pos-background border border-pos-muted/20 px-3.5 py-2.5">
+              <span className="text-xs text-pos-muted">Código escaneado</span>
+              <span className="text-xs font-mono text-pos-text tabular-nums">
+                {initialBarcode}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* ── Actions ── */}
