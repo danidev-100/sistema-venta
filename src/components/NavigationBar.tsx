@@ -47,6 +47,8 @@ const CONFIG_PAGES: PageDef[] = [
 export default function NavigationBar() {
   const page = useAppStore((s) => s.page);
   const setPage = useAppStore((s) => s.setPage);
+  const sidebarOpen = useAppStore((s) => s.sidebarOpen);
+  const setSidebarOpen = useAppStore((s) => s.setSidebarOpen);
   const currentUser = useAuthStore((s) => s.currentUser);
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const logout = useAuthStore((s) => s.logout);
@@ -94,7 +96,12 @@ export default function NavigationBar() {
   }
 
   return (
-    <aside className="w-56 lg:w-60 h-full bg-pos-primary/95 backdrop-blur-sm text-white flex flex-col shadow-lg shrink-0">
+    <>
+      <aside
+        className={`h-full bg-pos-primary/95 backdrop-blur-sm text-white flex flex-col shadow-lg shrink-0 overflow-hidden transition-[width] duration-200 ease-in-out ${
+          sidebarOpen ? "w-56 lg:w-60" : "w-0"
+        }`}
+      >
       {/* Logo / App title */}
       <div className="px-4 py-4 border-b border-white/10">
         <h1 className="text-sm font-bold tracking-wide">Sistema Ventas</h1>
@@ -262,6 +269,31 @@ export default function NavigationBar() {
           onCancel={() => setShowLogoutConfirm(false)}
         />
       )}
-    </aside>
+      </aside>
+
+      {/* Floating reopen button — visible when the sidebar is collapsed */}
+      {!sidebarOpen && (
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="fixed top-3 left-3 z-40 flex items-center justify-center w-10 h-10 rounded-lg bg-pos-primary/95 text-white shadow-lg border border-white/10 hover:bg-pos-secondary/80 transition-colors"
+          title="Abrir menú (F4)"
+          aria-label="Abrir menú lateral"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="w-5 h-5"
+          >
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+      )}
+    </>
   );
 }

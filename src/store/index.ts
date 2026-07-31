@@ -104,6 +104,11 @@ export type AppStore = {
   page: Page;
   setPage: (p: Page) => void;
 
+  // ── Sidebar (F4 toggle) ──
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
+  toggleSidebar: () => void;
+
   // ── UI ──
   busy: boolean;
   setBusy: (b: boolean) => void;
@@ -232,6 +237,7 @@ function computeComboInfo(items: CartItem[]): AppliedComboInfo | null {
 export const useAppStore = create<AppStore>((set, get) => ({
   // ── Defaults ──
   page: "pos",
+  sidebarOpen: true,
   busy: false,
   notification: null,
   items: [],
@@ -245,6 +251,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   // ── Navigation ──
   setPage: (page) => set({ page }),
+
+  // ── Sidebar (F4 toggle) ──
+  setSidebarOpen: (open) => set({ sidebarOpen: open }),
+  toggleSidebar: () => set({ sidebarOpen: !get().sidebarOpen }),
 
   // ── Discount ──
   setGlobalDiscount: (percent) => set({ globalDiscountPercent: Math.max(0, Math.min(100, percent)) }),

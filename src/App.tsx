@@ -69,6 +69,18 @@ export default function App() {
     initAllStores();
   }, []);
 
+  // F4 toggles the sidebar (collapse/expand) in every view
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "F4") {
+        e.preventDefault();
+        useAppStore.getState().toggleSidebar();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   // Sync theme class on mount and on change
   useEffect(() => {
     if (theme === "dark") {
