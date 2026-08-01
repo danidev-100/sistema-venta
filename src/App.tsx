@@ -3,7 +3,7 @@ import { useAppStore, type Page } from "@/store";
 import { useAdminStore } from "@/store/admin";
 import { useAuthStore } from "@/store/auth";
 import { usePermission } from "@/hooks/usePermission";
-import { StoreProvider } from "@/store/context";
+import { StoreProvider, useActiveStore } from "@/store/context";
 import { initAllStores } from "@/lib/init-stores";
 import AdminRoute from "@/components/AdminRoute";
 import NavigationBar from "@/components/NavigationBar";
@@ -52,6 +52,19 @@ const PAGE_COMPONENTS: Record<Page, () => JSX.Element> = {
 // ──────────────────────────────────────────────
 
 const ADMIN_PAGES: Page[] = ["admin", "user-management", "cash-closing"];
+
+// ──────────────────────────────────────────────
+// Sales loader — hydrates completedSales from the server
+// ──────────────────────────────────────────────
+
+function SalesLoader() {
+  const { storeId } = useActiveStore();
+  const loadSales = useAppStore((s) => s.loadSales);
+  useEffect(() => {
+    loadSales(storeId).catch(console.error);
+  }, [storeId, loadSales]);
+  return null;
+}
 
 // ──────────────────────────────────────────────
 // App shell
@@ -119,6 +132,7 @@ export default function App() {
     <StoreProvider initialStoreId="store_1">
       {isAuthenticated ? (
         <div className="flex h-screen w-screen overflow-hidden">
+          <SalesLoader />
           <NavigationBar />
           <main className="flex-1 overflow-auto p-4">
             {needsAdminGate ? (

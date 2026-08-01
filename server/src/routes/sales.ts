@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, inArray } from "drizzle-orm";
 import { getDb } from "../db.js";
 import * as schema from "../../../db/cloud-schema.js";
 
@@ -18,9 +18,46 @@ router.get("/", async (req: Request, res: Response) => {
       .from(schema.sales)
       .where(eq(schema.sales.store_id, storeId as string))
       .orderBy(desc(schema.sales.created_at));
-    res.json(results);
+
+    const ids = results.map((s) => s.id);
+    const itemsBySale: Record<number, typeof schema.saleItems.$inferSelect[]> = {};
+    if (ids.length > 0) {
+      const allItems = await db
+        .select()
+        .from(schema.saleItems)
+        .where(inArray(schema.saleItems.sale_id, ids));
+      for (const item of allItems) {
+        (itemsBySale[item.sale_id] ??= []).push(item);
+      }
+    }
+
+    res.json(results.map((sale) => ({ ...sale, items: itemsBySale[sale.id] ?? [] })));
   } catch (err) {
     console.error("[sales] list error:", err);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+router.post("/:id/refund", async (req: Request, res: Response) => {
+  try {
+    const db = getDb();
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) {
+      res.status(400).json({ error: "ID inválido" });
+      return;
+    }
+    const [updated] = await db
+      .update(schema.sales)
+      .set({ status: "refunded" })
+      .where(eq(schema.sales.id, id))
+      .returning();
+    if (!updated) {
+      res.status(404).json({ error: "Venta no encontrada" });
+      return;
+    }
+    res.json(updated);
+  } catch (err) {
+    console.error("[sales] refund error:", err);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });
@@ -59,11 +96,17 @@ router.post("/", async (req: Request, res: Response) => {
       storeId,
       items,
       paymentMethod,
+      total,
+      subtotal,
+      discountPercent,
+      discountAmount,
+      amountPaid,
       cashAmount,
       cardAmount,
       mercadopagoAmount,
+      change,
       customerName,
-      globalDiscountPercent,
+      createdBy,
     } = req.body;
 
     if (!storeId || !items?.length || !paymentMethod) {
@@ -74,32 +117,24 @@ router.post("/", async (req: Request, res: Response) => {
     const db = getDb();
 
     const sale = await db.transaction(async (tx) => {
-      const subtotal = items.reduce(
-        (s: number, i: any) => s + (i.subtotal ?? i.quantity * i.unitPrice),
-        0,
-      );
-      const discount = globalDiscountPercent
-        ? subtotal * (globalDiscountPercent / 100)
-        : 0;
-      const total = Math.round((subtotal - discount) * 100) / 100;
-      const amountPaid =
-        (cashAmount ?? 0) + (cardAmount ?? 0) + (mercadopagoAmount ?? 0);
-      const change =
-        paymentMethod === "cash" ? Math.max(0, amountPaid - total) : 0;
-
-      const pm: "cash" | "card" =
-        paymentMethod === "card" ? "card" : "cash";
+      const safe = (x: any) => Number(x) || 0;
 
       const [s] = await tx
         .insert(schema.sales)
         .values({
           store_id: storeId,
-          total,
-          payment_method: pm,
-          amount_paid: amountPaid || total,
-          change,
+          total: safe(total),
+          subtotal: safe(subtotal),
+          discount_percent: safe(discountPercent),
+          discount_amount: safe(discountAmount),
+          payment_method: paymentMethod,
+          amount_paid: safe(amountPaid) || safe(total),
+          cash_amount: cashAmount != null ? safe(cashAmount) : null,
+          card_amount: cardAmount != null ? safe(cardAmount) : null,
+          mercadopago_amount: mercadopagoAmount != null ? safe(mercadopagoAmount) : null,
+          change: change != null ? safe(change) : null,
           customer_name: customerName || null,
-          created_by: (req as any).user?.username || "—",
+          created_by: createdBy || (req as any).user?.username || "—",
         })
         .returning();
 
@@ -130,12 +165,12 @@ router.post("/", async (req: Request, res: Response) => {
         if (customer) {
           await tx
             .update(schema.customers)
-            .set({ credit_balance: sql`credit_balance + ${total}` })
+            .set({ credit_balance: sql`credit_balance + ${safe(total)}` })
             .where(eq(schema.customers.id, customer.id));
 
           await tx.insert(schema.creditPayments).values({
             customer_id: customer.id,
-            amount: total,
+            amount: safe(total),
             sale_id: s.id,
             store_id: storeId,
             date: new Date(),

@@ -161,6 +161,7 @@ export type AppStore = {
     mercadopagoAmount?: number,
   ) => Promise<CompletedSale>;
   refundSale: (saleId: number) => Promise<void>;
+  loadSales: (storeId: string) => Promise<void>;
   dismissReceipt: () => void;
 };
 
@@ -227,6 +228,39 @@ function computeComboInfo(items: CartItem[]): AppliedComboInfo | null {
       totalSavings: m.totalSavings,
     })),
     totalSavings: Math.round((comboSavings + bultoSavings) * 100) / 100,
+  };
+}
+
+function normalizeLoadedSale(row: any, fallbackStoreId: string): CompletedSale {
+  const pm = row.payment_method ?? "cash";
+  const amountPaid = row.amount_paid ?? null;
+  return {
+    id: row.id,
+    paymentMethod: pm,
+    amountPaid,
+    cashAmount: row.cash_amount ?? (pm === "cash" ? amountPaid : null),
+    cardAmount: row.card_amount ?? (pm === "card" ? amountPaid : null),
+    mercadopagoAmount: row.mercadopago_amount ?? (pm === "mercadopago" ? amountPaid : null),
+    items: (row.items ?? []).map((i: any) => ({
+      productId: i.product_id,
+      productName: i.product_name,
+      quantity: i.quantity,
+      unitPrice: i.unit_price,
+      subtotal: i.subtotal,
+      discountPercent: 0,
+      saleUnit: "unit" as const,
+    })),
+    date: row.created_at ?? new Date().toISOString(),
+    storeId: row.store_id ?? fallbackStoreId,
+    customerName: row.customer_name ?? null,
+    createdBy: row.created_by ?? "—",
+    status: row.status === "refunded" ? "refunded" : "completed",
+    total: row.total,
+    subtotal: row.subtotal ?? row.total,
+    discountPercent: row.discount_percent ?? 0,
+    discountAmount: row.discount_amount ?? 0,
+    change: row.change ?? null,
+    priceListId: null,
   };
 }
 
@@ -440,8 +474,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
       discountAmount,
       paymentMethod: resolvedPayment,
       amountPaid: paidAmount,
-      cashAmount: paymentMethod === "mixed" ? (cashAmount ?? 0) : (paymentMethod === "cash" ? amountPaid ?? null : null),
-      cardAmount: paymentMethod === "mixed" ? (cardAmount ?? 0) + (mercadopagoAmount ?? 0) : paymentMethod === "card" || paymentMethod === "mercadopago" ? total : null,
+      cashAmount: paymentMethod === "mixed" ? (cashAmount ?? 0) : paymentMethod === "cash" ? (amountPaid ?? null) : null,
+      cardAmount: paymentMethod === "mixed" ? (cardAmount ?? 0) : paymentMethod === "card" ? total : null,
+      mercadopagoAmount: paymentMethod === "mixed" ? (mercadopagoAmount ?? 0) : paymentMethod === "mercadopago" ? total : null,
       change,
       storeId: resolvedStoreId,
       customerName: customerName ?? null,
@@ -458,9 +493,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
       discountAmount,
       paymentMethod: resolvedPayment,
       amountPaid: paidAmount,
-      cashAmount: paymentMethod === "mixed" ? (cashAmount ?? 0) : (paymentMethod === "cash" ? amountPaid ?? null : null),
-      cardAmount: paymentMethod === "mixed" ? (cardAmount ?? 0) + (mercadopagoAmount ?? 0) : paymentMethod === "card" || paymentMethod === "mercadopago" ? total : null,
-      mercadopagoAmount: mercadopagoAmount ?? null,
+      cashAmount: paymentMethod === "mixed" ? (cashAmount ?? 0) : paymentMethod === "cash" ? (amountPaid ?? null) : null,
+      cardAmount: paymentMethod === "mixed" ? (cardAmount ?? 0) : paymentMethod === "card" ? total : null,
+      mercadopagoAmount: paymentMethod === "mixed" ? (mercadopagoAmount ?? 0) : paymentMethod === "mercadopago" ? total : null,
       change,
       date: created.created_at ?? new Date().toISOString(),
       storeId: resolvedStoreId,
@@ -591,6 +626,23 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   dismissReceipt: () => set({ lastCompletedSale: null }),
+
+  loadSales: async (storeId) => {
+    try {
+      const rows = await api.get<any[]>("/sales?storeId=" + encodeURIComponent(storeId));
+      const loaded = rows.map((r) => normalizeLoadedSale(r, storeId));
+      set((state) => {
+        const byId = new Map<number, CompletedSale>(loaded.map((s) => [s.id, s]));
+        for (const s of state.completedSales) {
+          if (!byId.has(s.id)) byId.set(s.id, s); // keep in-session sales not yet visible from server
+        }
+        const merged = [...byId.values()].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return { completedSales: merged };
+      });
+    } catch (err) {
+      console.error("[store] loadSales failed:", err);
+    }
+  },
 
   // ── Customer selection ──
   selectCustomer: (customer) => set({ selectedCustomer: customer }),
