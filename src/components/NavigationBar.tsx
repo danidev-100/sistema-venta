@@ -271,28 +271,30 @@ export default function NavigationBar() {
       )}
       </aside>
 
-      {/* Floating reopen button — visible when the sidebar is collapsed */}
+      {/* Reopen strip — reserves layout space when the sidebar is collapsed so it never overlaps the view content */}
       {!sidebarOpen && (
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="fixed top-3 left-3 z-40 flex items-center justify-center w-10 h-10 rounded-lg bg-pos-primary/95 text-white shadow-lg border border-white/10 hover:bg-pos-secondary/80 transition-colors"
-          title="Abrir menú (F4)"
-          aria-label="Abrir menú lateral"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="w-5 h-5"
+        <div className="w-12 h-full shrink-0 flex justify-center pt-3">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="flex items-center justify-center w-10 h-10 rounded-lg bg-pos-primary/95 text-white shadow-lg border border-white/10 hover:bg-pos-secondary/80 transition-colors"
+            title="Abrir menú (F4)"
+            aria-label="Abrir menú lateral"
           >
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
-        </button>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-5 h-5"
+            >
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+        </div>
       )}
     </>
   );
