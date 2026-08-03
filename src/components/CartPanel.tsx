@@ -5,6 +5,7 @@ import { useAuthStore } from "@/store/auth";
 import { useCashClosingStore } from "@/store/cash-closing";
 import { useActiveStore } from "@/store/context";
 import CashMovementModal from "@/components/CashMovementModal";
+import ProductImage from "@/components/ProductImage";
 import { formatCurrency } from "@/lib/format";
 
 // ──────────────────────────────────────────────
@@ -218,18 +219,12 @@ export default function CartPanel({
 
               {/* Thumbnail */}
               <div className="shrink-0 w-7 h-7 rounded-md overflow-hidden bg-pos-muted/10">
-                {(() => {
-                  const prod = products.find((p) => p.id === item.productId);
-                  return prod?.image ? (
-                    <img src={prod.image} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <svg className="w-3.5 h-3.5 text-pos-muted/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  );
-                })()}
+                <ProductImage
+                  src={products.find((p) => p.id === item.productId)?.image}
+                  imgClassName="w-full h-full object-cover"
+                  boxClassName="w-full h-full"
+                  iconClassName="w-3.5 h-3.5 text-pos-muted/30"
+                />
               </div>
 
               {/* Product name */}

@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useAppStore, usePriceListsStore } from "@/store";
 import { useActiveStore } from "@/store/context";
 import { useProductsStore } from "@/store/products";
+import ProductImage from "@/components/ProductImage";
 
 const RENDER_BATCH = 200;
 
@@ -309,15 +310,12 @@ export default function ProductSearchModal({
 
                     {/* Thumbnail */}
                     <div className="shrink-0 w-8 h-8 rounded-lg overflow-hidden bg-pos-muted/10">
-                      {product.image ? (
-                        <img src={product.image} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <svg className="w-4 h-4 text-pos-muted/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                        </div>
-                      )}
+                      <ProductImage
+                        src={product.image}
+                        imgClassName="w-full h-full object-cover"
+                        boxClassName="w-full h-full"
+                        iconClassName="w-4 h-4 text-pos-muted/30"
+                      />
                     </div>
 
                     {/* Name + barcode + price inline */}
