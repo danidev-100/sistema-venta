@@ -36,6 +36,20 @@
       "when": 1785597421096,
       "tag": "0004_bright_natasha_romanoff",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786236507494,
+      "tag": "0005_robust_thunderbolts",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786238418877,
+      "tag": "0006_modern_lord_hawal",
+      "breakpoints": true
     }
   ]
 }

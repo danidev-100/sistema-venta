@@ -506,6 +506,61 @@ export const pedidoItems = pgTable(
 );
 
 // ──────────────────────────────────────────────
+// Purchase invoices (syncable)
+// ──────────────────────────────────────────────
+
+export const purchaseInvoices = pgTable(
+  "purchase_invoices",
+  {
+    id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
+    store_id: text("store_id").notNull(),
+    proveedor_id: integer("proveedor_id").notNull(),
+    invoice_number: text("invoice_number"),
+    total: doublePrecision("total").notNull().default(0),
+    notes: text("notes"),
+    created_by: text("created_by").notNull().default("—"),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+    updated_at: timestamp("updated_at").notNull().defaultNow(),
+    sync_status: text("sync_status", { enum: ["pending", "synced", "conflict"] })
+      .notNull()
+      .default("pending"),
+  },
+  (table) => ({
+    storeIdx: index("idx_purchase_invoices_store").on(table.store_id),
+    proveedorIdx: index("idx_purchase_invoices_proveedor").on(table.proveedor_id),
+    createdAtIdx: index("idx_purchase_invoices_created").on(table.created_at),
+  }),
+);
+
+// ──────────────────────────────────────────────
+// Purchase invoice items (syncable)
+// ──────────────────────────────────────────────
+
+export const purchaseInvoiceItems = pgTable(
+  "purchase_invoice_items",
+  {
+    id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
+    purchase_invoice_id: integer("purchase_invoice_id").notNull(),
+    product_id: integer("product_id").notNull(),
+    product_name: text("product_name").notNull(),
+    quantity: integer("quantity").notNull(),
+    unit_price: doublePrecision("unit_price").notNull(),
+    sale_price: doublePrecision("sale_price").notNull().default(0),
+    subtotal: doublePrecision("subtotal").notNull(),
+    store_id: text("store_id").notNull(),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+    updated_at: timestamp("updated_at").notNull().defaultNow(),
+    sync_status: text("sync_status", { enum: ["pending", "synced", "conflict"] })
+      .notNull()
+      .default("pending"),
+  },
+  (table) => ({
+    invoiceIdx: index("idx_purchase_invoice_items_invoice").on(table.purchase_invoice_id),
+    productIdx: index("idx_purchase_invoice_items_product").on(table.product_id),
+  }),
+);
+
+// ──────────────────────────────────────────────
 // Comprobantes (syncable)
 // ──────────────────────────────────────────────
 

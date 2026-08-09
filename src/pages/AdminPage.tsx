@@ -7,6 +7,7 @@ import BrandList from "@/components/BrandList";
 import CategoryList from "@/components/CategoryList";
 import BulkPriceModal from "@/components/BulkPriceModal";
 import PlantillasSection from "@/components/PlantillasSection";
+import PurchaseInvoicesSection from "@/components/PurchaseInvoicesSection";
 import CompanySettings from "@/components/CompanySettings";
 import ThemeToggle from "@/components/ThemeToggle";
 import { exportBackup, downloadBackup, importBackup } from "@/lib/backup";
@@ -17,7 +18,7 @@ import { useActiveStore } from "@/store/context";
 // Admin section definitions
 // ──────────────────────────────────────────────
 
-type SectionId = "categories" | "brands" | "bulk-price" | "backup" | "settings" | "plantillas" | "empresa" | "combos" | "bultos" | "price-lists";
+type SectionId = "categories" | "brands" | "bulk-price" | "backup" | "settings" | "plantillas" | "empresa" | "combos" | "bultos" | "price-lists" | "purchase-invoices";
 
 type SectionDef = {
   id: SectionId;
@@ -134,6 +135,18 @@ function PriceListsIcon() {
   );
 }
 
+function PurchaseInvoicesIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
+      <path d="M9 13l6 0" />
+      <path d="M9 17l4 0" />
+    </svg>
+  );
+}
+
 const SECTIONS: SectionDef[] = [
   {
     id: "categories",
@@ -195,6 +208,12 @@ const SECTIONS: SectionDef[] = [
     description: "gestioná hasta 10 listas con porcentaje de ajuste",
     icon: <PriceListsIcon />,
   },
+  {
+    id: "purchase-invoices",
+    label: "Facturas de Compra",
+    description: "cargá compras a proveedores y sumá stock",
+    icon: <PurchaseInvoicesIcon />,
+  },
 ];
 
 // ──────────────────────────────────────────────
@@ -212,6 +231,7 @@ const ACCENTS: Record<string, { bg: string; text: string; bar: string }> = {
   combos:      { bg: "bg-orange-500/8 dark:bg-orange-500/15", text: "text-orange-600 dark:text-orange-400", bar: "#f97316" },
   bultos:      { bg: "bg-cyan-500/8 dark:bg-cyan-500/15",   text: "text-cyan-600 dark:text-cyan-400",     bar: "#06b6d4" },
   "price-lists": { bg: "bg-violet-500/8 dark:bg-violet-500/15", text: "text-violet-600 dark:text-violet-400", bar: "#8b5cf6" },
+  "purchase-invoices": { bg: "bg-fuchsia-500/8 dark:bg-fuchsia-500/15", text: "text-fuchsia-600 dark:text-fuchsia-400", bar: "#d946ef" },
 };
 
 // ──────────────────────────────────────────────
@@ -310,6 +330,7 @@ export default function AdminPage() {
       {activeSection === "combos" && <CombosSection />}
       {activeSection === "bultos" && <BultosSection />}
       {activeSection === "price-lists" && <PriceListsSection />}
+      {activeSection === "purchase-invoices" && <PurchaseInvoicesSection />}
     </div>
   );
 }

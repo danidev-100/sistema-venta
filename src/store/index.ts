@@ -657,6 +657,7 @@ export { useProductsStore } from "./products";
 export { useInvoicesStore } from "./invoices";
 export { useCashClosingStore } from "./cash-closing";
 export { useProveedoresStore } from "./proveedores";
+export { usePurchaseInvoicesStore } from "./purchase-invoices";
 export { usePedidosStore } from "./pedidos";
 export { useComprobantesStore } from "./comprobantes";
 export { useExpensesStore } from "./expenses";

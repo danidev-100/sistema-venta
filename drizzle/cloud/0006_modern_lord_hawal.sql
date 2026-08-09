@@ -1,0 +1,1 @@
+ALTER TABLE "purchase_invoice_items" ADD COLUMN "sale_price" double precision DEFAULT 0 NOT NULL;
