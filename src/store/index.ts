@@ -663,6 +663,7 @@ export { useComprobantesStore } from "./comprobantes";
 export { useExpensesStore } from "./expenses";
 export { usePlantillasStore } from "./plantillas";
 export { useCompanyStore } from "./company";
+export { useAfipStore } from "./afip";
 export { useCombosStore } from "./combos";
 export { useBultosStore } from "./bultos";
 export { usePriceListsStore } from "./price-lists";

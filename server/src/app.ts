@@ -22,6 +22,7 @@ import comprobantesRoutes from "./routes/comprobantes.js";
 import invoicesRoutes from "./routes/invoices.js";
 import plantillasRoutes from "./routes/plantillas.js";
 import companyRoutes from "./routes/company.js";
+import afipRoutes from "./routes/afip.js";
 import priceListsRoutes from "./routes/price-lists.js";
 import usersRoutes from "./routes/users.js";
 import storesRoutes from "./routes/stores.js";
@@ -79,6 +80,7 @@ app.use("/api/comprobantes", authMiddleware, requireStoreAccess, comprobantesRou
 app.use("/api/invoices", authMiddleware, requireStoreAccess, invoicesRoutes);
 app.use("/api/plantillas", authMiddleware, requireStoreAccess, plantillasRoutes);
 app.use("/api/company", authMiddleware, requireStoreAccess, companyRoutes);
+app.use("/api/afip", authMiddleware, requireStoreAccess, afipRoutes);
 app.use("/api/price-lists", authMiddleware, requireStoreAccess, priceListsRoutes);
 app.use("/api/users", authMiddleware, requireStoreAccess, usersRoutes);
 app.use("/api/stores", authMiddleware, storesRoutes);

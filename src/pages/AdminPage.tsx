@@ -9,6 +9,7 @@ import BulkPriceModal from "@/components/BulkPriceModal";
 import PlantillasSection from "@/components/PlantillasSection";
 import PurchaseInvoicesSection from "@/components/PurchaseInvoicesSection";
 import CompanySettings from "@/components/CompanySettings";
+import AfipSection from "@/components/AfipSection";
 import ThemeToggle from "@/components/ThemeToggle";
 import { exportBackup, downloadBackup, importBackup } from "@/lib/backup";
 import { runSeeder } from "@/lib/seeder";
@@ -18,7 +19,7 @@ import { useActiveStore } from "@/store/context";
 // Admin section definitions
 // ──────────────────────────────────────────────
 
-type SectionId = "categories" | "brands" | "bulk-price" | "backup" | "settings" | "plantillas" | "empresa" | "combos" | "bultos" | "price-lists" | "purchase-invoices";
+type SectionId = "categories" | "brands" | "bulk-price" | "backup" | "settings" | "plantillas" | "empresa" | "combos" | "bultos" | "price-lists" | "purchase-invoices" | "afip";
 
 type SectionDef = {
   id: SectionId;
@@ -147,6 +148,16 @@ function PurchaseInvoicesIcon() {
   );
 }
 
+function AfipIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
+      <path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z" />
+      <path d="M12 8v4" />
+      <path d="M12 16h.01" />
+    </svg>
+  );
+}
+
 const SECTIONS: SectionDef[] = [
   {
     id: "categories",
@@ -214,6 +225,12 @@ const SECTIONS: SectionDef[] = [
     description: "cargá compras a proveedores y sumá stock",
     icon: <PurchaseInvoicesIcon />,
   },
+  {
+    id: "afip",
+    label: "AFIP",
+    description: "facturá con CAE ante AFIP",
+    icon: <AfipIcon />,
+  },
 ];
 
 // ──────────────────────────────────────────────
@@ -232,6 +249,7 @@ const ACCENTS: Record<string, { bg: string; text: string; bar: string }> = {
   bultos:      { bg: "bg-cyan-500/8 dark:bg-cyan-500/15",   text: "text-cyan-600 dark:text-cyan-400",     bar: "#06b6d4" },
   "price-lists": { bg: "bg-violet-500/8 dark:bg-violet-500/15", text: "text-violet-600 dark:text-violet-400", bar: "#8b5cf6" },
   "purchase-invoices": { bg: "bg-fuchsia-500/8 dark:bg-fuchsia-500/15", text: "text-fuchsia-600 dark:text-fuchsia-400", bar: "#d946ef" },
+  afip: { bg: "bg-blue-500/8 dark:bg-blue-500/15", text: "text-blue-600 dark:text-blue-400", bar: "#3b82f6" },
 };
 
 // ──────────────────────────────────────────────
@@ -331,6 +349,7 @@ export default function AdminPage() {
       {activeSection === "bultos" && <BultosSection />}
       {activeSection === "price-lists" && <PriceListsSection />}
       {activeSection === "purchase-invoices" && <PurchaseInvoicesSection />}
+      {activeSection === "afip" && <AfipSection />}
     </div>
   );
 }

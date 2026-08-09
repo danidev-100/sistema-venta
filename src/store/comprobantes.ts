@@ -35,6 +35,13 @@ export type Comprobante = {
   total: number;
   sale_id: number | null;
   notes: string;
+  modo: "afip" | "interno";
+  cae: string | null;
+  caeVto: string | null;
+  afipNumero: number | null;
+  afipPtoVenta: number | null;
+  afipStatus: "pending" | "ok" | "error";
+  afipError: string | null;
   createdBy: string;
   items: ComprobanteItem[];
   store_id: string;
@@ -65,6 +72,13 @@ function normalizeComprobante(data: any): Comprobante {
     total: data.total ?? 0,
     sale_id: data.sale_id ?? null,
     notes: data.notes ?? "",
+    modo: data.modo ?? "interno",
+    cae: data.cae ?? null,
+    caeVto: data.cae_vto ?? null,
+    afipNumero: data.afip_numero ?? null,
+    afipPtoVenta: data.afip_pto_venta ?? null,
+    afipStatus: data.afip_status ?? "pending",
+    afipError: data.afip_error ?? null,
     createdBy: data.created_by ?? "",
     items: Array.isArray(data.items) ? data.items : [],
     store_id: data.store_id,
@@ -89,6 +103,7 @@ export type ComprobantesStore = {
     created_by?: string;
     sale_id?: number;
     store_id: string;
+    modo?: "afip" | "interno";
     subtotal?: number;
     iva?: number;
     total?: number;

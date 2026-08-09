@@ -582,6 +582,16 @@ export const comprobantes = pgTable(
     total: doublePrecision("total").notNull().default(0),
     sale_id: integer("sale_id"),
     notes: text("notes"),
+    cae: text("cae"),
+    cae_vto: timestamp("cae_vto"),
+    afip_numero: integer("afip_numero"),
+    afip_pto_venta: integer("afip_pto_venta"),
+    afip_tipo: integer("afip_tipo"),
+    afip_status: text("afip_status", { enum: ["pending", "ok", "error"] })
+      .notNull()
+      .default("pending"),
+    afip_error: text("afip_error"),
+    modo: text("modo", { enum: ["afip", "interno"] }).notNull().default("interno"),
     created_by: text("created_by").notNull().default("—"),
     store_id: text("store_id").notNull(),
     created_at: timestamp("created_at").notNull().defaultNow(),
@@ -594,6 +604,40 @@ export const comprobantes = pgTable(
     storeTipoIdx: index("idx_comprobantes_store_tipo").on(table.store_id, table.tipo),
     numeroIdx: uniqueIndex("idx_comprobantes_numero").on(table.store_id, table.numero),
     createdIdx: index("idx_comprobantes_created").on(table.created_at),
+  }),
+);
+
+// ──────────────────────────────────────────────
+// AFIP config (syncable)
+// ──────────────────────────────────────────────
+
+export const afipConfig = pgTable(
+  "afip_config",
+  {
+    id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
+    store_id: text("store_id").notNull(),
+    cuit: text("cuit").notNull().default(""),
+    razon_social: text("razon_social").notNull().default(""),
+    domicilio: text("domicilio").notNull().default(""),
+    condicion_iva: text("condicion_iva", {
+      enum: ["monotributo", "responsable_inscripto", "exento"],
+    })
+      .notNull()
+      .default("monotributo"),
+    punto_venta: integer("punto_venta").notNull().default(1),
+    ambiente: text("ambiente", { enum: ["homo", "prod"] }).notNull().default("homo"),
+    activo: integer("activo").notNull().default(0),
+    exigir_cae: integer("exigir_cae").notNull().default(0),
+    cert: text("cert").notNull().default(""),
+    key: text("key").notNull().default(""),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+    updated_at: timestamp("updated_at").notNull().defaultNow(),
+    sync_status: text("sync_status", { enum: ["pending", "synced", "conflict"] })
+      .notNull()
+      .default("pending"),
+  },
+  (table) => ({
+    storeIdx: uniqueIndex("idx_afip_config_store").on(table.store_id),
   }),
 );
 

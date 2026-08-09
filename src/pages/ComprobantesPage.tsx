@@ -46,6 +46,37 @@ const TIPO_COLORS: Record<ComprobanteTipo, string> = {
   ticket: "text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/30",
 };
 
+function AfipStatusBadge({ comprobante }: { comprobante: Comprobante }) {
+  if (comprobante.modo !== "afip") {
+    return (
+      <span className="mt-1 inline-block text-[10px] font-medium text-pos-muted/60 border border-pos-muted/15 rounded-full px-1.5 py-0.5">
+        Interno
+      </span>
+    );
+  }
+  if (comprobante.afipStatus === "ok") {
+    return (
+      <span className="mt-1 inline-block text-[10px] font-medium text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30 rounded-full px-1.5 py-0.5 max-w-full truncate">
+        CAE ✓ {comprobante.cae}
+      </span>
+    );
+  }
+  if (comprobante.afipStatus === "error") {
+    const msg = comprobante.afipError ?? "error";
+    const corto = msg.length > 36 ? `${msg.slice(0, 36)}…` : msg;
+    return (
+      <span className="mt-1 inline-block text-[10px] font-medium text-pos-danger bg-pos-danger/10 rounded-full px-1.5 py-0.5 max-w-full truncate" title={msg}>
+        AFIP: {corto}
+      </span>
+    );
+  }
+  return (
+    <span className="mt-1 inline-block text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 rounded-full px-1.5 py-0.5">
+      AFIP: pendiente
+    </span>
+  );
+}
+
 let nextItemKey = 1;
 
 // ──────────────────────────────────────────────
@@ -262,7 +293,10 @@ export default function ComprobantesPage() {
                   <tbody>
                     {filtered.map((c) => (
                       <tr key={c.id} className="border-b border-pos-muted/10 transition-colors hover:bg-pos-background/50 cursor-pointer" onClick={() => setView({ kind: "detail", comprobante: c })}>
-                        <td className="py-2 pr-2 font-mono text-xs text-pos-muted">{c.numero}</td>
+                        <td className="py-2 pr-2 font-mono text-xs text-pos-muted">
+                          <span className="block">{c.numero}</span>
+                          <AfipStatusBadge comprobante={c} />
+                        </td>
                         <td className="py-2 px-2">
                           <span className={`inline-block text-xs font-medium px-1.5 py-0.5 rounded-full ${TIPO_COLORS[c.tipo]}`}>
                             {getTipoLabel(c.tipo)}
@@ -329,6 +363,13 @@ function ComprobanteForm({ onSaved, onCancel }: { onSaved: () => void; onCancel:
   ]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [modo, setModo] = useState<"afip" | "interno">("interno");
+
+  // El ticket y las notas de crédito/débito son siempre internos
+  // (AFIP WSFE no emite tickets con CAE; las notas requieren comprobante asociado)
+  useEffect(() => {
+    if (tipo === "ticket" || tipo === "nota_credito" || tipo === "nota_debito") setModo("interno");
+  }, [tipo]);
 
   // Hooks must be BEFORE the early return (React rule)
   const filteredCustomers = useMemo(
@@ -390,6 +431,7 @@ function ComprobanteForm({ onSaved, onCancel }: { onSaved: () => void; onCancel:
     try {
       createComprobante({
         tipo,
+        modo,
         cliente_nombre: clienteNombre.trim() || "Consumidor Final",
         cliente_cuit: clienteCuit.trim(),
         cliente_direccion: clienteDireccion.trim(),
@@ -443,6 +485,24 @@ function ComprobanteForm({ onSaved, onCancel }: { onSaved: () => void; onCancel:
         </h3>
         <button type="button" onClick={() => setTipo(null)} className="text-xs text-pos-muted hover:text-pos-text">Cambiar tipo</button>
       </div>
+
+      {/* Modo de facturación — AFIP o interno (solo factura y boleta; ticket y notas siempre internos) */}
+      {(tipo === "factura" || tipo === "boleta") && (
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-xs font-medium text-pos-muted">Facturar:</span>
+          <label className="flex items-center gap-1.5 text-sm text-pos-text cursor-pointer touch-target">
+            <input type="radio" name="modo-facturacion" checked={modo === "afip"} onChange={() => setModo("afip")} className="accent-pos-secondary" />
+            AFIP
+          </label>
+          <label className="flex items-center gap-1.5 text-sm text-pos-text cursor-pointer touch-target">
+            <input type="radio" name="modo-facturacion" checked={modo === "interno"} onChange={() => setModo("interno")} className="accent-pos-secondary" />
+            Interno
+          </label>
+          {modo === "afip" && (
+            <span className="text-xs text-pos-muted">Se pedirá el CAE real al webservice de AFIP</span>
+          )}
+        </div>
+      )}
 
       {error && <div className="bg-pos-danger/10 border border-pos-danger/30 text-pos-danger text-sm rounded-lg px-3 py-2">{error}</div>}
 
@@ -679,6 +739,11 @@ function ComprobanteDetail({ comprobante, onBack }: { comprobante: Comprobante; 
             {comprobante.tipo === "factura" ? "FACTURA" : comprobante.tipo === "boleta" ? "BOLETA" : comprobante.tipo === "nota_credito" ? "NOTA DE CRÉDITO" : comprobante.tipo === "nota_debito" ? "NOTA DE DÉBITO" : "TICKET"}
           </div>
           <div className="text-sm font-mono text-pos-muted mt-0.5">{comprobante.numero}</div>
+          {comprobante.modo === "afip" && comprobante.afipStatus === "ok" && (
+            <div className="text-xs font-mono text-green-600 dark:text-green-400 mt-1">
+              CAE: {comprobante.cae} — Vto: {comprobante.caeVto ? new Date(comprobante.caeVto).toLocaleDateString("es-AR") : "—"}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-sm">
