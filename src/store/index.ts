@@ -159,6 +159,7 @@ export type AppStore = {
     cashAmount?: number,
     cardAmount?: number,
     mercadopagoAmount?: number,
+    modo?: "afip" | "interno",
   ) => Promise<CompletedSale>;
   refundSale: (saleId: number) => Promise<void>;
   loadSales: (storeId: string) => Promise<void>;
@@ -424,11 +425,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   // ── Sales / Checkout ──
 
-  checkout: async (paymentMethod, amountPaid, storeId, customerName, cashAmount, cardAmount, mercadopagoAmount) => {
+  checkout: async (paymentMethod, amountPaid, storeId, customerName, cashAmount, cardAmount, mercadopagoAmount, modo) => {
     const { items, cartTotal, globalDiscountPercent } = get();
     if (items.length === 0) {
       throw new Error("Cannot checkout with an empty cart");
     }
+
+    const resolvedModo: "afip" | "interno" = modo === "afip" ? "afip" : "interno";
 
     const total = cartTotal();
     const subtotal = items.reduce((sum, i) => sum + i.subtotal, 0);
@@ -548,8 +551,19 @@ export const useAppStore = create<AppStore>((set, get) => ({
     let comprobanteId: number | null = null;
     if (comprobanteTipo) {
       const { createComprobante } = useComprobantesStore.getState();
+      // En modo AFIP buscamos el CUIT del cliente seleccionado (necesario
+      // para facturas A y para identificar al comprador en AFIP).
+      let clienteCuit: string | undefined;
+      if (resolvedModo === "afip" && customerName) {
+        const customer = useCustomersStore.getState().customers.find(
+          (c) => c.name === customerName && c.store_id === resolvedStoreId,
+        );
+        if (customer?.cuit) clienteCuit = customer.cuit;
+      }
       const comp = await createComprobante({
         tipo: comprobanteTipo,
+        modo: resolvedModo,
+        cliente_cuit: clienteCuit,
         payment_method: paymentMethod,
         cliente_nombre: sale.customerName ?? "Consumidor Final",
         created_by: currentUserName,

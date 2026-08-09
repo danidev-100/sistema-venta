@@ -40,6 +40,7 @@ export default function CheckoutModal({
   const isEmpty = items.length === 0;
 
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "mixed" | "credit" | "mercadopago" | null>(null);
+  const [modo, setModo] = useState<"afip" | "interno">("interno");
   const [discountDraft, setDiscountDraft] = useState(String(globalDiscountPercent));
   const [cashAmount, setCashAmount] = useState<string>("");
   const [cardAmount, setCardAmount] = useState<string>("");
@@ -60,6 +61,7 @@ export default function CheckoutModal({
 
   function resetState() {
     setPaymentMethod(null);
+    setModo("interno");
     setCashAmount("");
     setCardAmount("");
     setMercadopagoAmount("");
@@ -120,17 +122,21 @@ export default function CheckoutModal({
 
     try {
       if (paymentMethod === "mixed") {
-        await checkout("mixed", total, storeId, selectedCustomer?.name, parsedCash, parsedCard, parsedMercadopago);
+        await checkout("mixed", total, storeId, selectedCustomer?.name, parsedCash, parsedCard, parsedMercadopago, modo);
       } else if (paymentMethod === "credit") {
-        await checkout("credit", total, storeId, selectedCustomer?.name);
+        await checkout("credit", total, storeId, selectedCustomer?.name, undefined, undefined, undefined, modo);
       } else if (paymentMethod === "mercadopago") {
-        await checkout("mercadopago", total, storeId, selectedCustomer?.name);
+        await checkout("mercadopago", total, storeId, selectedCustomer?.name, undefined, undefined, undefined, modo);
       } else {
         await checkout(
           paymentMethod,
           paymentMethod === "cash" ? parsedCash : undefined,
           storeId,
           selectedCustomer?.name,
+          undefined,
+          undefined,
+          undefined,
+          modo,
         );
       }
       // Sale completed — only now close the modal and let the receipt show.
@@ -216,7 +222,10 @@ export default function CheckoutModal({
                 <button
                   key={t}
                   type="button"
-                  onClick={() => setSelectedComprobanteTipo(selectedComprobanteTipo === t ? null : t)}
+                  onClick={() => {
+                    setSelectedComprobanteTipo(selectedComprobanteTipo === t ? null : t);
+                    if (t === "ticket") setModo("interno");
+                  }}
                   className={`text-xs px-2.5 py-1.5 rounded-lg font-medium touch-target transition-all ${
                     selectedComprobanteTipo === t
                       ? "bg-pos-secondary text-white"
@@ -240,6 +249,26 @@ export default function CheckoutModal({
               <p className="text-[10px] text-pos-muted mt-1">Ninguno — solo venta</p>
             )}
           </div>
+
+          {/* Modo de facturación — AFIP o interno (solo factura y boleta; el ticket es siempre interno) */}
+          {(selectedComprobanteTipo === "factura" || selectedComprobanteTipo === "boleta") && (
+            <div>
+              <h3 className="text-xs font-semibold text-pos-muted uppercase tracking-wide mb-2">Facturar</h3>
+              <div className="flex items-center gap-3 flex-wrap">
+                <label className="flex items-center gap-1.5 text-sm text-pos-text cursor-pointer touch-target">
+                  <input type="radio" name="pos-modo-facturacion" checked={modo === "afip"} onChange={() => setModo("afip")} className="accent-pos-secondary" />
+                  AFIP
+                </label>
+                <label className="flex items-center gap-1.5 text-sm text-pos-text cursor-pointer touch-target">
+                  <input type="radio" name="pos-modo-facturacion" checked={modo === "interno"} onChange={() => setModo("interno")} className="accent-pos-secondary" />
+                  Interno
+                </label>
+                {modo === "afip" && (
+                  <span className="text-[10px] text-pos-muted">Se pedirá el CAE real al webservice de AFIP</span>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Discount */}
           <div className="bg-pos-background/30 rounded-xl p-3 space-y-2">
