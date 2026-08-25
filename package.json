@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",
+    "html5-qrcode": "^2.3.8",
     "pg": "^8.21.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

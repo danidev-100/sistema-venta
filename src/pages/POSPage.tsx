@@ -9,6 +9,7 @@ import { useCashClosingStore } from "@/store/cash-closing";
 import { exportInvoicePdf, printComprobante } from "@/lib/pdf-export";
 import { api } from "@/lib/api";
 import ProductSearchModal from "@/components/ProductSearchModal";
+import BarcodeScannerModal from "@/components/BarcodeScannerModal";
 import CartPanel from "@/components/CartPanel";
 import CheckoutModal from "@/components/CheckoutModal";
 import CustomerSelectModal from "@/components/CustomerSelectModal";
@@ -315,44 +316,62 @@ export default function POSPage() {
     }, [showReceipt, showCheckout, showCustomerSelect, quickAddData]),
   });
 
-  // Barcode scan hook
+  // Barcode scan hook (lector USB)
   const storeProducts = useProductsStore((s) => s.products);
+
+  const handleBarcodeMatch = useCallback(
+    (id: number, name: string, price: number) => {
+      if (!hasOpenShift) {
+        showNotification("Abrí un turno antes de vender");
+        setTimeout(() => dismissNotification(), 4000);
+        return;
+      }
+      const prod = useProductsStore.getState().products.find(
+        (p) => p.id === id,
+      );
+      if (prod && prod.stock <= 0) {
+        setNoStockProduct(name);
+        return;
+      }
+      // Weight products: show weight input modal
+      if (prod && prod.saleUnit !== "unit") {
+        setWeightInput({
+          productId: id,
+          productName: name,
+          unitPrice: price,
+          saleUnit: prod.saleUnit,
+        });
+        return;
+      }
+      addItem(id, name, price);
+    },
+    [addItem, showNotification, dismissNotification, hasOpenShift],
+  );
+
+  const handleBarcodeMiss = useCallback(
+    (barcode: string) => {
+      setQuickAddData({ name: "", barcode });
+    },
+    [],
+  );
+
   const { scanFlash } = useBarcodeScan(storeProducts, {
-    onMatch: useCallback(
-      (id: number, name: string, price: number) => {
-        if (!hasOpenShift) {
-          showNotification("Abrí un turno antes de vender");
-          setTimeout(() => dismissNotification(), 4000);
-          return;
-        }
-        const prod = useProductsStore.getState().products.find(
-          (p) => p.id === id,
-        );
-        if (prod && prod.stock <= 0) {
-          setNoStockProduct(name);
-          return;
-        }
-        // Weight products: show weight input modal
-        if (prod && prod.saleUnit !== "unit") {
-          setWeightInput({
-            productId: id,
-            productName: name,
-            unitPrice: price,
-            saleUnit: prod.saleUnit,
-          });
-          return;
-        }
-        addItem(id, name, price);
-      },
-      [addItem, showNotification, dismissNotification, hasOpenShift],
-    ),
-    onMiss: useCallback(
-      (barcode: string) => {
-        setQuickAddData({ name: "", barcode });
-      },
-      [],
-    ),
+    onMatch: handleBarcodeMatch,
+    onMiss: handleBarcodeMiss,
   });
+
+  // Escáner con cámara (mobile)
+  const [showScanner, setShowScanner] = useState(false);
+
+  function handleCameraDetected(barcode: string) {
+    setShowScanner(false);
+    const prod = storeProducts.find((p) => p.barcode === barcode);
+    if (!prod) {
+      handleBarcodeMiss(barcode);
+      return;
+    }
+    handleBarcodeMatch(prod.id, prod.name, prod.price);
+  }
 
   // Show receipt when a sale completes
   useEffect(() => {
@@ -533,17 +552,30 @@ export default function POSPage() {
 
           {/* ── Search trigger ── */}
           <div className="shrink-0">
-            <button
-              onClick={() => setShowSearchModal(true)}
-              className="w-full flex items-center gap-3 bg-pos-surface border border-pos-muted/20 rounded-xl px-4 py-3.5 text-sm text-pos-muted hover:text-pos-text hover:border-pos-secondary/40 transition-all touch-target group dark:bg-gray-800 dark:border-gray-600/30 dark:hover:border-pos-secondary/40"
-            >
-              <svg className="w-5 h-5 text-pos-muted/40 group-hover:text-pos-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <span>Buscar productos por nombre, código o ID</span>
-              <kbd className="hidden lg:inline ml-auto text-[11px] font-mono text-pos-muted/30 bg-pos-background/50 px-1.5 py-0.5 rounded border border-pos-muted/10">F2</kbd>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowSearchModal(true)}
+                className="flex-1 flex items-center gap-3 bg-pos-surface border border-pos-muted/20 rounded-xl px-4 py-3.5 text-sm text-pos-muted hover:text-pos-text hover:border-pos-secondary/40 transition-all touch-target group dark:bg-gray-800 dark:border-gray-600/30 dark:hover:border-pos-secondary/40"
+              >
+                <svg className="w-5 h-5 text-pos-muted/40 group-hover:text-pos-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <span>Buscar productos por nombre, código o ID</span>
+                <kbd className="hidden lg:inline ml-auto text-[11px] font-mono text-pos-muted/30 bg-pos-background/50 px-1.5 py-0.5 rounded border border-pos-muted/10">F2</kbd>
+              </button>
+              <button
+                onClick={() => setShowScanner(true)}
+                title="Escanear con la cámara"
+                aria-label="Escanear con la cámara"
+                className="shrink-0 flex items-center justify-center w-12 h-12 bg-pos-surface border border-pos-muted/20 rounded-xl text-pos-muted hover:text-pos-text hover:border-pos-secondary/40 transition-all touch-target dark:bg-gray-800 dark:border-gray-600/30 dark:hover:border-pos-secondary/40"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+              </button>
+            </div>
             <p className="text-[11px] text-pos-muted/40 text-center mt-1.5">
               O escaneá el código de barras directamente
             </p>
@@ -564,6 +596,14 @@ export default function POSPage() {
               onAddToCart={handleAddToCart}
               onClose={() => setShowSearchModal(false)}
               onQuickAdd={handleQuickAdd}
+            />
+          )}
+
+          {/* ── Barcode Camera Scanner ── */}
+          {showScanner && (
+            <BarcodeScannerModal
+              onDetected={handleCameraDetected}
+              onClose={() => setShowScanner(false)}
             />
           )}
         </>

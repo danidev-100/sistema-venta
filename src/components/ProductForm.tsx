@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/auth";
 import { useActiveStore } from "@/store/context";
 import { productSchema } from "@/lib/validations";
 import NumberInput from "@/components/NumberInput";
+import BarcodeScannerModal from "@/components/BarcodeScannerModal";
 
 // ──────────────────────────────────────────────
 // Form state
@@ -91,6 +92,7 @@ export default function ProductForm({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [showScanHint, setShowScanHint] = useState(!editProduct);
+  const [showScanner, setShowScanner] = useState(false);
 
   const storeCategories = categories.filter((c) => c.store_id === storeId);
   const flatCategories = flattenCategories(storeCategories, null, 0, []);
@@ -288,14 +290,39 @@ export default function ProductForm({
             </span>
           )}
         </label>
-        <input
-          id="product-barcode"
-          autoFocus={!editProduct}
-          value={form.barcode}
-          onChange={(e) => setForm({ ...form, barcode: e.target.value })}
-          placeholder="ej. 77912345"
-          className="w-full border border-pos-muted/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pos-secondary touch-target"
-        />
+        <div className="flex items-center gap-2">
+          <input
+            id="product-barcode"
+            autoFocus={!editProduct}
+            value={form.barcode}
+            onChange={(e) => setForm({ ...form, barcode: e.target.value })}
+            placeholder="ej. 77912345"
+            className="flex-1 min-w-0 border border-pos-muted/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pos-secondary touch-target"
+          />
+          <button
+            type="button"
+            onClick={() => setShowScanner(true)}
+            title="Escanear con la cámara"
+            aria-label="Escanear código con la cámara"
+            className="shrink-0 flex items-center gap-1.5 px-3 py-2 border border-pos-muted/30 rounded-lg text-sm text-pos-text hover:border-pos-secondary hover:text-pos-secondary transition-colors touch-target dark:border-gray-600/40"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+            Cámara
+          </button>
+        </div>
+        {showScanner && (
+          <BarcodeScannerModal
+            onDetected={(code) => {
+              setForm((prev) => ({ ...prev, barcode: code }));
+              setShowScanHint(false);
+              setShowScanner(false);
+            }}
+            onClose={() => setShowScanner(false)}
+          />
+        )}
       </div>
 
       {/* Price */}
