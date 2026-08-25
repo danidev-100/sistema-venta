@@ -7,7 +7,7 @@ export default function ActivationPage() {
   return (
     <div className="flex h-screen w-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl dark:bg-gray-800">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-pos-secondary text-2xl text-white shadow-lg">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-pos-secondary text-2xl text-white shadow-sm">
           B
         </div>
         <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">

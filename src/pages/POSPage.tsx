@@ -498,7 +498,12 @@ export default function POSPage() {
       {!hasOpenShift ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-sm dark:text-gray-100">
-            <div className="text-6xl mb-4">🔒</div>
+            <div className="mx-auto mb-4 w-14 h-14 rounded-full bg-pos-secondary/10 flex items-center justify-center">
+              <svg className="w-7 h-7 text-pos-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
             <h2 className="text-lg font-semibold text-pos-text mb-2">
               No hay caja abierta
             </h2>
@@ -795,8 +800,8 @@ function PriceListStrip() {
               }}
               className={`text-[11px] px-2 py-1 rounded-lg font-medium touch-target transition-all ${
                 active
-                  ? "bg-violet-500 text-white shadow-sm"
-                  : "border border-pos-muted/20 text-pos-muted hover:border-violet-400 hover:text-violet-600 dark:hover:text-violet-400"
+                  ? "bg-pos-secondary text-white shadow-sm"
+                  : "border border-pos-muted/20 text-pos-muted hover:border-pos-secondary hover:text-pos-secondary"
               }`}
             >
               {list.name}
@@ -805,7 +810,7 @@ function PriceListStrip() {
         })}
       </div>
       {activeList && (
-        <p className="text-[10px] text-violet-600 dark:text-violet-400 mt-1 ml-1">
+        <p className="text-[10px] text-pos-secondary mt-1 ml-1">
           Precios de {activeList.name} — los productos nuevos se agregarán con precio ajustado
         </p>
       )}

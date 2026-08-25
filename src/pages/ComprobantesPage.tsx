@@ -39,11 +39,11 @@ const TIPO_OPTIONS: { id: ComprobanteTipo; label: string; desc: string }[] = [
 ];
 
 const TIPO_COLORS: Record<ComprobanteTipo, string> = {
-  factura: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30",
-  boleta: "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30",
-  nota_credito: "text-purple-600 bg-purple-100 dark:text-purple-400 dark:bg-purple-900/30",
-  nota_debito: "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30",
-  ticket: "text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/30",
+  factura: "text-pos-secondary bg-pos-secondary/10 dark:bg-pos-secondary/15",
+  boleta: "text-pos-secondary bg-pos-secondary/10 dark:bg-pos-secondary/15",
+  nota_credito: "text-pos-secondary bg-pos-secondary/10 dark:bg-pos-secondary/15",
+  nota_debito: "text-pos-secondary bg-pos-secondary/10 dark:bg-pos-secondary/15",
+  ticket: "text-pos-secondary bg-pos-secondary/10 dark:bg-pos-secondary/15",
 };
 
 function AfipStatusBadge({ comprobante }: { comprobante: Comprobante }) {
@@ -713,11 +713,11 @@ function ComprobanteDetail({ comprobante, onBack }: { comprobante: Comprobante; 
   const printableRef = useRef<HTMLDivElement>(null);
 
   const TIPO_BG: Record<ComprobanteTipo, string> = {
-    factura: "bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800",
-    boleta: "bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800",
-    nota_credito: "bg-purple-50 dark:bg-purple-900/10 border-purple-200 dark:border-purple-800",
-    nota_debito: "bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800",
-    ticket: "bg-gray-50 dark:bg-gray-900/10 border-gray-200 dark:border-gray-800",
+    factura: "bg-pos-background/50 dark:bg-pos-background/50 border-pos-muted/15 dark:border-pos-muted/20",
+    boleta: "bg-pos-background/50 dark:bg-pos-background/50 border-pos-muted/15 dark:border-pos-muted/20",
+    nota_credito: "bg-pos-background/50 dark:bg-pos-background/50 border-pos-muted/15 dark:border-pos-muted/20",
+    nota_debito: "bg-pos-background/50 dark:bg-pos-background/50 border-pos-muted/15 dark:border-pos-muted/20",
+    ticket: "bg-pos-background/50 dark:bg-pos-background/50 border-pos-muted/15 dark:border-pos-muted/20",
   };
 
   async function handlePrint() {

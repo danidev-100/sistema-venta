@@ -43,7 +43,7 @@ const PAYMENT_LABELS: Record<BucketKey, string> = {
 const PAYMENT_COLORS: Record<BucketKey, string> = {
   cash: "#eab308",     // amarillo
   card: "#ef4444",     // rojo
-  mercadopago: "#3b82f6", // azul
+  mercadopago: "#4a90d9", // pos-secondary
   credit: "#8b5cf6",   // violeta (se mantiene)
 };
 

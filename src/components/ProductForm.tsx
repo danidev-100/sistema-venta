@@ -433,7 +433,7 @@ export default function ProductForm({
               htmlFor="product-mid-stock"
               className="block text-xs font-medium text-pos-muted mb-1"
             >
-              <span className="inline-block w-2 h-2 rounded-full bg-yellow-500 shrink-0 mr-1.5" />
+              <span className="inline-block w-2 h-2 rounded-full bg-amber-400 shrink-0 mr-1.5" />
               Stock medio
             </label>
             <input

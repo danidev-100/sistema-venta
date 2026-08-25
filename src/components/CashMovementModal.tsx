@@ -299,7 +299,7 @@ export default function CashMovementModal({
           <button
             onClick={handleSubmit}
             disabled={!amount || exceedsLimit}
-            className={`flex-1 px-4 py-2.5 text-sm font-bold text-white rounded-xl touch-target transition-all hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none ${
+            className={`flex-1 px-4 py-2.5 text-sm font-bold text-white rounded-xl touch-target transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
               type === "withdrawal"
                 ? "bg-pos-danger hover:bg-pos-danger/90"
                 : "bg-pos-success hover:bg-pos-success/90"

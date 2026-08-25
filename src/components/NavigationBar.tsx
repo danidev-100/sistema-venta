@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { useAppStore, useAuthStore, type Page } from "@/store";
 import { useExpensesStore } from "@/store/expenses";
 import { useComprobantesStore } from "@/store/comprobantes";
@@ -12,32 +12,182 @@ import ConfirmModal from "@/components/ConfirmModal";
 declare const __APP_VERSION__: string;
 
 // ──────────────────────────────────────────────
+// Inline SVG line icons (strokeWidth 1.75, currentColor)
+// ──────────────────────────────────────────────
+
+function NavIcon({ children, className = "w-5 h-5" }: { children: ReactNode; className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      {children}
+    </svg>
+  );
+}
+
+const HomeIcon = () => (
+  <NavIcon>
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    <polyline points="9 22 9 12 15 12 15 22" />
+  </NavIcon>
+);
+
+const CartIcon = () => (
+  <NavIcon>
+    <circle cx="9" cy="21" r="1" />
+    <circle cx="20" cy="21" r="1" />
+    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+  </NavIcon>
+);
+
+const CashIcon = () => (
+  <NavIcon>
+    <rect x="2" y="6" width="20" height="12" rx="2" />
+    <circle cx="12" cy="12" r="2" />
+    <path d="M6 12h.01" />
+    <path d="M18 12h.01" />
+  </NavIcon>
+);
+
+const BoxIcon = () => (
+  <NavIcon>
+    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+    <line x1="12" y1="22.08" x2="12" y2="12" />
+  </NavIcon>
+);
+
+const UsersIcon = () => (
+  <NavIcon>
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </NavIcon>
+);
+
+const TruckIcon = () => (
+  <NavIcon>
+    <rect x="1" y="3" width="15" height="13" rx="1" />
+    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+    <circle cx="5.5" cy="18.5" r="2.5" />
+    <circle cx="18.5" cy="18.5" r="2.5" />
+  </NavIcon>
+);
+
+const ClipboardIcon = () => (
+  <NavIcon>
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    <rect x="8" y="2" width="8" height="4" rx="1" />
+  </NavIcon>
+);
+
+const ReceiptIcon = () => (
+  <NavIcon>
+    <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1z" />
+    <path d="M8 7h8" />
+    <path d="M8 11h6" />
+    <path d="M8 15h4" />
+  </NavIcon>
+);
+
+const FileTextIcon = () => (
+  <NavIcon>
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+  </NavIcon>
+);
+
+const WalletIcon = () => (
+  <NavIcon>
+    <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+    <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+    <path d="M18 12a2 2 0 0 0 0 4h4v-4z" />
+  </NavIcon>
+);
+
+const ChartIcon = () => (
+  <NavIcon>
+    <line x1="18" y1="20" x2="18" y2="10" />
+    <line x1="12" y1="20" x2="12" y2="4" />
+    <line x1="6" y1="20" x2="6" y2="14" />
+  </NavIcon>
+);
+
+const ShieldIcon = () => (
+  <NavIcon>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </NavIcon>
+);
+
+const SettingsIcon = () => (
+  <NavIcon>
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+  </NavIcon>
+);
+
+function SyncIcon({ status }: { status: "idle" | "syncing" | "success" | "error" | "offline" }) {
+  if (status === "syncing") {
+    return (
+      <NavIcon>
+        <polyline points="23 4 23 10 17 10" />
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+      </NavIcon>
+    );
+  }
+  if (status === "error") {
+    return (
+      <NavIcon>
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </NavIcon>
+    );
+  }
+  return (
+    <NavIcon>
+      <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+    </NavIcon>
+  );
+}
+
+// ──────────────────────────────────────────────
 // Page definitions
 // ──────────────────────────────────────────────
 
 type PageDef = {
   id: Page;
   label: string;
-  icon: string;
+  icon: ReactNode;
   permission?: Permission;
 };
 
 const MAIN_PAGES: PageDef[] = [
-  { id: "dashboard", label: "Inicio", icon: "🏠" },
-  { id: "pos", label: "POS", icon: "🛒", permission: "ventas" },
-  { id: "cash-closing", label: "Caja", icon: "💰", permission: "caja" },
+  { id: "dashboard", label: "Inicio", icon: <HomeIcon /> },
+  { id: "pos", label: "POS", icon: <CartIcon />, permission: "ventas" },
+  { id: "cash-closing", label: "Caja", icon: <CashIcon />, permission: "caja" },
 ];
 
 const CONFIG_PAGES: PageDef[] = [
-  { id: "products", label: "Productos", icon: "📦", permission: "productos" },
-  { id: "customers", label: "Clientes", icon: "👥", permission: "clientes" },
-  { id: "proveedores", label: "Proveedores", icon: "🏭", permission: "proveedores" },
-  { id: "pedidos", label: "Pedidos", icon: "📋", permission: "pedidos" },
-  { id: "billing", label: "Facturación", icon: "🧾", permission: "facturacion" },
-  { id: "comprobantes", label: "Comprobantes", icon: "📄", permission: "comprobantes" },
-  { id: "expenses", label: "Gastos", icon: "💸", permission: "gastos" },
-  { id: "stats", label: "Estadísticas", icon: "📊", permission: "estadisticas" },
-  { id: "admin", label: "Admin", icon: "🔒", permission: "admin" },
+  { id: "products", label: "Productos", icon: <BoxIcon />, permission: "productos" },
+  { id: "customers", label: "Clientes", icon: <UsersIcon />, permission: "clientes" },
+  { id: "proveedores", label: "Proveedores", icon: <TruckIcon />, permission: "proveedores" },
+  { id: "pedidos", label: "Pedidos", icon: <ClipboardIcon />, permission: "pedidos" },
+  { id: "billing", label: "Facturación", icon: <ReceiptIcon />, permission: "facturacion" },
+  { id: "comprobantes", label: "Comprobantes", icon: <FileTextIcon />, permission: "comprobantes" },
+  { id: "expenses", label: "Gastos", icon: <WalletIcon />, permission: "gastos" },
+  { id: "stats", label: "Estadísticas", icon: <ChartIcon />, permission: "estadisticas" },
+  { id: "admin", label: "Admin", icon: <ShieldIcon />, permission: "admin" },
 ];
 
 // ──────────────────────────────────────────────
@@ -82,10 +232,6 @@ export default function NavigationBar() {
   const lastSync = syncState.lastSyncedAt
     ? new Date(syncState.lastSyncedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : null;
-  const syncIcon =
-    syncStatus === "syncing" ? "🔄"
-    : syncStatus === "success" ? "☁️"
-    : syncStatus === "error" ? "⚠️" : "☁️";
 
   function handleLogout() {
     setShowLogoutConfirm(true);
@@ -129,7 +275,7 @@ export default function NavigationBar() {
                 : "text-white/70 hover:text-white hover:bg-white/10"
             }`}
           >
-            <span className="text-lg shrink-0">{p.icon}</span>
+            <span className="shrink-0">{p.icon}</span>
             <span>{p.label}</span>
             {isActive(p.id) && !isInConfig && (
               <span className="ml-auto w-1.5 h-1.5 rounded-full bg-pos-secondary" />
@@ -149,7 +295,7 @@ export default function NavigationBar() {
               onClick={() => setConfigOpen(!configOpen)}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left text-white/50 hover:text-white hover:bg-white/10"
             >
-              <span className="text-lg shrink-0">⚙️</span>
+              <span className="shrink-0"><SettingsIcon /></span>
               <span>Configuración</span>
               <svg
                 viewBox="0 0 24 24"
@@ -176,7 +322,7 @@ export default function NavigationBar() {
                         : "text-white/60 hover:text-white hover:bg-white/10"
                     }`}
                   >
-                    <span className="text-base shrink-0">{p.icon}</span>
+                    <span className="shrink-0">{p.icon}</span>
                     <span>{p.label}</span>
                   </button>
                 ))}
@@ -194,7 +340,7 @@ export default function NavigationBar() {
           className="w-full flex items-center gap-2 text-xs text-white/50 hover:text-white transition-colors px-2 py-1.5 rounded-lg hover:bg-white/10"
           title={syncStatus === "error" ? `Error: ${syncError}` : "Sincronizar ahora"}
         >
-          <span>{syncIcon}</span>
+          <span className="shrink-0"><SyncIcon status={syncStatus} /></span>
           <span className="text-xs">
             {syncStatus === "syncing" ? "Sincronizando..."
             : syncStatus === "success" ? "Sincronizado"
@@ -257,7 +403,7 @@ export default function NavigationBar() {
   return (
     <>
       {/* Mobile top bar — visible only below lg */}
-      <header className="lg:hidden flex items-center gap-3 px-3 h-14 shrink-0 bg-pos-primary/95 backdrop-blur-sm text-white shadow-md z-30">
+      <header className="lg:hidden flex items-center gap-3 px-3 h-14 shrink-0 bg-pos-primary/95 backdrop-blur-sm text-white shadow-sm z-30">
         <button
           onClick={() => setMobileOpen(true)}
           className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-white/10 transition-colors touch-target"
@@ -283,7 +429,7 @@ export default function NavigationBar() {
 
       {/* Desktop sidebar — identical behavior to before, hidden below lg */}
       <aside
-        className={`hidden lg:flex flex-col h-full bg-pos-primary/95 backdrop-blur-sm text-white shadow-lg shrink-0 overflow-hidden transition-[width] duration-200 ease-in-out ${
+        className={`hidden lg:flex flex-col h-full bg-pos-primary/95 backdrop-blur-sm text-white shadow-sm shrink-0 overflow-hidden transition-[width] duration-200 ease-in-out ${
           sidebarOpen ? "w-56 lg:w-60" : "w-0"
         }`}
       >
@@ -295,7 +441,7 @@ export default function NavigationBar() {
         <div className="hidden lg:flex w-12 h-full shrink-0 justify-center pt-3">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="flex items-center justify-center w-10 h-10 rounded-lg bg-pos-primary/95 text-white shadow-lg border border-white/10 hover:bg-pos-secondary/80 transition-colors"
+            className="flex items-center justify-center w-10 h-10 rounded-lg bg-pos-primary/95 text-white shadow-sm border border-white/10 hover:bg-pos-secondary/80 transition-colors"
             title="Abrir menú (F4)"
             aria-label="Abrir menú lateral"
           >

@@ -99,15 +99,15 @@ export default function PlantillasSection() {
               <button
                 key={entry.tipo}
                 onClick={() => handleEdit(entry.tipo)}
-                className="card-enter relative flex items-start gap-4 rounded-xl border border-pos-muted/10 bg-pos-surface p-4 shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-200 text-left cursor-pointer group overflow-hidden"
+                className="card-enter relative flex items-start gap-4 rounded-xl border border-pos-muted/10 bg-pos-surface p-4 shadow-sm active:scale-[0.98] transition-all duration-200 text-left cursor-pointer group overflow-hidden"
               >
-                {/* Accent bar — indigo */}
+                {/* Accent bar */}
                 <span className="absolute top-0 left-0 right-0 h-0.5 opacity-80 group-hover:opacity-100 transition-opacity"
-                  style={{ backgroundColor: "#6366f1" }}
+                  style={{ backgroundColor: "rgb(var(--color-pos-secondary))" }}
                 />
 
                 {/* Icon */}
-                <span className="shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-indigo-500/8 text-indigo-600 mt-0.5">
+                <span className="shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-pos-secondary/10 text-pos-secondary mt-0.5">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                     <polyline points="14 2 14 8 20 8" />
@@ -271,7 +271,7 @@ function PlantillaEditor({
           <button
             onClick={handleSave}
             disabled={saving || !dirty}
-            className="px-4 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40 touch-target transition-colors"
+            className="px-4 py-1.5 text-xs font-medium rounded-lg bg-pos-secondary text-white hover:bg-pos-secondary/90 disabled:opacity-40 touch-target transition-colors"
           >
             {saving ? "Guardando…" : "Guardar"}
           </button>
@@ -285,7 +285,7 @@ function PlantillaEditor({
           {/* Variable reference */}
           <button
             onClick={() => setShowVars(!showVars)}
-            className="flex items-center gap-1.5 text-xs text-indigo-600 mb-2 hover:text-indigo-700 transition-colors touch-target"
+            className="flex items-center gap-1.5 text-xs text-pos-secondary mb-2 hover:text-pos-secondary/80 transition-colors touch-target"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
               {showVars ? <polyline points="18 15 12 9 6 15" /> : <polyline points="6 9 12 15 18 9" />}
@@ -294,23 +294,23 @@ function PlantillaEditor({
           </button>
 
           {showVars && (
-            <div className="mb-3 p-3 rounded-lg bg-indigo-500/5 border border-indigo-500/10 text-xs space-y-1">
-              <p className="text-indigo-600 font-semibold mb-1">Variables de comprobante:</p>
+            <div className="mb-3 p-3 rounded-lg bg-pos-secondary/5 border border-pos-secondary/10 text-xs space-y-1">
+              <p className="text-pos-secondary font-semibold mb-1">Variables de comprobante:</p>
               {[
                 "cliente_nombre", "cliente_cuit", "cliente_direccion",
                 "numero", "fecha", "subtotal", "iva", "total", "tipo_label", "notes",
               ].map((v) => (
-                <code key={v} className="inline-block mr-2 px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-700 font-mono text-[11px]">
+                <code key={v} className="inline-block mr-2 px-1.5 py-0.5 rounded bg-pos-secondary/10 text-pos-secondary font-mono text-[11px]">
                   {`{{${v}}}`}
                 </code>
               ))}
-              <p className="text-indigo-600 font-semibold mt-2 mb-1">Bloque de items:</p>
-              <code className="inline-block px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-700 font-mono text-[11px]">
+              <p className="text-pos-secondary font-semibold mt-2 mb-1">Bloque de items:</p>
+              <code className="inline-block px-1.5 py-0.5 rounded bg-pos-secondary/10 text-pos-secondary font-mono text-[11px]">
                 {`{{#items}}...{{/items}}`}
               </code>
-              <p className="text-indigo-600/70 mt-1">Variables disponibles dentro del bloque:</p>
+              <p className="text-pos-secondary/70 mt-1">Variables disponibles dentro del bloque:</p>
               {["product_name", "quantity", "unit_price", "subtotal", "combo_name", "bulto_name"].map((v) => (
-                <code key={v} className="inline-block mr-2 px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-700 font-mono text-[11px]">
+                <code key={v} className="inline-block mr-2 px-1.5 py-0.5 rounded bg-pos-secondary/10 text-pos-secondary font-mono text-[11px]">
                   {`{{${v}}}`}
                 </code>
               ))}
@@ -324,7 +324,7 @@ function PlantillaEditor({
               setHtml(e.target.value);
               setDirty(true);
             }}
-            className="w-full h-[320px] lg:h-[420px] font-mono text-xs leading-relaxed p-3 rounded-xl border border-pos-muted/20 bg-pos-background text-pos-text resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/50"
+            className="w-full h-[320px] lg:h-[420px] font-mono text-xs leading-relaxed p-3 rounded-xl border border-pos-muted/20 bg-pos-background text-pos-text resize-none focus:outline-none focus:ring-2 focus:ring-pos-secondary/30 focus:border-pos-secondary/50"
             spellCheck={false}
             placeholder="<html>..."
           />

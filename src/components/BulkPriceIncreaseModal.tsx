@@ -192,7 +192,7 @@ export default function BulkPriceModal({
               }
             }}
             disabled={pct <= 0}
-            className="flex-1 px-4 py-2.5 bg-pos-accent text-white rounded-xl text-sm font-bold touch-target transition-all hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none"
+            className="flex-1 px-4 py-2.5 bg-pos-accent text-white rounded-xl text-sm font-bold touch-target transition-all hover:bg-pos-accent/90 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Aumentar {pct > 0 ? `${pct}%` : ""}
           </button>

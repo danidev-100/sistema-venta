@@ -319,7 +319,7 @@ export default function BulkPriceModal({ onClose }: BulkPriceModalProps) {
           <button
             onClick={handlePreview}
             disabled={parsedPercent === 0}
-            className="w-full px-4 py-2.5 bg-pos-secondary text-white rounded-lg font-medium text-sm touch-target hover:opacity-90 disabled:opacity-50 transition-opacity dark:bg-blue-700"
+            className="w-full px-4 py-2.5 bg-pos-secondary text-white rounded-lg font-medium text-sm touch-target hover:opacity-90 disabled:opacity-50 transition-opacity"
           >
             {preview === null ? "Vista Previa" : "Actualizar Vista Previa"}
           </button>
@@ -389,7 +389,7 @@ export default function BulkPriceModal({ onClose }: BulkPriceModalProps) {
           <button
             onClick={handleApply}
             disabled={!canApply}
-            className="flex-1 px-4 py-3 bg-pos-accent text-white rounded-xl font-bold text-sm touch-target hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed dark:bg-amber-600"
+            className="flex-1 px-4 py-3 bg-pos-accent text-white rounded-xl font-bold text-sm touch-target hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {applying
               ? "Aplicando…"

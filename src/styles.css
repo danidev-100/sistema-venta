@@ -63,31 +63,18 @@ body,
   overflow: hidden;
 }
 
-/* Smooth background/text transitions when toggling theme */
+/* Flat neutral background (replaces the old mesh gradient) */
+body {
+  background-color: rgb(var(--color-pos-background));
+}
+
+/* Smooth background/text transitions when toggling theme.
+ * Scope limited to the app shell: interactive elements use Tailwind's
+ * transition-* utilities (transition-colors / transition-opacity). */
 html,
 body,
-#root,
-* {
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-/* Subtle mesh gradient background — light */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(ellipse 80% 60% at 0% 10%, rgba(74 144 217 / 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 100% 90%, rgba(74 144 217 / 0.04) 0%, transparent 60%);
-  pointer-events: none;
-}
-
-/* Subtle mesh gradient background — dark */
-.dark body::before {
-  background:
-    radial-gradient(ellipse 80% 60% at 0% 10%, rgba(91 160 232 / 0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 100% 90%, rgba(91 160 232 / 0.06) 0%, transparent 60%);
+#root {
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 /* Custom scrollbar — light */

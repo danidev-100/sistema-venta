@@ -522,7 +522,7 @@ export default function CartPanel({
             <div className="flex items-center gap-2">
               <span className="text-pos-muted">Subtotal</span>
               {activePriceList && (
-                <span className="inline-flex items-center gap-1 rounded-md bg-violet-500/10 px-2 py-0.5 text-[10px] font-medium text-violet-600 dark:bg-violet-500/20 dark:text-violet-400">
+                <span className="inline-flex items-center gap-1 rounded-md bg-pos-secondary/10 px-2 py-0.5 text-[10px] font-medium text-pos-secondary dark:bg-pos-secondary/20">
                   {activePriceList.name}
                 </span>
               )}
@@ -535,10 +535,10 @@ export default function CartPanel({
             <div className="space-y-0.5">
               {comboInfo.combos.map((c) => (
                 <div key={c.comboId} className="flex items-center justify-between text-xs">
-                  <span className="text-emerald-600 font-medium">
+                  <span className="text-pos-secondary font-medium">
                     {c.times > 1 ? `${c.times}x ` : ""}Combo: {c.name}
                   </span>
-                  <span className="text-emerald-600 font-mono">−{formatCurrency(c.totalSavings)}</span>
+                  <span className="text-pos-secondary font-mono">−{formatCurrency(c.totalSavings)}</span>
                 </div>
               ))}
             </div>
@@ -549,10 +549,10 @@ export default function CartPanel({
             <div className="space-y-0.5">
               {comboInfo.bultos.map((b) => (
                 <div key={b.bultoId} className="flex items-center justify-between text-xs">
-                  <span className="text-cyan-600 font-medium">
+                  <span className="text-pos-secondary font-medium">
                     {b.times > 1 ? `${b.times}x ` : ""}Bulto: {b.name}
                   </span>
-                  <span className="text-cyan-600 font-mono">−{formatCurrency(b.totalSavings)}</span>
+                  <span className="text-pos-secondary font-mono">−{formatCurrency(b.totalSavings)}</span>
                 </div>
               ))}
             </div>
@@ -586,7 +586,12 @@ export default function CartPanel({
       {showCloseModal && openShift && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-pos-surface rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
-            <div className="text-5xl mb-4">🔒</div>
+            <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-pos-danger/10 flex items-center justify-center">
+              <svg className="w-6 h-6 text-pos-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
             <h3 className="text-base font-semibold text-pos-text mb-2">
               Cerrar Turno
             </h3>

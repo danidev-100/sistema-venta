@@ -741,7 +741,7 @@ function SummaryTab({
                     fontSize: "12px",
                   }}
                 />
-                <Bar dataKey="total" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="total" fill="var(--color-chart-bar)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

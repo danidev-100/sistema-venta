@@ -237,19 +237,26 @@ const SECTIONS: SectionDef[] = [
 // Color accents per section
 // ──────────────────────────────────────────────
 
+// Single accent for every section: neutral surface + pos-secondary.
+const NEUTRAL_ACCENT = {
+  bg: "bg-pos-secondary/10 dark:bg-pos-secondary/15",
+  text: "text-pos-secondary",
+  bar: "rgb(var(--color-pos-secondary))",
+};
+
 const ACCENTS: Record<string, { bg: string; text: string; bar: string }> = {
-  categories:  { bg: "bg-rose-500/8 dark:bg-rose-500/15",    text: "text-rose-600 dark:text-rose-400",    bar: "#e11d48" },
-  brands:      { bg: "bg-violet-500/8 dark:bg-violet-500/15",  text: "text-violet-600 dark:text-violet-400",  bar: "#8b5cf6" },
-  "bulk-price": { bg: "bg-emerald-500/8 dark:bg-emerald-500/15", text: "text-emerald-600 dark:text-emerald-400", bar: "#10b981" },
-  backup:      { bg: "bg-amber-500/8 dark:bg-amber-500/15",   text: "text-amber-600 dark:text-amber-400",   bar: "#f59e0b" },
-  settings:    { bg: "bg-sky-500/8 dark:bg-sky-500/15",     text: "text-sky-600 dark:text-sky-400",     bar: "#0ea5e9" },
-  plantillas:  { bg: "bg-indigo-500/8 dark:bg-indigo-500/15",   text: "text-indigo-600 dark:text-indigo-400",  bar: "#6366f1" },
-  empresa:     { bg: "bg-teal-500/8 dark:bg-teal-500/15",     text: "text-teal-600 dark:text-teal-400",    bar: "#14b8a6" },
-  combos:      { bg: "bg-orange-500/8 dark:bg-orange-500/15", text: "text-orange-600 dark:text-orange-400", bar: "#f97316" },
-  bultos:      { bg: "bg-cyan-500/8 dark:bg-cyan-500/15",   text: "text-cyan-600 dark:text-cyan-400",     bar: "#06b6d4" },
-  "price-lists": { bg: "bg-violet-500/8 dark:bg-violet-500/15", text: "text-violet-600 dark:text-violet-400", bar: "#8b5cf6" },
-  "purchase-invoices": { bg: "bg-fuchsia-500/8 dark:bg-fuchsia-500/15", text: "text-fuchsia-600 dark:text-fuchsia-400", bar: "#d946ef" },
-  afip: { bg: "bg-blue-500/8 dark:bg-blue-500/15", text: "text-blue-600 dark:text-blue-400", bar: "#3b82f6" },
+  categories:          NEUTRAL_ACCENT,
+  brands:              NEUTRAL_ACCENT,
+  "bulk-price":        NEUTRAL_ACCENT,
+  backup:              NEUTRAL_ACCENT,
+  settings:            NEUTRAL_ACCENT,
+  plantillas:          NEUTRAL_ACCENT,
+  empresa:             NEUTRAL_ACCENT,
+  combos:              NEUTRAL_ACCENT,
+  bultos:              NEUTRAL_ACCENT,
+  "price-lists":       NEUTRAL_ACCENT,
+  "purchase-invoices": NEUTRAL_ACCENT,
+  afip:                NEUTRAL_ACCENT,
 };
 
 // ──────────────────────────────────────────────
@@ -287,7 +294,7 @@ export default function AdminPage() {
               <button
                 key={sec.id}
                 onClick={() => setActiveSection(sec.id)}
-                className="card-enter relative flex items-start gap-4 rounded-xl border border-pos-muted/10 bg-pos-surface p-4 md:p-5 shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-200 text-left cursor-pointer group overflow-hidden dark:border-gray-600/30 dark:bg-gray-800 dark:hover:bg-gray-750"
+                className="card-enter relative flex items-start gap-4 rounded-xl border border-pos-muted/10 bg-pos-surface p-4 md:p-5 shadow-sm active:scale-[0.98] transition-all duration-200 text-left cursor-pointer group overflow-hidden dark:border-gray-600/30 dark:bg-gray-800"
                 style={{ animationDelay: `${i * 0.06}s` }}
               >
                 {/* Accent bar */}
@@ -522,7 +529,7 @@ function BultosSection() {
             {/* Selected product chip */}
             {selectedProduct && (
               <div className="flex flex-wrap gap-1.5">
-                <span className="inline-flex items-center gap-1 rounded-md bg-cyan-500/10 px-2 py-0.5 text-xs font-medium text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-400">
+                <span className="inline-flex items-center gap-1 rounded-md bg-pos-secondary/10 px-2 py-0.5 text-xs font-medium text-pos-secondary dark:bg-pos-secondary/20">
                   {selectedProduct.name}
                   <button
                     onClick={() => setSelectedProductId(null)}
@@ -569,7 +576,7 @@ function BultosSection() {
                       key={p.id}
                       className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${
                         highlighted
-                          ? "bg-cyan-500/10 ring-1 ring-cyan-500/30"
+                          ? "bg-pos-secondary/10 ring-1 ring-pos-secondary/30"
                           : "hover:bg-pos-background"
                       }`}
                       onMouseEnter={() => setHighlightIndex(idx)}
@@ -579,7 +586,7 @@ function BultosSection() {
                         name="bulto-product"
                         checked={checked}
                         onChange={() => setSelectedProductId(p.id)}
-                        className="accent-cyan-500"
+                        className="accent-pos-secondary"
                       />
                       <span className="text-sm text-pos-text flex-1">{p.name}</span>
                       <span className="text-xs text-pos-muted font-mono w-16 text-right">
@@ -1384,8 +1391,8 @@ function PriceListsSection() {
         <p className="text-sm text-pos-muted mb-5">gestioná hasta 10 listas con precios personalizados</p>
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-12 h-12 rounded-xl bg-violet-500/10 flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-violet-500 animate-spin" fill="none" viewBox="0 0 24 24">
+            <div className="w-12 h-12 rounded-xl bg-pos-secondary/10 flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-pos-secondary animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
@@ -1411,8 +1418,8 @@ function PriceListsSection() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-12 h-12 rounded-xl bg-violet-500/10 flex items-center justify-center mb-4">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-6 h-6 text-violet-500">
+            <div className="w-12 h-12 rounded-xl bg-pos-secondary/10 flex items-center justify-center mb-4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-6 h-6 text-pos-secondary">
                 <path d="M9 5H2v7l6.29 6.29a1 1 0 0 0 1.42 0l5.58-5.58a1 1 0 0 0 0-1.42L9 5z" />
                 <circle cx="5.5" cy="6.5" r="1.5" fill="currentColor" opacity="0.3" />
                 <path d="M16 5h6v6" />
@@ -1423,7 +1430,7 @@ function PriceListsSection() {
             <p className="text-xs text-pos-muted/60 mb-4">Cargá las listas predeterminadas o creá una nueva</p>
             <button
               onClick={() => { setLoadError(false); loadPriceLists(storeId).catch(() => setLoadError(true)); }}
-              className="px-4 py-2 bg-violet-500 text-white rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity"
+              className="px-4 py-2 bg-pos-secondary text-white rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity"
             >
               Cargar listas
             </button>
@@ -1465,7 +1472,7 @@ function PriceListsSection() {
                 type="text"
                 value={listNameDraft}
                 onChange={(e) => setListNameDraft(e.target.value)}
-                className="w-full border-0 border-b-2 border-transparent focus:border-violet-500 bg-transparent px-0 py-0.5 text-base font-semibold text-pos-text focus:outline-none focus:ring-0 transition-colors"
+                className="w-full border-0 border-b-2 border-transparent focus:border-pos-secondary bg-transparent px-0 py-0.5 text-base font-semibold text-pos-text focus:outline-none focus:ring-0 transition-colors"
               />
             </div>
             <button
@@ -1489,7 +1496,7 @@ function PriceListsSection() {
               <span className="font-medium text-pos-text">{storeProducts.length}</span> productos
               {overrideCount > 0 && (
                 <span className="ml-2">
-                  · <span className="font-medium text-violet-500">{overrideCount}</span> con precio personalizado
+                  · <span className="font-medium text-pos-secondary">{overrideCount}</span> con precio personalizado
                 </span>
               )}
             </span>
@@ -1497,7 +1504,7 @@ function PriceListsSection() {
               <button
                 onClick={handleBulkPercentage}
                 disabled={isLoadingItems}
-                className="px-3 py-1.5 bg-violet-500 text-white rounded-lg text-xs font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40"
+                className="px-3 py-1.5 bg-pos-secondary text-white rounded-lg text-xs font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40"
               >
                 Aplicar % a todos
               </button>
@@ -1542,10 +1549,10 @@ function PriceListsSection() {
                 value={productSearch}
                 onChange={(e) => setProductSearch(e.target.value)}
                 placeholder="Buscá producto por nombre o código de barras…"
-                className="w-full border border-pos-muted/25 rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 bg-pos-surface"
+                className="w-full border border-pos-muted/25 rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pos-secondary bg-pos-surface"
               />
               {productSearch && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-white bg-violet-500 px-1.5 py-0.5 rounded-full pointer-events-none">
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-white bg-pos-secondary px-1.5 py-0.5 rounded-full pointer-events-none">
                   {filteredProducts.length}
                 </span>
               )}
@@ -1573,7 +1580,7 @@ function PriceListsSection() {
                   const diffColor = diff < 0 ? "text-green-600" : diff > 0 ? "text-pos-danger" : "text-pos-muted";
 
                   return (
-                    <tr key={product.id} className={`border-t border-pos-muted/5 hover:bg-pos-background/30 transition-colors ${hasOverride ? "bg-violet-500/[0.03]" : ""}`}>
+                    <tr key={product.id} className={`border-t border-pos-muted/5 hover:bg-pos-background/30 transition-colors ${hasOverride ? "bg-pos-secondary/[0.03]" : ""}`}>
                       <td className="px-3 py-2 text-pos-muted font-mono text-xs">{product.id}</td>
                       <td className="px-3 py-2 max-w-[220px]">
                         <p className="text-pos-text font-medium truncate">{product.name}</p>
@@ -1593,7 +1600,7 @@ function PriceListsSection() {
                             placeholder="—"
                             className={`w-20 text-right border rounded-lg px-2 py-1 text-xs font-mono focus:outline-none focus:ring-2 bg-pos-surface transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                               priceVal !== null
-                                ? "border-violet-300 focus:ring-violet-400 dark:border-violet-500/50"
+                                ? "border-pos-secondary/40 focus:ring-pos-secondary dark:border-pos-secondary/50"
                                 : "border-pos-muted/30 focus:ring-pos-secondary"
                             }`}
                           />
@@ -1609,7 +1616,7 @@ function PriceListsSection() {
                             placeholder="—"
                             className={`w-16 text-right border rounded-lg px-2 py-1 text-xs font-mono focus:outline-none focus:ring-2 bg-pos-surface transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                               pctVal !== null
-                                ? "border-violet-300 focus:ring-violet-400 dark:border-violet-500/50"
+                                ? "border-pos-secondary/40 focus:ring-pos-secondary dark:border-pos-secondary/50"
                                 : "border-pos-muted/30 focus:ring-pos-secondary"
                             }`}
                           />
@@ -1617,7 +1624,7 @@ function PriceListsSection() {
                         </div>
                       </td>
                       <td className="px-3 py-2 text-right">
-                        <span className={`font-mono text-xs font-bold ${hasOverride ? "text-violet-600 dark:text-violet-400" : "text-pos-muted"}`}>
+                        <span className={`font-mono text-xs font-bold ${hasOverride ? "text-pos-secondary" : "text-pos-muted"}`}>
                           ${effective.toFixed(2)}
                         </span>
                         {hasOverride && diff !== 0 && (
@@ -1647,8 +1654,8 @@ function PriceListsSection() {
             >
               {/* Icon */}
               <div className="flex justify-center">
-                <div className="w-16 h-16 rounded-full bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center ring-8 ring-violet-100/50 dark:ring-violet-900/10">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-8 h-8 text-violet-500">
+                <div className="w-16 h-16 rounded-full bg-pos-secondary/10 dark:bg-pos-secondary/15 flex items-center justify-center ring-1 ring-pos-secondary/15">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-8 h-8 text-pos-secondary">
                     <path d="M9 5H2v7l6.29 6.29a1 1 0 0 0 1.42 0l5.58-5.58a1 1 0 0 0 0-1.42L9 5z" />
                     <circle cx="5.5" cy="6.5" r="1.5" fill="currentColor" opacity="0.3" />
                     <path d="M16 5h6v6" />
@@ -1675,7 +1682,7 @@ function PriceListsSection() {
                   onChange={(e) => setBulkPctDraft(e.target.value)}
                   placeholder="0"
                   autoFocus
-                  className="w-full text-center text-2xl font-bold font-mono border-2 border-violet-200 focus:border-violet-500 rounded-xl px-4 py-4 focus:outline-none focus:ring-4 focus:ring-violet-500/20 bg-pos-surface transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full text-center text-2xl font-bold font-mono border-2 border-pos-secondary/30 focus:border-pos-secondary rounded-xl px-4 py-4 focus:outline-none focus:ring-4 focus:ring-pos-secondary/20 bg-pos-surface transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       const pct = parseFloat(bulkPctDraft);
@@ -1722,7 +1729,7 @@ function PriceListsSection() {
                     showNotification(`Porcentaje ${pct > 0 ? "+" : ""}${pct}% aplicado a todos los productos`);
                   }}
                   disabled={!bulkPctDraft || isNaN(parseFloat(bulkPctDraft))}
-                  className="flex-1 px-4 py-3 bg-violet-500 text-white rounded-xl font-bold text-sm touch-target hover:bg-violet-600 hover:shadow-lg hover:shadow-violet-500/25 active:scale-[0.98] transition-all disabled:opacity-40"
+                  className="flex-1 px-4 py-3 bg-pos-secondary text-white rounded-xl font-bold text-sm touch-target hover:bg-pos-secondary/90 active:scale-[0.98] transition-all disabled:opacity-40"
                 >
                   Aplicar
                 </button>
@@ -1743,7 +1750,7 @@ function PriceListsSection() {
             >
               {/* Warning icon */}
               <div className="flex justify-center">
-                <div className="w-16 h-16 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center ring-8 ring-red-100/50 dark:ring-red-900/10">
+                <div className="w-16 h-16 rounded-full bg-pos-danger/10 dark:bg-pos-danger/15 flex items-center justify-center ring-1 ring-pos-danger/15">
                   <svg className="w-8 h-8 text-pos-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10" />
                     <line x1="12" y1="8" x2="12" y2="12" />
@@ -1766,7 +1773,7 @@ function PriceListsSection() {
                 </button>
                 <button
                   onClick={confirmAction.onConfirm}
-                  className="flex-1 px-4 py-3 bg-pos-danger text-white rounded-xl font-bold text-sm touch-target hover:bg-red-700 hover:shadow-lg hover:shadow-red-500/25 active:scale-[0.98] transition-all"
+                  className="flex-1 px-4 py-3 bg-pos-danger text-white rounded-xl font-bold text-sm touch-target hover:bg-pos-danger/90 active:scale-[0.98] transition-all"
                 >
                   Confirmar
                 </button>
@@ -1786,7 +1793,7 @@ function PriceListsSection() {
         <button
           onClick={handleNewList}
           disabled={storeLists.length >= 10}
-          className="px-4 py-2 bg-violet-500 text-white rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center gap-1.5"
+          className="px-4 py-2 bg-pos-secondary text-white rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center gap-1.5"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
             <line x1="12" y1="5" x2="12" y2="19" />
@@ -1804,7 +1811,7 @@ function PriceListsSection() {
           <button
             key={list.id}
             onClick={() => setEditingListId(list.id)}
-            className="card-enter relative rounded-xl border border-pos-muted/10 bg-pos-surface p-4 text-left hover:shadow-md active:scale-[0.98] transition-all duration-200 dark:border-gray-600/30 dark:bg-gray-800 group cursor-pointer overflow-hidden"
+            className="card-enter relative rounded-xl border border-pos-muted/10 bg-pos-surface p-4 text-left active:scale-[0.98] transition-all duration-200 dark:border-gray-600/30 dark:bg-gray-800 group cursor-pointer overflow-hidden"
             style={{ animationDelay: `${i * 0.06}s` }}
           >
             {/* Accent bar */}

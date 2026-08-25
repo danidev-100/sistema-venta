@@ -137,7 +137,7 @@ export default function BulkCategoryModal({
               onApply(selected);
               closeWithAnim();
             }}
-            className="flex-1 px-4 py-2.5 bg-pos-secondary text-white rounded-xl text-sm font-bold touch-target transition-all hover:shadow-lg"
+            className="flex-1 px-4 py-2.5 bg-pos-secondary text-white rounded-xl text-sm font-bold touch-target transition-all hover:bg-pos-secondary/90"
           >
             Aplicar
           </button>

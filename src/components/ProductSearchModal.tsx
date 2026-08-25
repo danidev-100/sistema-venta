@@ -303,7 +303,7 @@ export default function ProductSearchModal({
                           : product.minStock > 0 && availableStock <= product.minStock
                             ? "bg-pos-danger"
                             : product.midStock > 0 && availableStock <= product.midStock
-                              ? "bg-yellow-500"
+                              ? "bg-amber-400"
                               : "bg-pos-success"
                       }`}
                     />
@@ -324,7 +324,7 @@ export default function ProductSearchModal({
                         <p className="text-sm font-medium text-pos-text truncate">
                           {product.name}
                           {product.saleUnit !== "unit" && (
-                            <span className="ml-1.5 inline-block px-1 py-0.5 rounded text-[10px] font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 align-middle">
+                            <span className="ml-1.5 inline-block px-1 py-0.5 rounded text-[10px] font-medium bg-pos-muted/10 text-pos-muted align-middle">
                               {product.saleUnit === "gram" ? "g" : "kg"}
                             </span>
                           )}
@@ -334,7 +334,7 @@ export default function ProductSearchModal({
                             <span className="text-xs font-mono text-pos-muted/50 line-through mr-1">
                               ${product.price.toFixed(2)}
                             </span>
-                            <span className="text-sm font-bold font-mono text-violet-600 dark:text-violet-400 tabular-nums">
+                            <span className="text-sm font-bold font-mono text-pos-secondary tabular-nums">
                               ${getEffectivePrice(product).toFixed(2)}
                             </span>
                           </div>

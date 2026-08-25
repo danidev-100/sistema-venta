@@ -376,21 +376,28 @@ export default function ProductsPage() {
                   stockFilter === "critical"
                     ? "bg-pos-danger/10 border-pos-danger/40 text-pos-danger ring-1 ring-pos-danger/20 dark:bg-red-900/20 dark:border-red-500/40 dark:text-red-400"
                     : stockFilter === "medium"
-                      ? "bg-yellow-500/10 border-yellow-500/40 text-yellow-600 ring-1 ring-yellow-500/20 dark:bg-yellow-900/20 dark:border-yellow-500/40 dark:text-yellow-400"
+                      ? "bg-amber-500/10 border-amber-500/40 text-amber-600 ring-1 ring-amber-500/20 dark:bg-amber-900/20 dark:border-amber-500/40 dark:text-amber-400"
                       : "border-pos-muted/20 text-pos-muted hover:border-pos-muted/40 hover:text-pos-text dark:border-gray-600/30 dark:text-gray-400 dark:hover:text-gray-200"
                 }`}
               >
+                <span className={`inline-block w-2 h-2 rounded-full mr-1.5 align-middle ${
+                  stockFilter === "critical"
+                    ? "bg-pos-danger"
+                    : stockFilter === "medium"
+                      ? "bg-pos-accent"
+                      : "bg-pos-muted/50"
+                }`} />
                 {stockFilter === "critical"
-                  ? "🔴 Crítico"
+                  ? "Crítico"
                   : stockFilter === "medium"
-                    ? "🟡 Medio"
-                    : "📊 Stock"}
+                    ? "Medio"
+                    : "Stock"}
               </button>
             </div>
 
             {/* Bulk actions */}
             {selectedProductIds.length > 0 && (
-              <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-pos-secondary/10 border border-pos-secondary/30 rounded-lg dark:bg-blue-900/20 dark:border-blue-500/30">
+              <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-pos-secondary/10 border border-pos-secondary/30 rounded-lg dark:bg-pos-secondary/15 dark:border-pos-secondary/30">
                 <span className="text-xs font-medium text-pos-text mr-1">
                   {selectedProductIds.length} seleccionado{selectedProductIds.length !== 1 ? "s" : ""}
                 </span>
@@ -503,11 +510,11 @@ export default function ProductsPage() {
                           onMouseEnter={() => setSelectedIndex(idx)}
                           className={`border-b border-pos-muted/10 cursor-pointer transition-colors dark:border-gray-700 ${
                             isSelected
-                              ? "bg-pos-secondary/10 dark:bg-blue-900/20 ring-1 ring-pos-secondary/30"
+                              ? "bg-pos-secondary/10 dark:bg-pos-secondary/15 ring-1 ring-pos-secondary/30"
                               : "hover:bg-pos-background/50 dark:hover:bg-gray-700/50"
                           } ${
                             selectedProductId === p.id
-                              ? "bg-pos-secondary/10 dark:bg-blue-900/20"
+                              ? "bg-pos-secondary/10 dark:bg-pos-secondary/15"
                               : ""
                           }`}
                         >
@@ -545,11 +552,7 @@ export default function ProductsPage() {
                             {p.name}
                           </td>
                           <td className="py-2 px-2 text-center text-xs">
-                            <span className={`inline-block px-1.5 py-0.5 rounded font-medium ${
-                              p.saleUnit === "unit"
-                                ? "bg-pos-muted/10 text-pos-muted"
-                                : "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300"
-                            }`}>
+                            <span className="inline-block px-1.5 py-0.5 rounded font-medium bg-pos-muted/10 text-pos-muted">
                               {p.saleUnit === "unit" ? "u" : p.saleUnit === "gram" ? "g" : "kg"}
                             </span>
                           </td>
@@ -566,7 +569,7 @@ export default function ProductsPage() {
                               p.stock <= p.minStock && p.minStock > 0
                                 ? "text-pos-danger dark:text-red-400"
                                 : p.midStock > 0 && p.stock <= p.midStock
-                                  ? "text-yellow-500 dark:text-yellow-400"
+                                  ? "text-amber-500 dark:text-amber-400"
                                   : "text-pos-success dark:text-green-400"
                             }`}
                           >
@@ -613,10 +616,10 @@ export default function ProductsPage() {
                               </button>
                             )}
                             {editingStockId !== p.id && p.minStock > 0 && p.stock <= p.minStock && (
-                              <span className="text-[10px] text-pos-muted ml-1">🔴</span>
+                              <span className="inline-block w-1.5 h-1.5 rounded-full bg-pos-danger ml-1 align-middle" />
                             )}
                             {editingStockId !== p.id && p.minStock > 0 && p.stock > p.minStock && p.midStock > 0 && p.stock <= p.midStock && (
-                              <span className="text-[10px] text-pos-muted ml-1">🟡</span>
+                              <span className="inline-block w-1.5 h-1.5 rounded-full bg-pos-accent ml-1 align-middle" />
                             )}
                           </td>
                           <td className="py-2 px-2 text-pos-muted text-xs truncate max-w-[100px]">
@@ -752,7 +755,14 @@ export default function ProductsPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
-              <div className="text-5xl mb-4">🗑️</div>
+              <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-pos-danger/10 flex items-center justify-center">
+              <svg className="w-6 h-6 text-pos-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                <line x1="10" y1="11" x2="10" y2="17" />
+                <line x1="14" y1="11" x2="14" y2="17" />
+              </svg>
+            </div>
               <h3 className="text-base font-bold text-pos-text mb-1">
                 Eliminar Productos
               </h3>
@@ -777,7 +787,7 @@ export default function ProductsPage() {
                   setSelectedProductIds([]);
                   setShowBulkDelete(false);
                 }}
-                className="flex-1 px-4 py-2.5 bg-pos-danger text-white rounded-xl text-sm font-bold touch-target transition-all hover:shadow-lg"
+                className="flex-1 px-4 py-2.5 bg-pos-danger text-white rounded-xl text-sm font-bold touch-target transition-all hover:bg-pos-danger/90"
               >
                 Eliminar
               </button>

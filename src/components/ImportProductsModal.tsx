@@ -449,7 +449,7 @@ export default function ImportProductsModal({
               <button
                 onClick={handleImport}
                 disabled={!canImport() || importing}
-                className="flex-1 px-4 py-2.5 bg-pos-secondary text-white rounded-xl text-sm font-bold touch-target transition-all hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none"
+                className="flex-1 px-4 py-2.5 bg-pos-secondary text-white rounded-xl text-sm font-bold touch-target transition-all hover:bg-pos-secondary/90 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {importing
                   ? "Importando…"
@@ -461,7 +461,7 @@ export default function ImportProductsModal({
           {step === "result" && (
             <button
               onClick={handleDone}
-              className="w-full px-4 py-2.5 bg-pos-secondary text-white rounded-xl text-sm font-bold touch-target transition-all hover:shadow-lg"
+              className="w-full px-4 py-2.5 bg-pos-secondary text-white rounded-xl text-sm font-bold touch-target transition-all hover:bg-pos-secondary/90"
             >
               Listo
             </button>

@@ -26,7 +26,7 @@ export default function ConfirmModal({
       >
         {/* Red danger icon */}
         <div className="flex justify-center">
-          <div className="w-16 h-16 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center ring-8 ring-red-100/50 dark:ring-red-900/10">
+          <div className="w-16 h-16 rounded-full bg-pos-danger/10 dark:bg-pos-danger/15 flex items-center justify-center ring-1 ring-pos-danger/15">
             <svg
               className="w-8 h-8 text-pos-danger"
               viewBox="0 0 24 24"
@@ -59,7 +59,7 @@ export default function ConfirmModal({
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-4 py-3 bg-pos-danger text-white rounded-xl font-bold text-sm touch-target hover:bg-red-700 hover:shadow-lg hover:shadow-red-500/25 active:scale-[0.98] transition-all"
+            className="flex-1 px-4 py-3 bg-pos-danger text-white rounded-xl font-bold text-sm touch-target hover:bg-pos-danger/90 active:scale-[0.98] transition-all"
           >
             {confirmText}
           </button>

@@ -346,7 +346,7 @@ function ShiftList({
             onClick={() => onSelect(s.id)}
             className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${
               isSelected
-                ? "border-pos-secondary bg-pos-secondary/10 dark:border-blue-500 dark:bg-blue-900/20"
+                ? "border-pos-secondary bg-pos-secondary/10 dark:border-pos-secondary dark:bg-pos-secondary/15"
                 : "border-transparent hover:bg-pos-background/50 dark:hover:bg-gray-700/50"
             }`}
           >

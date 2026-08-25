@@ -188,8 +188,8 @@ export default function AfipSection() {
       </div>
 
       {/* Mini-guía de certificado */}
-      <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 dark:border-blue-500/30 dark:bg-blue-500/10">
-        <h4 className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2 dark:text-blue-400">
+      <div className="rounded-xl border border-pos-secondary/20 bg-pos-secondary/5 p-4 dark:border-pos-secondary/30 dark:bg-pos-secondary/10">
+        <h4 className="text-xs font-semibold text-pos-secondary uppercase tracking-wider mb-2">
           Certificado de homologación
         </h4>
         <p className="text-xs text-pos-muted leading-relaxed">

@@ -175,11 +175,11 @@ const MODULE_META: Record<string, ModuleMeta> = {
 };
 
 const CATEGORY_STYLES: Record<string, { accent: string; bg: string; text: string }> = {
-  primary:    { accent: "#14b8a6",  bg: "bg-teal-500/8",  text: "text-teal-600" },
-  management: { accent: "#10b981",  bg: "bg-emerald-500/8",   text: "text-emerald-600" },
-  docs:       { accent: "#f59e0b",  bg: "bg-amber-500/8",     text: "text-amber-600" },
-  finance:    { accent: "#8b5cf6",  bg: "bg-violet-500/8",    text: "text-violet-600" },
-  system:     { accent: "#0ea5e9",  bg: "bg-sky-500/8",       text: "text-sky-600" },
+  primary:    { accent: "rgb(var(--color-pos-secondary))", bg: "bg-pos-secondary/10", text: "text-pos-secondary" },
+  management: { accent: "rgb(var(--color-pos-secondary))", bg: "bg-pos-secondary/10", text: "text-pos-secondary" },
+  docs:       { accent: "rgb(var(--color-pos-secondary))", bg: "bg-pos-secondary/10", text: "text-pos-secondary" },
+  finance:    { accent: "rgb(var(--color-pos-secondary))", bg: "bg-pos-secondary/10", text: "text-pos-secondary" },
+  system:     { accent: "rgb(var(--color-pos-secondary))", bg: "bg-pos-secondary/10", text: "text-pos-secondary" },
 };
 
 const MODULES: ModuleConfig[] = [
@@ -234,7 +234,7 @@ function ModuleCard({ label, icon, target }: ModuleConfig) {
   return (
     <button
       onClick={() => setPage(target)}
-      className="relative w-full flex flex-col items-center justify-center gap-3 rounded-xl border border-pos-muted/10 bg-pos-surface p-6 md:p-7 shadow-sm hover:shadow-md active:scale-[0.97] transition-all duration-200 cursor-pointer group overflow-hidden"
+      className="relative w-full flex flex-col items-center justify-center gap-3 rounded-xl border border-pos-muted/10 bg-pos-surface p-6 md:p-7 active:scale-[0.97] transition-all duration-200 cursor-pointer group overflow-hidden"
     >
       {/* Top accent bar */}
       <span

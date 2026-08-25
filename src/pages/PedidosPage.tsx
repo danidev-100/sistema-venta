@@ -13,10 +13,10 @@ type View =
   | { kind: "detail"; pedido: Pedido };
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30",
+  pending: "text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-900/30",
   received: "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30",
   cancelled: "text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30",
-  partial: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30",
+  partial: "text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-900/30",
 };
 
 export default function PedidosPage() {
@@ -254,7 +254,7 @@ export default function PedidosPage() {
                               {getStatusLabel(p.status)}
                             </span>
                             {p.items.some((i) => i.received_qty > 0) && (
-                              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                              <span className="text-xs text-pos-muted font-medium">
                                 {p.items.reduce((s, i) => s + i.received_qty, 0)}/{p.items.reduce((s, i) => s + i.quantity, 0)}
                               </span>
                             )}
@@ -327,10 +327,10 @@ function DetailView({ pedido: initialPedido, onBack, onEdit }: { pedido: Pedido;
   const [receiveQtys, setReceiveQtys] = useState<Record<number, number>>({});
 
   const STATUS_COLORS_DETAIL: Record<string, string> = {
-    pending: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30",
+    pending: "text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-900/30",
     received: "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30",
     cancelled: "text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30",
-    partial: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30",
+    partial: "text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-900/30",
   };
 
   function handlePrint() {

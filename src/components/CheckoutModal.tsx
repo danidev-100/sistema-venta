@@ -310,10 +310,10 @@ export default function CheckoutModal({
               <div className="space-y-1">
                 {comboInfo.combos.map((c) => (
                   <div key={c.comboId} className="flex items-center justify-between text-xs">
-                    <span className="text-emerald-600 font-medium">
+                    <span className="text-pos-secondary font-medium">
                       {c.times > 1 ? `${c.times}x ` : ""}Combo: {c.name}
                     </span>
-                    <span className="text-emerald-600 font-mono">−{formatCurrency(c.totalSavings)}</span>
+                    <span className="text-pos-secondary font-mono">−{formatCurrency(c.totalSavings)}</span>
                   </div>
                 ))}
               </div>
@@ -322,10 +322,10 @@ export default function CheckoutModal({
               <div className="space-y-1">
                 {comboInfo.bultos.map((b) => (
                   <div key={b.bultoId} className="flex items-center justify-between text-xs">
-                    <span className="text-cyan-600 font-medium">
+                    <span className="text-pos-secondary font-medium">
                       {b.times > 1 ? `${b.times}x ` : ""}Bulto: {b.name}
                     </span>
-                    <span className="text-cyan-600 font-mono">−{formatCurrency(b.totalSavings)}</span>
+                    <span className="text-pos-secondary font-mono">−{formatCurrency(b.totalSavings)}</span>
                   </div>
                 ))}
               </div>
@@ -366,8 +366,8 @@ export default function CheckoutModal({
                     onClick={() => setSelectedPriceListId(active ? null : list.id)}
                     className={`text-xs px-2.5 py-1.5 rounded-lg font-medium touch-target transition-all ${
                       active
-                        ? "bg-violet-500 text-white"
-                        : "border border-pos-muted/20 text-pos-muted hover:border-violet-400 hover:text-violet-600 dark:hover:text-violet-400"
+                        ? "bg-pos-secondary text-white"
+                        : "border border-pos-muted/20 text-pos-muted hover:border-pos-secondary hover:text-pos-secondary"
                     }`}
                   >
                     {list.name}
@@ -388,7 +388,12 @@ export default function CheckoutModal({
                   onClick={() => handlePaymentSelect("cash")}
                   className="flex flex-col items-center justify-center py-4 px-1 border-2 border-pos-muted/20 rounded-xl touch-target hover:border-pos-secondary hover:bg-pos-secondary/5 transition-all"
                 >
-                  <span className="text-2xl mb-1">💵</span>
+                  <svg className="w-7 h-7 mb-1" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <rect x="2" y="6" width="20" height="12" rx="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <path d="M6 12h.01" />
+                    <path d="M18 12h.01" />
+                  </svg>
                   <span className="text-xs font-semibold text-pos-text">
                     Efectivo
                   </span>
@@ -397,7 +402,10 @@ export default function CheckoutModal({
                   onClick={() => handlePaymentSelect("card")}
                   className="flex flex-col items-center justify-center py-4 px-1 border-2 border-pos-muted/20 rounded-xl touch-target hover:border-pos-secondary hover:bg-pos-secondary/5 transition-all"
                 >
-                  <span className="text-2xl mb-1">💳</span>
+                  <svg className="w-7 h-7 mb-1" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <rect x="1" y="4" width="22" height="16" rx="2" />
+                    <line x1="1" y1="10" x2="23" y2="10" />
+                  </svg>
                   <span className="text-xs font-semibold text-pos-text">
                     Tarjeta
                   </span>
@@ -417,7 +425,12 @@ export default function CheckoutModal({
                   onClick={() => handlePaymentSelect("mixed")}
                   className="flex flex-col items-center justify-center py-4 px-1 border-2 border-pos-muted/20 rounded-xl touch-target hover:border-pos-secondary hover:bg-pos-secondary/5 transition-all"
                 >
-                  <span className="text-2xl mb-1">🔀</span>
+                  <svg className="w-7 h-7 mb-1" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <polyline points="17 1 21 5 17 9" />
+                    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                    <polyline points="7 23 3 19 7 15" />
+                    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                  </svg>
                   <span className="text-xs font-semibold text-pos-text">
                     Mixto
                   </span>
@@ -431,7 +444,10 @@ export default function CheckoutModal({
                       : "border-pos-muted/20 hover:border-pos-secondary hover:bg-pos-secondary/5"
                   }`}
                 >
-                  <span className="text-2xl mb-1">📒</span>
+                  <svg className="w-7 h-7 mb-1" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                  </svg>
                   <span className="text-xs font-semibold text-pos-text">
                     Cta. Corriente
                   </span>
@@ -540,7 +556,7 @@ export default function CheckoutModal({
           {paymentMethod === "credit" && selectedCustomer && (
             <div className="bg-pos-accent/10 border border-pos-accent/20 rounded-xl px-4 py-3">
               <div className="flex items-center justify-between mb-1">
-                <p className="text-sm font-medium text-pos-accent">📒 Cuenta Corriente</p>
+                <p className="text-sm font-medium text-pos-accent">Cuenta Corriente</p>
                 <span className="text-sm font-mono font-bold">{formatCurrency(total)}</span>
               </div>
               <p className="text-xs text-pos-muted">
@@ -556,7 +572,7 @@ export default function CheckoutModal({
           {paymentMethod === "card" && (
             <div className="bg-pos-secondary/10 border border-pos-secondary/20 rounded-xl px-4 py-3 text-center">
               <p className="text-sm text-pos-secondary font-medium">
-                💳 Pago con tarjeta seleccionado
+                Pago con tarjeta seleccionado
               </p>
               <p className="text-xs text-pos-muted mt-1">
                 Tocá "Confirmar" para completar la venta
