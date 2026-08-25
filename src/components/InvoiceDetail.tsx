@@ -42,7 +42,7 @@ export default function InvoiceDetail({
     <div className="flex flex-col h-full">
       {/* ── Header ── */}
       <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
           <h2 className="text-lg font-bold text-pos-text">
             {invoice.invoiceNumber}
           </h2>
@@ -62,7 +62,7 @@ export default function InvoiceDetail({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm">
           <div>
             <span className="text-pos-muted text-xs">Factura N°</span>
             <p className="text-pos-text font-mono">

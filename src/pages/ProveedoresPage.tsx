@@ -100,7 +100,7 @@ export default function ProveedoresPage() {
 
   return (
     <div className="flex flex-col gap-4 h-full">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-lg font-bold text-pos-text">Proveedores</h1>
         {view.kind === "list" && (
           <div className="flex items-center gap-2">

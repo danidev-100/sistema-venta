@@ -53,6 +53,7 @@ export default function NavigationBar() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const logout = useAuthStore((s) => s.logout);
   const [configOpen, setConfigOpen] = useState(true); // open by default in sidebar
+  const [mobileOpen, setMobileOpen] = useState(false); // mobile drawer
   const [clock, setClock] = useState(new Date());
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -95,13 +96,10 @@ export default function NavigationBar() {
     return page === id;
   }
 
-  return (
+  // Shared sidebar content (desktop aside + mobile drawer). Selecting a page
+  // always closes the mobile drawer.
+  const sidebarContent = (
     <>
-      <aside
-        className={`h-full bg-pos-primary/95 backdrop-blur-sm text-white flex flex-col shadow-lg shrink-0 overflow-hidden transition-[width] duration-200 ease-in-out ${
-          sidebarOpen ? "w-56 lg:w-60" : "w-0"
-        }`}
-      >
       {/* Logo / App title */}
       <div className="px-4 py-4 border-b border-white/10">
         <h1 className="text-sm font-bold tracking-wide">Sistema Ventas</h1>
@@ -124,7 +122,7 @@ export default function NavigationBar() {
         {visibleMain.map((p) => (
           <button
             key={p.id}
-            onClick={() => setPage(p.id)}
+            onClick={() => { setPage(p.id); setMobileOpen(false); }}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${
               isActive(p.id) && !isInConfig
                 ? "bg-pos-secondary/20 text-white"
@@ -171,7 +169,7 @@ export default function NavigationBar() {
                 {visibleConfig.map((p) => (
                   <button
                     key={p.id}
-                    onClick={() => setPage(p.id)}
+                    onClick={() => { setPage(p.id); setMobileOpen(false); }}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-left ${
                       page === p.id
                         ? "text-white bg-pos-secondary/15 font-medium"
@@ -253,27 +251,48 @@ export default function NavigationBar() {
           </button>
         </div>
       </div>
+    </>
+  );
 
-      {/* Logout confirmation modal */}
-      {showLogoutConfirm && (
-        <ConfirmModal
-          title="Cerrar sesión"
-          message="¿Estás seguro de que querés cerrar sesión? Se te redirigirá a la pantalla de inicio."
-          confirmText="Sí, cerrar sesión"
-          cancelText="Cancelar"
-          onConfirm={() => {
-            logout();
-            setPage("login");
-            setShowLogoutConfirm(false);
-          }}
-          onCancel={() => setShowLogoutConfirm(false)}
-        />
-      )}
+  return (
+    <>
+      {/* Mobile top bar — visible only below lg */}
+      <header className="lg:hidden flex items-center gap-3 px-3 h-14 shrink-0 bg-pos-primary/95 backdrop-blur-sm text-white shadow-md z-30">
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-white/10 transition-colors touch-target"
+          title="Abrir menú"
+          aria-label="Abrir menú"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="w-6 h-6"
+          >
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <h1 className="text-sm font-bold tracking-wide">Sistema Ventas</h1>
+      </header>
+
+      {/* Desktop sidebar — identical behavior to before, hidden below lg */}
+      <aside
+        className={`hidden lg:flex flex-col h-full bg-pos-primary/95 backdrop-blur-sm text-white shadow-lg shrink-0 overflow-hidden transition-[width] duration-200 ease-in-out ${
+          sidebarOpen ? "w-56 lg:w-60" : "w-0"
+        }`}
+      >
+        {sidebarContent}
       </aside>
 
-      {/* Reopen strip — reserves layout space when the sidebar is collapsed so it never overlaps the view content */}
+      {/* Reopen strip — desktop only; reserves layout space when the sidebar is collapsed so it never overlaps the view content */}
       {!sidebarOpen && (
-        <div className="w-12 h-full shrink-0 flex justify-center pt-3">
+        <div className="hidden lg:flex w-12 h-full shrink-0 justify-center pt-3">
           <button
             onClick={() => setSidebarOpen(true)}
             className="flex items-center justify-center w-10 h-10 rounded-lg bg-pos-primary/95 text-white shadow-lg border border-white/10 hover:bg-pos-secondary/80 transition-colors"
@@ -295,6 +314,45 @@ export default function NavigationBar() {
             </svg>
           </button>
         </div>
+      )}
+
+      {/* Mobile drawer + backdrop — overlay, hidden below lg */}
+      <div
+        className={`lg:hidden fixed inset-0 z-40 ${mobileOpen ? "" : "pointer-events-none"}`}
+        aria-hidden={!mobileOpen}
+      >
+        {/* Backdrop */}
+        <div
+          className={`absolute inset-0 bg-black/50 transition-opacity duration-200 ${
+            mobileOpen ? "opacity-100" : "opacity-0"
+          }`}
+          onClick={() => setMobileOpen(false)}
+        />
+        {/* Drawer */}
+        <aside
+          className={`absolute left-0 top-0 h-full w-72 max-w-[85vw] bg-pos-primary/95 backdrop-blur-sm text-white flex flex-col shadow-2xl transition-transform duration-200 ease-in-out ${
+            mobileOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+          aria-label="Menú de navegación"
+        >
+          {sidebarContent}
+        </aside>
+      </div>
+
+      {/* Logout confirmation modal — kept outside the drawer so its fixed positioning is viewport-relative */}
+      {showLogoutConfirm && (
+        <ConfirmModal
+          title="Cerrar sesión"
+          message="¿Estás seguro de que querés cerrar sesión? Se te redirigirá a la pantalla de inicio."
+          confirmText="Sí, cerrar sesión"
+          cancelText="Cancelar"
+          onConfirm={() => {
+            logout();
+            setPage("login");
+            setShowLogoutConfirm(false);
+          }}
+          onCancel={() => setShowLogoutConfirm(false)}
+        />
       )}
     </>
   );

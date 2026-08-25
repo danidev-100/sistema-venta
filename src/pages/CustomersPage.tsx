@@ -127,7 +127,7 @@ export default function CustomersPage() {
   return (
     <div className="flex flex-col gap-4 h-full">
       {/* ── Header + Search ── */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-lg font-bold text-pos-text">Clientes</h1>
         {view.kind === "list" && (
           <div className="flex items-center gap-2">
@@ -398,6 +398,7 @@ function CustomerDetail({ customer, onBack }: { customer: Customer; onBack: () =
         {rows.length === 0 ? (
           <p className="text-sm text-pos-muted italic text-center py-8">No hay movimientos registrados</p>
         ) : (
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-pos-muted border-b border-pos-muted/20">
@@ -434,6 +435,7 @@ function CustomerDetail({ customer, onBack }: { customer: Customer; onBack: () =
               ))}
             </tbody>
           </table>
+        </div>
         )}
       </div>
 

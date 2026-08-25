@@ -146,7 +146,7 @@ export default function PedidosPage() {
 
   return (
     <div className="flex flex-col gap-4 h-full">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-lg font-bold text-pos-text">Pedidos</h1>
         {view.kind === "list" && (
           <div className="flex items-center gap-2">
@@ -426,7 +426,7 @@ function DetailView({ pedido: initialPedido, onBack, onEdit }: { pedido: Pedido;
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <h3 className="text-sm font-semibold text-pos-text uppercase tracking-wide">
           Pedido #{pedido.id}
         </h3>
@@ -454,7 +454,7 @@ function DetailView({ pedido: initialPedido, onBack, onEdit }: { pedido: Pedido;
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 text-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
         <div>
           <span className="text-pos-muted">Proveedor:</span>{" "}
           <span className="text-pos-text font-medium">{pedido.proveedor_name}</span>
@@ -479,6 +479,7 @@ function DetailView({ pedido: initialPedido, onBack, onEdit }: { pedido: Pedido;
         )}
       </div>
 
+      <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="text-pos-muted border-b border-pos-muted/20">
@@ -547,6 +548,7 @@ function DetailView({ pedido: initialPedido, onBack, onEdit }: { pedido: Pedido;
           </tr>
         </tfoot>
       </table>
+      </div>
     </div>
   );
 }

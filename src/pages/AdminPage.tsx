@@ -1053,7 +1053,8 @@ function CombosSection() {
                       </div>
                     </div>
                     {combo.items.length > 0 && (
-                      <table className="w-full mt-2 text-xs">
+                      <div className="overflow-x-auto mt-2">
+                      <table className="w-full text-xs">
                         <thead>
                           <tr className="text-pos-muted/60 border-b border-pos-muted/10">
                             <th className="text-left font-medium py-1 pr-2">Producto</th>
@@ -1075,6 +1076,7 @@ function CombosSection() {
                           })}
                         </tbody>
                       </table>
+                      </div>
                     )}
                   </>
                 );

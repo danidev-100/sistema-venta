@@ -207,7 +207,7 @@ export default function CashMovementModal({
             <label className="block text-xs font-semibold text-pos-muted uppercase tracking-wide mb-2">
               Medio de pago
             </label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {METHODS.map((m) => (
                 <button
                   key={m.value}

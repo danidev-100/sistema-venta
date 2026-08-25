@@ -410,7 +410,7 @@ export default function ProductForm({
         <p className="text-xs font-semibold text-pos-muted uppercase tracking-wide mb-2">
           {form.saleUnit === "unit" ? "Niveles de Stock" : "Stock en gramos"}
         </p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label
               htmlFor="product-min-stock"

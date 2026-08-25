@@ -383,7 +383,7 @@ export default function CheckoutModal({
               <h3 className="text-xs font-semibold text-pos-muted uppercase tracking-wide mb-2">
                 Método de pago
               </h3>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 <button
                   onClick={() => handlePaymentSelect("cash")}
                   className="flex flex-col items-center justify-center py-4 px-1 border-2 border-pos-muted/20 rounded-xl touch-target hover:border-pos-secondary hover:bg-pos-secondary/5 transition-all"
@@ -482,7 +482,7 @@ export default function CheckoutModal({
               <h3 className="text-xs font-semibold text-pos-muted uppercase tracking-wide mb-2">
                 Pago Mixto
               </h3>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div>
                   <label htmlFor="mixed-cash-input" className="block text-[10px] text-pos-muted mb-1">💵 Efectivo</label>
                   <NumberInput

@@ -193,7 +193,7 @@ export default function BulkPriceModal({ onClose }: BulkPriceModalProps) {
               <h3 className="text-xs font-semibold text-pos-muted uppercase tracking-wide mb-3 dark:text-gray-400">
                 Filtrar Productos
               </h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label
                   htmlFor="bulk-category"
@@ -253,7 +253,7 @@ export default function BulkPriceModal({ onClose }: BulkPriceModalProps) {
             <h3 className="text-xs font-semibold text-pos-muted uppercase tracking-wide mb-3">
               Configuración del Aumento
             </h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label
                   htmlFor="bulk-percent"
@@ -293,7 +293,7 @@ export default function BulkPriceModal({ onClose }: BulkPriceModalProps) {
                 <span className="block text-sm font-medium text-pos-text mb-2">
                   Aplicar a
                 </span>
-                <div className="flex items-center gap-4 h-[38px]">
+                <div className="flex items-center gap-4 flex-wrap sm:h-[38px]">
                   {(["cost", "selling", "both"] as const).map((opt) => (
                     <label
                       key={opt}

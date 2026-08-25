@@ -190,7 +190,7 @@ export default function ComprobantesPage() {
 
   return (
     <div className="flex flex-col gap-4 h-full">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-lg font-bold text-pos-text">Comprobantes</h1>
         {view.kind === "list" && (
           <div className="flex items-center gap-2">
@@ -409,7 +409,8 @@ function ComprobanteForm({ onSaved, onCancel }: { onSaved: () => void; onCancel:
         const prod = storeProducts.find((p) => p.id === value);
         if (prod) { updated.product_name = prod.name; updated.unit_price = prod.price; }
       }
-      if (field === "quantity" || field === "unit_price") {
+      // Recalcular el subtotal también al elegir producto (que setea el precio)
+      if (field === "product_id" || field === "quantity" || field === "unit_price") {
         updated.subtotal = Math.round(updated.quantity * updated.unit_price * 100) / 100;
       }
       return updated;
@@ -479,7 +480,7 @@ function ComprobanteForm({ onSaved, onCancel }: { onSaved: () => void; onCancel:
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <h3 className="text-sm font-semibold text-pos-text uppercase tracking-wide">
           Nuevo {getTipoLabel(tipo)}
         </h3>
@@ -533,7 +534,7 @@ function ComprobanteForm({ onSaved, onCancel }: { onSaved: () => void; onCancel:
 
       {/* Cliente datos (todos los comprobantes) */}
       {clienteId && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-medium text-pos-text mb-1">Nombre</label>
             <input type="text" value={clienteNombre} readOnly className="w-full border border-pos-muted/30 rounded-lg px-3 py-2 text-sm bg-pos-background/50" />
@@ -725,7 +726,7 @@ function ComprobanteDetail({ comprobante, onBack }: { comprobante: Comprobante; 
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <h3 className="text-sm font-semibold text-pos-text uppercase tracking-wide">Comprobante</h3>
         <div className="flex items-center gap-2">
           <button onClick={handlePrint} className="text-xs px-3 py-1.5 bg-pos-secondary text-white rounded-lg touch-target hover:opacity-90">🖨️ Imprimir</button>
@@ -746,7 +747,7 @@ function ComprobanteDetail({ comprobante, onBack }: { comprobante: Comprobante; 
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
           <div><span className="text-pos-muted">Fecha:</span> {new Date(comprobante.fecha).toLocaleDateString("es-AR")}</div>
           <div><span className="text-pos-muted">Cajero:</span> {comprobante.createdBy}</div>
           <div><span className="text-pos-muted">Cliente:</span> {comprobante.cliente_nombre}</div>
@@ -754,6 +755,7 @@ function ComprobanteDetail({ comprobante, onBack }: { comprobante: Comprobante; 
           {comprobante.cliente_direccion && <div className="col-span-2"><span className="text-pos-muted">Dirección:</span> {comprobante.cliente_direccion}</div>}
         </div>
 
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead><tr className="text-pos-muted border-b border-pos-muted/20">
             <th className="text-left py-1 pr-2 font-medium">Producto</th>
@@ -772,6 +774,7 @@ function ComprobanteDetail({ comprobante, onBack }: { comprobante: Comprobante; 
             ))}
           </tbody>
         </table>
+        </div>
 
         <div className="text-right space-y-0.5 pt-2 border-t border-pos-muted/20">
           <div className="text-sm text-pos-muted">Subtotal: <span className="font-mono">{formatCurrency(comprobante.subtotal)}</span></div>

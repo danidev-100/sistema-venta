@@ -493,7 +493,7 @@ export default function POSPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 h-full">
+    <div className="flex flex-col gap-3 lg:gap-4 h-full">
       {/* ── Cash Register Gate ── */}
       {!hasOpenShift ? (
         <div className="flex-1 flex items-center justify-center">
@@ -537,7 +537,7 @@ export default function POSPage() {
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
               <span>Buscar productos por nombre, código o ID</span>
-              <kbd className="ml-auto text-[11px] font-mono text-pos-muted/30 bg-pos-background/50 px-1.5 py-0.5 rounded border border-pos-muted/10">F2</kbd>
+              <kbd className="hidden lg:inline ml-auto text-[11px] font-mono text-pos-muted/30 bg-pos-background/50 px-1.5 py-0.5 rounded border border-pos-muted/10">F2</kbd>
             </button>
             <p className="text-[11px] text-pos-muted/40 text-center mt-1.5">
               O escaneá el código de barras directamente
@@ -545,7 +545,7 @@ export default function POSPage() {
           </div>
 
           {/* ── Cart Panel (vertical — full height) ── */}
-          <aside className={`flex-1 min-h-0 bg-pos-surface rounded-xl border border-pos-muted/10 p-4 overflow-y-auto dark:bg-gray-800 dark:border-gray-600/30 ${scanFlash ? "scan-flash" : ""}`}>
+          <aside className={`flex-1 min-h-[45vh] lg:min-h-0 bg-pos-surface rounded-xl border border-pos-muted/10 p-4 overflow-y-auto dark:bg-gray-800 dark:border-gray-600/30 ${scanFlash ? "scan-flash" : ""}`}>
             <CartPanel
               onCheckout={handleCheckout}
               onSelectCustomer={() => setShowCustomerSelect(true)}

@@ -206,19 +206,19 @@ export default function CartPanel({
             <div
               key={item.productId}
               onClick={() => selectCartItem(item.productId)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-colors ${
+              className={`flex flex-wrap items-center gap-x-2 gap-y-1.5 px-3 py-2 rounded-lg border cursor-pointer transition-colors lg:flex-nowrap lg:gap-2 ${
                 selectedCartItemId === item.productId
                   ? "border-pos-secondary ring-1 ring-pos-secondary/30"
                   : "border-pos-muted/10 hover:border-pos-muted/30"
               }`}
             >
               {/* Item index */}
-              <span className="shrink-0 w-5 text-center text-xs font-mono font-bold text-pos-muted/50">
+              <span className="order-1 shrink-0 w-5 text-center text-xs font-mono font-bold text-pos-muted/50">
                 {idx + 1}
               </span>
 
               {/* Thumbnail */}
-              <div className="shrink-0 w-7 h-7 rounded-md overflow-hidden bg-pos-muted/10">
+              <div className="order-2 shrink-0 w-7 h-7 rounded-md overflow-hidden bg-pos-muted/10">
                 <ProductImage
                   src={products.find((p) => p.id === item.productId)?.image}
                   imgClassName="w-full h-full object-cover"
@@ -228,24 +228,24 @@ export default function CartPanel({
               </div>
 
               {/* Product name */}
-              <span className="flex-1 min-w-0 text-sm font-medium text-pos-text truncate">
+              <span className="order-3 flex-1 min-w-0 text-sm font-medium text-pos-text truncate">
                 {item.productName}
               </span>
 
               {/* Price */}
-              <span className="shrink-0 text-xs font-mono text-pos-muted tabular-nums min-w-[72px] text-right">
+              <span className="order-5 lg:order-4 shrink-0 text-xs font-mono text-pos-muted tabular-nums min-w-[72px] text-right">
                 {formatCurrency(item.unitPrice)}{item.saleUnit !== "unit" ? "/kg" : ""}
               </span>
 
               {/* Subtotal */}
-              <span className="shrink-0 text-sm font-bold font-mono text-pos-text tabular-nums min-w-[70px] text-right">
+              <span className="order-6 lg:order-5 shrink-0 text-sm font-bold font-mono text-pos-text tabular-nums min-w-[70px] text-right">
                 {formatCurrency(item.subtotal)}
               </span>
 
               {/* Quantity / Weight controls */}
               {item.saleUnit === "unit" ? (
                 /* ── Unit controls (current) ── */
-                <div className="shrink-0 flex items-center gap-0.5">
+                <div className="order-7 lg:order-6 shrink-0 flex flex-wrap lg:flex-nowrap items-center gap-0.5">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -350,7 +350,7 @@ export default function CartPanel({
                 </div>
               ) : (
                 /* ── Weight controls (gramos) ── */
-                <div className="shrink-0 flex items-center gap-0.5">
+                <div className="order-7 lg:order-6 shrink-0 flex flex-wrap lg:flex-nowrap items-center gap-0.5">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -494,7 +494,7 @@ export default function CartPanel({
 
               {/* Stock warning */}
               {stockError === item.productId && (
-                <span className="shrink-0 text-[10px] text-pos-danger font-medium">
+                <span className="order-8 lg:order-7 shrink-0 text-[10px] text-pos-danger font-medium">
                   Stock insuf.
                 </span>
               )}
@@ -505,7 +505,7 @@ export default function CartPanel({
                   e.stopPropagation();
                   removeItem(item.productId);
                 }}
-                className="shrink-0 w-6 h-6 flex items-center justify-center text-pos-muted/40 hover:text-pos-danger touch-target rounded-md hover:bg-pos-danger/10 transition-colors"
+                className="order-4 lg:order-8 shrink-0 w-6 h-6 flex items-center justify-center text-pos-muted/40 hover:text-pos-danger touch-target rounded-md hover:bg-pos-danger/10 transition-colors"
                 aria-label={`Eliminar ${item.productName} del carrito`}
               >
                 ✕
