@@ -249,7 +249,7 @@ export default function NavigationBar() {
       {/* Logo / App title */}
       <div className="px-4 py-4 border-b border-white/10">
         <h1 className="text-sm font-bold tracking-wide">Sistema Ventas</h1>
-        <p className="text-[10px] text-white/50 mt-0.5">POS v{__APP_VERSION__}</p>
+        <p className="text-[10px] text-white/50 mt-0.5">Release v{__APP_VERSION__}</p>
       </div>
 
       {/* Live clock */}
@@ -375,26 +375,6 @@ export default function NavigationBar() {
         {/* Theme */}
         <div className="flex justify-center">
           <ThemeToggle compact />
-        </div>
-
-        {/* Persistence status */}
-        <div className="px-3 py-2 border-t border-white/10">
-          <button
-            onClick={() => {
-              const sales = useAppStore.getState().completedSales.length;
-              const exps = useExpensesStore.getState().expenses.length;
-              const comps = useComprobantesStore.getState().comprobantes.length;
-              const prods = useProductsStore.getState().products.length;
-              const shifts = useCashClosingStore.getState().shifts.length;
-              useAppStore.getState().showNotification(
-                `📊 Ventas:${sales} Gastos:${exps} Comp:${comps} Prod:${prods} Turnos:${shifts}`
-              );
-            }}
-            className="w-full text-[9px] text-white/30 hover:text-white/60 transition-colors text-center"
-            title="Ver conteo de datos cargados"
-          >
-            v{__APP_VERSION__} — tocar para diagnóstico
-          </button>
         </div>
       </div>
     </>

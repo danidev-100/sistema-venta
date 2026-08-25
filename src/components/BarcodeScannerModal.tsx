@@ -7,6 +7,7 @@ type BarcodeScannerModalProps = {
 };
 
 const SCANNER_ID = "barcode-scanner-region";
+const START_TIMEOUT_MS = 15000;
 
 const SCAN_FORMATS = [
   Html5QrcodeSupportedFormats.EAN_13,
@@ -40,66 +41,104 @@ export default function BarcodeScannerModal({ onDetected, onClose }: BarcodeScan
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  // Iniciar cámara y detector al montar; limpiar al desmontar
+  // Iniciar cámara y detector al montar; limpiar al desmontar.
+  // IMPORTANTE: el elemento #barcode-scanner-region debe existir en el DOM
+  // ANTES de llamar Html5Qrcode.start() (por eso se renderiza siempre).
   useEffect(() => {
     let cancelled = false;
     let scanner: Html5Qrcode | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    function makeScanner() {
+      return new Html5Qrcode(SCANNER_ID, {
+        formatsToSupport: SCAN_FORMATS,
+        useBarCodeDetectorIfSupported: true,
+        verbose: false,
+      });
+    }
+
+    async function tryStart(constraints: string | MediaTrackConstraints) {
+      if (!scanner) scanner = makeScanner();
+      await scanner.start(
+        constraints,
+        {
+          fps: 10,
+          qrbox: { width: 260, height: 110 },
+        },
+        (decodedText) => {
+          if (handledRef.current) return;
+          handledRef.current = true;
+          onDetectedRef.current(decodedText);
+        },
+        () => {
+          /* errores por frame: ignorar */
+        },
+      );
+    }
 
     async function startCamera() {
-      const attempt = async (constraints: MediaTrackConstraints, freshScanner: boolean): Promise<boolean> => {
-        if (freshScanner || !scanner) {
-          scanner = new Html5Qrcode(SCANNER_ID, {
-            formatsToSupport: SCAN_FORMATS,
-            useBarCodeDetectorIfSupported: true,
-            verbose: false,
-          });
+      // Timeout de seguridad: nunca quedarse colgado en "starting"
+      timeoutId = setTimeout(() => {
+        if (!cancelled) {
+          setStatus("error");
+          setErrorMsg("La cámara tardó demasiado en iniciar. Probá de nuevo.");
         }
-        try {
-          await scanner.start(
-            constraints,
-            {
-              fps: 10,
-              qrbox: { width: 260, height: 110 },
-              disableFlip: true,
-            },
-            (decodedText) => {
-              if (handledRef.current) return;
-              handledRef.current = true;
-              onDetectedRef.current(decodedText);
-            },
-            () => {
-              /* errores por frame: ignorar */
-            },
-          );
-          return true;
-        } catch {
-          return false;
-        }
-      };
+      }, START_TIMEOUT_MS);
 
-      // Primero cámara trasera exacta; si falla, facingMode genérico.
-      let ok = await attempt({ facingMode: { exact: "environment" } }, true);
-      if (!ok) {
-        if (scanner) { try { scanner.clear(); } catch { /* noop */ } }
-        ok = await attempt({ facingMode: "environment" }, false);
-      }
-      if (!ok) {
-        if (scanner) { try { scanner.clear(); } catch { /* noop */ } }
+      try {
+        // 1) Intentar con la cámara trasera detectada por getCameras()
+        let started = false;
+        try {
+          const cameras = await Html5Qrcode.getCameras().catch(() => []);
+          const back =
+            cameras.find((c) => /back|rear|trasera|trás/i.test(c.label)) ??
+            cameras[cameras.length - 1];
+          if (back) {
+            await tryStart(back.id);
+            started = true;
+          }
+        } catch {
+          /* getCameras falló o no hay cámaras: seguir con facingMode */
+        }
+
+        // 2) Fallback: facingMode trasera exacta
+        if (!started) {
+          try {
+            await tryStart({ facingMode: { exact: "environment" } });
+            started = true;
+          } catch {
+            if (scanner) {
+              try {
+                scanner.clear();
+              } catch {
+                /* noop */
+              }
+            }
+            scanner = makeScanner();
+            // 3) Último fallback: facingMode genérico
+            await tryStart({ facingMode: "environment" });
+            started = true;
+          }
+        }
+
+        if (timeoutId) clearTimeout(timeoutId);
+        if (!cancelled) setStatus("scanning");
+      } catch {
+        if (timeoutId) clearTimeout(timeoutId);
         if (!cancelled) {
           setStatus("error");
           setErrorMsg(
-            "Verificá que el sitio use HTTPS y que permitas el acceso a la cámara desde el navegador.",
+            "No se pudo acceder a la cámara. Verificá que el sitio use HTTPS y que permitas el acceso a la cámara desde el navegador.",
           );
         }
-        return;
       }
-      if (!cancelled) setStatus("scanning");
     }
 
     startCamera();
 
     return () => {
       cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
       if (scanner) {
         scanner
           .stop()
@@ -138,24 +177,28 @@ export default function BarcodeScannerModal({ onDetected, onClose }: BarcodeScan
 
         {/* Body */}
         <div className="p-4">
-          {status === "starting" && (
-            <p className="text-sm text-pos-muted text-center py-10">Iniciando cámara…</p>
-          )}
-
-          {status === "error" && (
+          {status === "error" ? (
             <div className="text-center py-6 space-y-3">
               <div className="text-4xl">📷</div>
-              <p className="text-sm font-medium text-pos-danger">No se pudo acceder a la cámara.</p>
+              <p className="text-sm font-medium text-pos-danger">No se pudo iniciar la cámara.</p>
               <p className="text-xs text-pos-muted">{errorMsg}</p>
             </div>
-          )}
-
-          {status === "scanning" && (
+          ) : (
             <>
-              <div id={SCANNER_ID} className="w-full rounded-xl overflow-hidden bg-black" />
-              <p className="text-xs text-pos-muted text-center mt-3">
-                Apuntá al código de barras del producto
-              </p>
+              {/* El contenedor del video SIEMPRE está en el DOM para que start() lo encuentre */}
+              <div className="relative w-full rounded-xl overflow-hidden bg-black">
+                <div id={SCANNER_ID} className={status === "starting" ? "min-h-[200px]" : ""} />
+                {status === "starting" && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <p className="text-sm text-white/80">Iniciando cámara…</p>
+                  </div>
+                )}
+              </div>
+              {status === "scanning" && (
+                <p className="text-xs text-pos-muted text-center mt-3">
+                  Apuntá al código de barras del producto
+                </p>
+              )}
             </>
           )}
         </div>
