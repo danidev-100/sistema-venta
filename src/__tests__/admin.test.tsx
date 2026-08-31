@@ -1,60 +1,120 @@
 ﻿import { describe, it, expect, beforeEach, vi } from "vitest";
 
+const mockState = vi.hoisted(() => ({
+  users: new Map<string, Record<string, unknown>>(),
+  nextId: 1,
+}));
+
 vi.mock("@/lib/api", () => ({
   api: {
     get: vi.fn(() => Promise.resolve([])),
-    post: vi.fn((_path: string, data: unknown) => Promise.resolve({ ...(data as object), id: Date.now(), created_at: new Date().toISOString() })),
+    post: vi.fn((path: string, data: any) => {
+      if (path === "/auth/login") {
+        const user = mockState.users.get(data?.username);
+        if (!user || user.passwordHash !== "hashed_" + (data?.password ?? "")) {
+          return Promise.reject(new Error("Credenciales inválidas"));
+        }
+        return Promise.resolve({ token: "test-token", user });
+      }
+      if (path === "/users") {
+        const user = {
+          id: mockState.nextId++,
+          name: data.name,
+          role: data.role,
+          permissions: data.permissions ?? [],
+          active: data.active,
+          createdAt: new Date().toISOString(),
+          passwordHash: "hashed_" + data.password,
+        };
+        mockState.users.set(data.name, user);
+        return Promise.resolve(user);
+      }
+      return Promise.resolve({
+        ...(data as object),
+        id: mockState.nextId++,
+        created_at: new Date().toISOString(),
+      });
+    }),
     put: vi.fn(() => Promise.resolve(undefined)),
     del: vi.fn(() => Promise.resolve(undefined)),
   },
+  setToken: vi.fn(),
+  clearToken: vi.fn(),
 }));
+
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useAdminStore, type BulkPriceOpts } from "@/store/admin";
 import { useProductsStore } from "@/store/products";
 import { useBrandsStore } from "@/store/brands";
-import { useAuthStore } from "@/store/auth";
+import { useAuthStore, type AuthUser, type Permission } from "@/store/auth";
 import AdminRoute from "@/components/AdminRoute";
 import AdminPage from "@/pages/AdminPage";
 import { StoreProvider } from "@/store/context";
 import { useAppStore } from "@/store";
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
 // Helpers
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
 
-/** Clear localStorage and reset admin store between tests. */
 function resetStore() {
   useAdminStore.setState({
     theme: "light",
     preview: null,
+    pendingBulkOpts: null,
   });
+}
+
+function seedAdminUser() {
+  mockState.users.set("admin", {
+    id: 1,
+    name: "admin",
+    role: "admin",
+    permissions: [],
+    active: true,
+    createdAt: new Date().toISOString(),
+    passwordHash: "hashed_admin",
+  });
+}
+
+function makeUser(
+  name: string,
+  permissions: Permission[],
+  role: "admin" | "custom" = "custom",
+): AuthUser {
+  return {
+    id: mockState.nextId++,
+    name,
+    role,
+    permissions,
+    active: true,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function setCurrentUser(user: AuthUser | null) {
+  useAuthStore.setState({ currentUser: user });
 }
 
 beforeEach(() => {
   resetStore();
+  mockState.users.clear();
+  mockState.nextId = 1;
+  seedAdminUser();
 });
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
 // AdminRoute component
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
 
 describe("AdminRoute", () => {
   beforeEach(() => {
-    // Reset auth state
-    useAuthStore.setState({
-      users: [],
-      currentUser: null,
-      _hydrated: false,
-    });
-    localStorage.removeItem("auth_users");
-    localStorage.removeItem("auth_current_user_id");
+    setCurrentUser(null);
     useAppStore.getState().setPage("admin");
   });
 
-  it("renders children when user has admin permission", async () => {
-    await useAuthStore.getState().init();
-    await useAuthStore.getState().login("admin", "admin");
+  it("renders children when user has admin permission", () => {
+    setCurrentUser(makeUser("admin", [], "admin"));
 
     render(
       <AdminRoute>
@@ -65,16 +125,8 @@ describe("AdminRoute", () => {
     expect(screen.getByTestId("admin-content")).toBeInTheDocument();
   });
 
-  it("renders null when user does not have admin permission", async () => {
-    await useAuthStore.getState().init();
-    await useAuthStore.getState().addUser({
-      name: "limited",
-      password: "pass",
-      role: "custom",
-      permissions: ["ventas"],
-      active: true,
-    });
-    await useAuthStore.getState().login("limited", "pass");
+  it("renders null when user does not have admin permission", () => {
+    setCurrentUser(makeUser("limited", ["ventas"]));
 
     render(
       <AdminRoute>
@@ -86,15 +138,7 @@ describe("AdminRoute", () => {
   });
 
   it("redirects to dashboard when user lacks admin permission", async () => {
-    await useAuthStore.getState().init();
-    await useAuthStore.getState().addUser({
-      name: "limited",
-      password: "pass",
-      role: "custom",
-      permissions: ["ventas"],
-      active: true,
-    });
-    await useAuthStore.getState().login("limited", "pass");
+    setCurrentUser(makeUser("limited", ["ventas"]));
     useAppStore.setState({ page: "admin" });
 
     render(
@@ -109,8 +153,7 @@ describe("AdminRoute", () => {
   });
 
   it("redirects to dashboard when not authenticated", async () => {
-    await useAuthStore.getState().init();
-    // Not logged in
+    setCurrentUser(null);
     useAppStore.setState({ page: "admin" });
 
     render(
@@ -119,21 +162,22 @@ describe("AdminRoute", () => {
       </AdminRoute>,
     );
 
-    // Without currentUser, hasPermission returns false
     expect(screen.queryByTestId("admin-content")).toBeNull();
+    await waitFor(() => {
+      expect(useAppStore.getState().page).toBe("dashboard");
+    });
   });
 });
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
 // Bulk price preview & confirm
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
 
 describe("Bulk price preview", () => {
   const STORE_A = "store_1";
   const STORE_B = "store_2";
 
   beforeEach(() => {
-    // Reset all relevant stores
     useAdminStore.setState({
       theme: "light",
       preview: null,
@@ -147,29 +191,29 @@ describe("Bulk price preview", () => {
     useBrandsStore.setState({ brands: [] });
   });
 
-  function seedProducts() {
+  async function seedProducts() {
     const store = useProductsStore.getState();
-    const bebidas = store.addCategory({
+    const bebidas = await store.addCategory({
       name: "Bebidas",
       parent_id: null,
       store_id: STORE_A,
     });
-    const limpieza = store.addCategory({
+    const limpieza = await store.addCategory({
       name: "Limpieza",
       parent_id: null,
       store_id: STORE_A,
     });
 
-    const coca = useBrandsStore.getState().addBrand({
+    const coca = await useBrandsStore.getState().addBrand({
       name: "Coca-Cola",
       store_id: STORE_A,
     });
-    const pepsi = useBrandsStore.getState().addBrand({
+    const pepsi = await useBrandsStore.getState().addBrand({
       name: "Pepsi",
       store_id: STORE_A,
     });
 
-    store.addProduct({
+    await store.addProduct({
       barcode: "111",
       name: "Coca-Cola 500ml",
       price: 150,
@@ -179,7 +223,7 @@ describe("Bulk price preview", () => {
       brandId: coca.id,
       store_id: STORE_A,
     });
-    store.addProduct({
+    await store.addProduct({
       barcode: "222",
       name: "Coca-Cola 1L",
       price: 250,
@@ -189,7 +233,7 @@ describe("Bulk price preview", () => {
       brandId: coca.id,
       store_id: STORE_A,
     });
-    store.addProduct({
+    await store.addProduct({
       barcode: "333",
       name: "Pepsi 500ml",
       price: 140,
@@ -199,7 +243,7 @@ describe("Bulk price preview", () => {
       brandId: pepsi.id,
       store_id: STORE_A,
     });
-    store.addProduct({
+    await store.addProduct({
       barcode: "444",
       name: "Detergente",
       price: 300,
@@ -209,7 +253,7 @@ describe("Bulk price preview", () => {
       brandId: null,
       store_id: STORE_A,
     });
-    store.addProduct({
+    await store.addProduct({
       barcode: "555",
       name: "Lavandina",
       price: 180,
@@ -221,7 +265,7 @@ describe("Bulk price preview", () => {
     });
 
     // Product in other store (should never appear in preview)
-    store.addProduct({
+    await store.addProduct({
       barcode: "999",
       name: "Store B Product",
       price: 500,
@@ -235,10 +279,9 @@ describe("Bulk price preview", () => {
     return { bebidas, limpieza, coca, pepsi };
   }
 
-  it("previews all products when no filter is applied", () => {
-    seedProducts();
+  it("previews all products when no filter is applied", async () => {
+    await seedProducts();
     const opts: BulkPriceOpts = {
-
       percent: 10,
       target: "selling",
       storeId: STORE_A,
@@ -252,8 +295,8 @@ describe("Bulk price preview", () => {
     expect(result.find((i) => i.name === "Store B Product")).toBeUndefined();
   });
 
-  it("previews filter by category", () => {
-    const { bebidas } = seedProducts();
+  it("previews filter by category", async () => {
+    const { bebidas } = await seedProducts();
     const opts: BulkPriceOpts = {
       categoryId: bebidas.id,
       percent: 10,
@@ -271,8 +314,8 @@ describe("Bulk price preview", () => {
     ]);
   });
 
-  it("previews filter by brand", () => {
-    const { coca } = seedProducts();
+  it("previews filter by brand", async () => {
+    const { coca } = await seedProducts();
     const opts: BulkPriceOpts = {
       brandId: coca.id,
       percent: 10,
@@ -289,8 +332,8 @@ describe("Bulk price preview", () => {
     ]);
   });
 
-  it("previews filter by brand + category combined", () => {
-    const { bebidas, coca } = seedProducts();
+  it("previews filter by brand + category combined", async () => {
+    const { bebidas, coca } = await seedProducts();
     const opts: BulkPriceOpts = {
       categoryId: bebidas.id,
       percent: 10,
@@ -308,10 +351,9 @@ describe("Bulk price preview", () => {
     ]);
   });
 
-  it("preview calculates correct new prices for selling target", () => {
-    seedProducts();
+  it("preview calculates correct new prices for selling target", async () => {
+    await seedProducts();
     const opts: BulkPriceOpts = {
-
       percent: 10,
       target: "selling",
       storeId: STORE_A,
@@ -329,10 +371,9 @@ describe("Bulk price preview", () => {
     expect(det.newPrice).toBe(330);
   });
 
-  it("preview calculates correct new prices for cost target", () => {
-    seedProducts();
+  it("preview calculates correct new prices for cost target", async () => {
+    await seedProducts();
     const opts: BulkPriceOpts = {
-
       percent: 20,
       target: "cost",
       storeId: STORE_A,
@@ -347,17 +388,16 @@ describe("Bulk price preview", () => {
     expect(coca.newPrice).toBe(120);
   });
 
-  it("preview shows both cost and selling when target is both", () => {
-    seedProducts();
+  it("preview shows both cost and selling when target is both", async () => {
+    await seedProducts();
     const opts: BulkPriceOpts = {
-
       percent: 10,
       target: "both",
       storeId: STORE_A,
     };
     const result = useAdminStore.getState().bulkPricePreview(opts);
 
-    // 5 products Ã— 2 fields = 10 items
+    // 5 products × 2 fields = 10 items
     expect(result).toHaveLength(10);
 
     const costItems = result.filter((i) => i.field === "cost");
@@ -366,8 +406,8 @@ describe("Bulk price preview", () => {
     expect(sellingItems).toHaveLength(5);
   });
 
-  it("preview is empty when no products match filter", () => {
-    seedProducts();
+  it("preview is empty when no products match filter", async () => {
+    await seedProducts();
     const opts: BulkPriceOpts = {
       categoryId: 9999,
       percent: 10,
@@ -379,10 +419,9 @@ describe("Bulk price preview", () => {
     expect(result).toHaveLength(0);
   });
 
-  it("preview shows 0 products for 0% increase edge case", () => {
-    seedProducts();
+  it("preview shows 0 products for 0% increase edge case", async () => {
+    await seedProducts();
     const opts: BulkPriceOpts = {
-
       percent: 0,
       target: "selling",
       storeId: STORE_A,
@@ -394,10 +433,9 @@ describe("Bulk price preview", () => {
     expect(result[0].currentPrice).toBe(result[0].newPrice);
   });
 
-  it("preview handles negative percentage (decrease)", () => {
-    seedProducts();
+  it("preview handles negative percentage (decrease)", async () => {
+    await seedProducts();
     const opts: BulkPriceOpts = {
-
       percent: -10,
       target: "selling",
       storeId: STORE_A,
@@ -409,14 +447,13 @@ describe("Bulk price preview", () => {
     expect(coca.newPrice).toBe(135); // 150 - 15
   });
 
-  it("preview does not modify product store", () => {
-    seedProducts();
+  it("preview does not modify product store", async () => {
+    await seedProducts();
     const before = useProductsStore
       .getState()
       .products.map((p) => ({ id: p.id, price: p.price, costPrice: p.costPrice }));
 
     const opts: BulkPriceOpts = {
-
       percent: 50,
       target: "both",
       storeId: STORE_A,
@@ -431,9 +468,9 @@ describe("Bulk price preview", () => {
   });
 });
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
 // Bulk price confirm
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
 
 describe("Bulk price confirm", () => {
   const STORE_A = "store_1";
@@ -452,34 +489,32 @@ describe("Bulk price confirm", () => {
     useBrandsStore.setState({ brands: [] });
   });
 
-  it("confirm updates selling prices and matches preview", () => {
-    const store = useProductsStore.getState();
-    // Add products directly (no categories/brands needed for this test)
-    store.addProduct({
-      barcode: "111",
-      name: "Product A",
-      price: 100,
+  async function addProduct(
+    barcode: string,
+    name: string,
+    price: number,
+    costPrice: number,
+    categoryId: number | null = null,
+  ) {
+    return useProductsStore.getState().addProduct({
+      barcode,
+      name,
+      price,
       stock: 10,
-      category_id: null,
-      costPrice: 80,
+      category_id: categoryId,
+      costPrice,
       brandId: null,
       store_id: STORE_A,
     });
-    store.addProduct({
-      barcode: "222",
-      name: "Product B",
-      price: 200,
-      stock: 5,
-      category_id: null,
-      costPrice: 150,
-      brandId: null,
-      store_id: STORE_A,
-    });
+  }
+
+  it("confirm updates selling prices and matches preview", async () => {
+    await addProduct("111", "Product A", 100, 80);
+    await addProduct("222", "Product B", 200, 150);
 
     // Preview
     const adminStore = useAdminStore.getState();
     const preview = adminStore.bulkPricePreview({
-
       percent: 10,
       target: "selling",
       storeId: STORE_A,
@@ -490,7 +525,7 @@ describe("Bulk price confirm", () => {
     expect(preview[1].newPrice).toBe(220);
 
     // Confirm
-    useAdminStore.getState().bulkPriceConfirm();
+    await useAdminStore.getState().bulkPriceConfirm();
 
     // Verify
     const products = useProductsStore.getState().products;
@@ -506,76 +541,43 @@ describe("Bulk price confirm", () => {
     expect(useAdminStore.getState().preview).toBeNull();
   });
 
-  it("confirm updates cost prices correctly", () => {
-    const store = useProductsStore.getState();
-    store.addProduct({
-      barcode: "111",
-      name: "Product A",
-      price: 100,
-      stock: 10,
-      category_id: null,
-      costPrice: 80,
-      brandId: null,
-      store_id: STORE_A,
-    });
+  it("confirm updates cost prices correctly", async () => {
+    await addProduct("111", "Product A", 100, 80);
 
     useAdminStore.getState().bulkPricePreview({
-
       percent: 25,
       target: "cost",
       storeId: STORE_A,
     });
-    useAdminStore.getState().bulkPriceConfirm();
+    await useAdminStore.getState().bulkPriceConfirm();
 
     const p = useProductsStore.getState().products[0];
     expect(p.costPrice).toBe(100); // 80 * 1.25
     expect(p.price).toBe(100); // unchanged
   });
 
-  it("confirm updates both cost and selling prices", () => {
-    const store = useProductsStore.getState();
-    store.addProduct({
-      barcode: "111",
-      name: "Product A",
-      price: 100,
-      stock: 10,
-      category_id: null,
-      costPrice: 80,
-      brandId: null,
-      store_id: STORE_A,
-    });
+  it("confirm updates both cost and selling prices", async () => {
+    await addProduct("111", "Product A", 100, 80);
 
     useAdminStore.getState().bulkPricePreview({
-
       percent: 10,
       target: "both",
       storeId: STORE_A,
     });
-    useAdminStore.getState().bulkPriceConfirm();
+    await useAdminStore.getState().bulkPriceConfirm();
 
     const p = useProductsStore.getState().products[0];
     expect(p.costPrice).toBe(88); // 80 * 1.1
     expect(p.price).toBe(110); // 100 * 1.1
   });
 
-  it("cancel (clear preview) does not modify products", () => {
-    const store = useProductsStore.getState();
-    store.addProduct({
-      barcode: "111",
-      name: "Product A",
-      price: 100,
-      stock: 10,
-      category_id: null,
-      costPrice: 80,
-      brandId: null,
-      store_id: STORE_A,
-    });
+  it("cancel (clear preview) does not modify products", async () => {
+    await addProduct("111", "Product A", 100, 80);
 
     const beforePrice = useProductsStore.getState().products[0].price;
 
     // Preview then cancel
     useAdminStore.getState().bulkPricePreview({
-
       percent: 50,
       target: "selling",
       storeId: STORE_A,
@@ -587,29 +589,14 @@ describe("Bulk price confirm", () => {
     expect(useAdminStore.getState().preview).toBeNull();
   });
 
-  it("confirm with no preview is a no-op (does not throw)", () => {
-    expect(() => {
-      useAdminStore.getState().bulkPriceConfirm();
-    }).not.toThrow();
+  it("confirm with no preview is a no-op (does not throw)", async () => {
+    await expect(useAdminStore.getState().bulkPriceConfirm()).resolves.toBeUndefined();
   });
 
-
-
-  it("handles large percentages without overflow", () => {
-    const store = useProductsStore.getState();
-    store.addProduct({
-      barcode: "111",
-      name: "Expensive Item",
-      price: 9999.99,
-      stock: 1,
-      category_id: null,
-      costPrice: 8000,
-      brandId: null,
-      store_id: STORE_A,
-    });
+  it("handles large percentages without overflow", async () => {
+    await addProduct("111", "Expensive Item", 9999.99, 8000);
 
     const preview = useAdminStore.getState().bulkPricePreview({
-
       percent: 1000,
       target: "selling",
       storeId: STORE_A,
@@ -619,31 +606,20 @@ describe("Bulk price confirm", () => {
     expect(isFinite(preview[0].newPrice)).toBe(true);
   });
 
-  it("confirm with filtered preview only updates matching products", () => {
-    const store = useProductsStore.getState();
-    const cat1 = store.addCategory({ name: "Cat A", parent_id: null, store_id: STORE_A });
-    const cat2 = store.addCategory({ name: "Cat B", parent_id: null, store_id: STORE_A });
+  it("confirm with filtered preview only updates matching products", async () => {
+    const cat1 = await useProductsStore.getState().addCategory({
+      name: "Cat A",
+      parent_id: null,
+      store_id: STORE_A,
+    });
+    const cat2 = await useProductsStore.getState().addCategory({
+      name: "Cat B",
+      parent_id: null,
+      store_id: STORE_A,
+    });
 
-    store.addProduct({
-      barcode: "111",
-      name: "In Category A",
-      price: 100,
-      stock: 10,
-      category_id: cat1.id,
-      costPrice: 0,
-      brandId: null,
-      store_id: STORE_A,
-    });
-    store.addProduct({
-      barcode: "222",
-      name: "In Category B",
-      price: 200,
-      stock: 5,
-      category_id: cat2.id,
-      costPrice: 0,
-      brandId: null,
-      store_id: STORE_A,
-    });
+    await addProduct("111", "In Category A", 100, 0, cat1.id);
+    await addProduct("222", "In Category B", 200, 0, cat2.id);
 
     // Preview only Cat A
     useAdminStore.getState().bulkPricePreview({
@@ -652,7 +628,7 @@ describe("Bulk price confirm", () => {
       target: "selling",
       storeId: STORE_A,
     });
-    useAdminStore.getState().bulkPriceConfirm();
+    await useAdminStore.getState().bulkPriceConfirm();
 
     const products = useProductsStore.getState().products;
     const a = products.find((p) => p.name === "In Category A")!;
@@ -662,9 +638,9 @@ describe("Bulk price confirm", () => {
   });
 });
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Dark theme toggle â€” store & persistence
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
+// Dark theme toggle — store & persistence
+// ──────────────────────────────────────────────
 
 describe("Dark theme toggle", () => {
   beforeEach(() => {
@@ -735,7 +711,7 @@ describe("Dark theme toggle", () => {
   it("flicker prevention: inline script should apply dark class before React", () => {
     // This test verifies the EFFECT of the flicker prevention approach.
     // The inline script in index.html runs before React hydrates.
-    // Here we simulate: set localStorage dark â†’ check that the class
+    // Here we simulate: set localStorage dark → check that the class
     // would be applied before render.
     localStorage.setItem("admin_theme", "dark");
     document.documentElement.classList.remove("dark");
@@ -749,9 +725,9 @@ describe("Dark theme toggle", () => {
   });
 });
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Settings Tab â€” AdminPage (Task 3.2)
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
+// Settings Tab — AdminPage
+// ──────────────────────────────────────────────
 
 function renderAdminPage() {
   return render(
@@ -761,36 +737,28 @@ function renderAdminPage() {
   );
 }
 
-describe("AdminPage â€” Settings Tab", () => {
-  beforeEach(async () => {
-    // Reset auth store and login as admin
-    useAuthStore.setState({
-      users: [],
-      currentUser: null,
-      _hydrated: false,
-    });
-    localStorage.removeItem("auth_users");
-    localStorage.removeItem("auth_current_user_id");
+describe("AdminPage — Settings Tab", () => {
+  beforeEach(() => {
+    setCurrentUser(makeUser("admin", [], "admin"));
     useAppStore.setState({ page: "admin" });
-    await useAuthStore.getState().init();
-    await useAuthStore.getState().login("admin", "admin");
+    useAdminStore.setState({ theme: "light", preview: null, pendingBulkOpts: null });
+    localStorage.removeItem("admin_theme");
   });
 
-  it("shows Gestionar Usuarios link in settings tab", async () => {
+  it("shows Gestionar button in settings tab", async () => {
     const user = userEvent.setup();
     renderAdminPage();
 
-    // Click ConfiguraciÃ³n tab
-    await user.click(screen.getByText("ConfiguraciÃ³n"));
+    await user.click(screen.getByText("Configuración"));
 
-    expect(screen.getByText("Gestionar Usuarios")).toBeInTheDocument();
+    expect(screen.getByText("Gestionar")).toBeInTheDocument();
   });
 
   it("does not render PIN form elements", async () => {
     const user = userEvent.setup();
     renderAdminPage();
 
-    await user.click(screen.getByText("ConfiguraciÃ³n"));
+    await user.click(screen.getByText("Configuración"));
 
     // PIN fields should NOT exist
     expect(screen.queryByLabelText("PIN Actual")).toBeNull();
@@ -805,18 +773,18 @@ describe("AdminPage â€” Settings Tab", () => {
     const user = userEvent.setup();
     renderAdminPage();
 
-    await user.click(screen.getByText("ConfiguraciÃ³n"));
+    await user.click(screen.getByText("Configuración"));
 
     expect(screen.getByText("Tema")).toBeInTheDocument();
     expect(screen.getByText("Modo Claro")).toBeInTheDocument();
   });
 
-  it("navigates to user-management page when clicking Gestionar Usuarios", async () => {
+  it("navigates to user-management page when clicking Gestionar", async () => {
     const user = userEvent.setup();
     renderAdminPage();
 
-    await user.click(screen.getByText("ConfiguraciÃ³n"));
-    await user.click(screen.getByText("Gestionar Usuarios"));
+    await user.click(screen.getByText("Configuración"));
+    await user.click(screen.getByText("Gestionar"));
 
     expect(useAppStore.getState().page).toBe("user-management");
   });
@@ -825,9 +793,8 @@ describe("AdminPage â€” Settings Tab", () => {
     const user = userEvent.setup();
     renderAdminPage();
 
-    await user.click(screen.getByText("ConfiguraciÃ³n"));
+    await user.click(screen.getByText("Configuración"));
 
     expect(screen.getByText("admin")).toBeInTheDocument();
   });
 });
-

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { usePedidosStore, getStatusLabel } from "@/store/pedidos";
 
 function resetStore() {
-  usePedidosStore.setState({ pedidos: [] });
+  usePedidosStore.setState({ pedidos: [], loading: false });
 }
 
 beforeEach(() => {
@@ -18,8 +18,8 @@ const baseItem = {
 };
 
 describe("Pedidos CRUD", () => {
-  it("adds a pedido with items and computes total", () => {
-    const pedido = usePedidosStore.getState().addPedido({
+  it("adds a pedido with items and computes total", async () => {
+    const pedido = await usePedidosStore.getState().addPedido({
       proveedor_id: 1,
       proveedor_name: "Distribuidora SRL",
       date: "2026-06-21",
@@ -42,8 +42,8 @@ describe("Pedidos CRUD", () => {
     expect(pedido.items[1].product_name).toBe("Item B");
   });
 
-  it("increments id for each new pedido", () => {
-    const p1 = usePedidosStore.getState().addPedido({
+  it("increments id for each new pedido", async () => {
+    const p1 = await usePedidosStore.getState().addPedido({
       proveedor_id: 1,
       proveedor_name: "A",
       date: "2026-06-21",
@@ -51,7 +51,7 @@ describe("Pedidos CRUD", () => {
       store_id: "store_1",
       items: [{ ...baseItem, product_name: "X" }],
     });
-    const p2 = usePedidosStore.getState().addPedido({
+    const p2 = await usePedidosStore.getState().addPedido({
       proveedor_id: 2,
       proveedor_name: "B",
       date: "2026-06-22",
@@ -60,11 +60,11 @@ describe("Pedidos CRUD", () => {
       items: [{ ...baseItem, product_name: "Y" }],
     });
 
-    expect(p2.id).toBe(p1.id + 1);
+    expect(p2.id).toBeGreaterThan(p1.id);
   });
 
-  it("rounds total to 2 decimal places", () => {
-    const pedido = usePedidosStore.getState().addPedido({
+  it("rounds total to 2 decimal places", async () => {
+    const pedido = await usePedidosStore.getState().addPedido({
       proveedor_id: 1,
       proveedor_name: "A",
       date: "2026-06-21",
@@ -76,11 +76,11 @@ describe("Pedidos CRUD", () => {
       ],
     });
 
-    expect(pedido.total).toBe(31.00);
+    expect(pedido.total).toBe(31.0);
   });
 
-  it("updates pedido status", () => {
-    const pedido = usePedidosStore.getState().addPedido({
+  it("updates pedido status", async () => {
+    const pedido = await usePedidosStore.getState().addPedido({
       proveedor_id: 1,
       proveedor_name: "A",
       date: "2026-06-21",
@@ -89,18 +89,18 @@ describe("Pedidos CRUD", () => {
       items: [{ ...baseItem }],
     });
 
-    usePedidosStore.getState().updateStatus(pedido.id, "received");
+    await usePedidosStore.getState().updateStatus(pedido.id, "received");
     const updated = usePedidosStore.getState().pedidos.find((p) => p.id === pedido.id)!;
     expect(updated.status).toBe("received");
   });
 
-  it("silently ignores updating status of non-existent pedido", () => {
-    usePedidosStore.getState().updateStatus(999, "received");
+  it("silently ignores updating status of non-existent pedido", async () => {
+    await usePedidosStore.getState().updateStatus(999, "received");
     expect(usePedidosStore.getState().pedidos).toHaveLength(0);
   });
 
-  it("deletes a pedido", () => {
-    const pedido = usePedidosStore.getState().addPedido({
+  it("deletes a pedido", async () => {
+    const pedido = await usePedidosStore.getState().addPedido({
       proveedor_id: 1,
       proveedor_name: "A",
       date: "2026-06-21",
@@ -109,14 +109,14 @@ describe("Pedidos CRUD", () => {
       items: [{ ...baseItem }],
     });
 
-    usePedidosStore.getState().deletePedido(pedido.id);
+    await usePedidosStore.getState().deletePedido(pedido.id);
     expect(
       usePedidosStore.getState().pedidos.find((p) => p.id === pedido.id),
     ).toBeUndefined();
   });
 
-  it("silently ignores deleting non-existent pedido", () => {
-    usePedidosStore.getState().addPedido({
+  it("silently ignores deleting non-existent pedido", async () => {
+    await usePedidosStore.getState().addPedido({
       proveedor_id: 1,
       proveedor_name: "A",
       date: "2026-06-21",
@@ -125,14 +125,14 @@ describe("Pedidos CRUD", () => {
       items: [{ ...baseItem }],
     });
 
-    usePedidosStore.getState().deletePedido(999);
+    await usePedidosStore.getState().deletePedido(999);
     expect(usePedidosStore.getState().pedidos).toHaveLength(1);
   });
 });
 
 describe("getPedidosByStore", () => {
-  beforeEach(() => {
-    usePedidosStore.getState().addPedido({
+  beforeEach(async () => {
+    await usePedidosStore.getState().addPedido({
       proveedor_id: 1,
       proveedor_name: "Alpha",
       date: "2026-06-20",
@@ -140,7 +140,7 @@ describe("getPedidosByStore", () => {
       store_id: "store_1",
       items: [{ ...baseItem }],
     });
-    usePedidosStore.getState().addPedido({
+    await usePedidosStore.getState().addPedido({
       proveedor_id: 2,
       proveedor_name: "Beta",
       date: "2026-06-21",
@@ -148,7 +148,7 @@ describe("getPedidosByStore", () => {
       store_id: "store_1",
       items: [{ ...baseItem }],
     });
-    usePedidosStore.getState().addPedido({
+    await usePedidosStore.getState().addPedido({
       proveedor_id: 3,
       proveedor_name: "Other store",
       date: "2026-06-22",

@@ -26,6 +26,7 @@ import afipRoutes from "./routes/afip.js";
 import priceListsRoutes from "./routes/price-lists.js";
 import usersRoutes from "./routes/users.js";
 import storesRoutes from "./routes/stores.js";
+import backupRoutes from "./routes/backup.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,6 +49,9 @@ app.use(cors({
 }));
 
 // ── Body parser ──
+// El import de backup recibe un JSON completo de la tienda; le damos un
+// límite propio mayor y más permisivo sin tocar el límite global.
+app.use("/api/backup/import", express.json({ limit: "50mb" }));
 app.use(express.json({ limit: "5mb" }));
 
 // ── Global rate limiter ──
@@ -84,6 +88,7 @@ app.use("/api/afip", authMiddleware, requireStoreAccess, afipRoutes);
 app.use("/api/price-lists", authMiddleware, requireStoreAccess, priceListsRoutes);
 app.use("/api/users", authMiddleware, requireStoreAccess, usersRoutes);
 app.use("/api/stores", authMiddleware, storesRoutes);
+app.use("/api/backup", backupRoutes);
 
 // ── Serve frontend (only in non-Vercel environments) ──
 // On Vercel, static files are served by the CDN, not by Express.

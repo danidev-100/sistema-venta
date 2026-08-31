@@ -29,6 +29,8 @@ export type TemplateData = {
   fecha: string;
   subtotal: string;
   iva: string;
+  /** Etiqueta del IVA, ej. "IVA 21%" o "IVA". */
+  iva_label: string;
   total: string;
   tipo_label: string;
   notes: string;
@@ -107,6 +109,8 @@ export type ComprobanteLike = {
   iva: number;
   total: number;
   notes?: string | null;
+  /** Opcional — alícuota de IVA para la etiqueta de la plantilla. */
+  iva_percent?: number;
   items: Array<{
     product_name: string;
     quantity: number;
@@ -149,6 +153,7 @@ export function comprobanteToTemplateData(c: ComprobanteLike, company?: Record<s
     fecha: formatDate(c.fecha),
     subtotal: fmt(c.subtotal),
     iva: fmt(c.iva),
+    iva_label: c.iva_percent ? `IVA ${c.iva_percent}%` : "IVA",
     total: fmt(c.total),
     tipo_label: TIPO_LABELS[c.tipo] || c.tipo,
     notes: c.notes ?? "",

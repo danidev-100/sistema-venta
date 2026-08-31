@@ -108,6 +108,12 @@ export default function ReceiptPreview({
                 <span className="font-mono text-pos-danger">−{formatCurrency(sale.discountAmount)}</span>
               </div>
             )}
+            {sale.iva > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-pos-muted">IVA</span>
+                <span className="font-mono">{formatCurrency(sale.iva)}</span>
+              </div>
+            )}
             <div className="flex items-center justify-between text-base font-bold pt-1 border-t border-pos-muted/10">
               <span className="text-pos-text">Total</span>
               <span className="font-mono text-pos-secondary">

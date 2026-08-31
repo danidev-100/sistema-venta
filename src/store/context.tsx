@@ -9,8 +9,8 @@ import {
 /**
  * Store context — provides the active `store_id` to the entire component tree.
  *
- * All data-access hooks (e.g. `useStoreFilter`) read from this context to
- * scope queries and mutations to the currently selected store.
+ * All data-access hooks read from this context to scope queries and mutations
+ * to the currently selected store.
  *
  * Changing the store clears the cart via the Zustand store and refreshes
  * all data-bound views.
@@ -38,8 +38,6 @@ export function StoreProvider({
   const setStoreId = useCallback(
     (id: string) => {
       setStoreIdState(id);
-      // Cart is cleared on store switch via a Zustand subscription
-      // in the useStoreFilter hook (see src/hooks/useStoreFilter.ts).
     },
     [],
   );

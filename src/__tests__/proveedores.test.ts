@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { useProveedoresStore } from "@/store/proveedores";
 
 function resetStore() {
-  useProveedoresStore.setState({ proveedores: [] });
+  useProveedoresStore.setState({ proveedores: [], loading: false });
 }
 
 beforeEach(() => {
@@ -10,8 +10,8 @@ beforeEach(() => {
 });
 
 describe("Proveedores CRUD", () => {
-  it("adds a proveedor with all required fields", () => {
-    const p = useProveedoresStore.getState().addProveedor({
+  it("adds a proveedor with all required fields", async () => {
+    const p = await useProveedoresStore.getState().addProveedor({
       name: "Distribuidora SRL",
       phone: "123456789",
       email: "info@distri.com",
@@ -29,8 +29,8 @@ describe("Proveedores CRUD", () => {
     expect(p.store_id).toBe("store_1");
   });
 
-  it("increments id for each new proveedor", () => {
-    const p1 = useProveedoresStore.getState().addProveedor({
+  it("increments id for each new proveedor", async () => {
+    const p1 = await useProveedoresStore.getState().addProveedor({
       name: "Proveedor A",
       phone: "",
       email: "",
@@ -38,7 +38,7 @@ describe("Proveedores CRUD", () => {
       cuit: "",
       store_id: "store_1",
     });
-    const p2 = useProveedoresStore.getState().addProveedor({
+    const p2 = await useProveedoresStore.getState().addProveedor({
       name: "Proveedor B",
       phone: "",
       email: "",
@@ -47,11 +47,11 @@ describe("Proveedores CRUD", () => {
       store_id: "store_1",
     });
 
-    expect(p2.id).toBe(p1.id + 1);
+    expect(p2.id).toBeGreaterThan(p1.id);
   });
 
-  it("rejects duplicate name in same store", () => {
-    useProveedoresStore.getState().addProveedor({
+  it("rejects duplicate name in same store", async () => {
+    await useProveedoresStore.getState().addProveedor({
       name: "Duplicado",
       phone: "",
       email: "",
@@ -60,7 +60,7 @@ describe("Proveedores CRUD", () => {
       store_id: "store_1",
     });
 
-    expect(() => {
+    await expect(
       useProveedoresStore.getState().addProveedor({
         name: "Duplicado",
         phone: "",
@@ -68,12 +68,12 @@ describe("Proveedores CRUD", () => {
         address: "",
         cuit: "",
         store_id: "store_1",
-      });
-    }).toThrow(/ya existe/i);
+      }),
+    ).rejects.toThrow(/ya existe/i);
   });
 
-  it("allows same name in different stores", () => {
-    useProveedoresStore.getState().addProveedor({
+  it("allows same name in different stores", async () => {
+    await useProveedoresStore.getState().addProveedor({
       name: "Mismo nombre",
       phone: "",
       email: "",
@@ -82,7 +82,7 @@ describe("Proveedores CRUD", () => {
       store_id: "store_1",
     });
 
-    const p2 = useProveedoresStore.getState().addProveedor({
+    const p2 = await useProveedoresStore.getState().addProveedor({
       name: "Mismo nombre",
       phone: "",
       email: "",
@@ -94,8 +94,8 @@ describe("Proveedores CRUD", () => {
     expect(p2.id).toBeGreaterThan(0);
   });
 
-  it("updates an existing proveedor", () => {
-    const p = useProveedoresStore.getState().addProveedor({
+  it("updates an existing proveedor", async () => {
+    const p = await useProveedoresStore.getState().addProveedor({
       name: "Original",
       phone: "111",
       email: "a@a.com",
@@ -104,7 +104,7 @@ describe("Proveedores CRUD", () => {
       store_id: "store_1",
     });
 
-    useProveedoresStore.getState().updateProveedor(p.id, {
+    await useProveedoresStore.getState().updateProveedor(p.id, {
       name: "Actualizado",
       phone: "222",
     });
@@ -117,8 +117,8 @@ describe("Proveedores CRUD", () => {
     expect(updated.email).toBe("a@a.com");
   });
 
-  it("rejects update to duplicate name", () => {
-    useProveedoresStore.getState().addProveedor({
+  it("rejects update to duplicate name", async () => {
+    await useProveedoresStore.getState().addProveedor({
       name: "Uno",
       phone: "",
       email: "",
@@ -126,7 +126,7 @@ describe("Proveedores CRUD", () => {
       cuit: "",
       store_id: "store_1",
     });
-    const p2 = useProveedoresStore.getState().addProveedor({
+    const p2 = await useProveedoresStore.getState().addProveedor({
       name: "Dos",
       phone: "",
       email: "",
@@ -135,13 +135,13 @@ describe("Proveedores CRUD", () => {
       store_id: "store_1",
     });
 
-    expect(() => {
-      useProveedoresStore.getState().updateProveedor(p2.id, { name: "Uno" });
-    }).toThrow(/ya existe/i);
+    await expect(
+      useProveedoresStore.getState().updateProveedor(p2.id, { name: "Uno" }),
+    ).rejects.toThrow(/ya existe/i);
   });
 
-  it("deletes a proveedor", () => {
-    const p = useProveedoresStore.getState().addProveedor({
+  it("deletes a proveedor", async () => {
+    const p = await useProveedoresStore.getState().addProveedor({
       name: "To delete",
       phone: "",
       email: "",
@@ -150,14 +150,14 @@ describe("Proveedores CRUD", () => {
       store_id: "store_1",
     });
 
-    useProveedoresStore.getState().deleteProveedor(p.id);
+    await useProveedoresStore.getState().deleteProveedor(p.id);
     expect(
       useProveedoresStore.getState().proveedores.find((x) => x.id === p.id),
     ).toBeUndefined();
   });
 
-  it("silently ignores deleting non-existent proveedor", () => {
-    useProveedoresStore.getState().addProveedor({
+  it("silently ignores deleting non-existent proveedor", async () => {
+    await useProveedoresStore.getState().addProveedor({
       name: "Keep me",
       phone: "",
       email: "",
@@ -166,14 +166,14 @@ describe("Proveedores CRUD", () => {
       store_id: "store_1",
     });
 
-    useProveedoresStore.getState().deleteProveedor(999);
+    await useProveedoresStore.getState().deleteProveedor(999);
     expect(useProveedoresStore.getState().proveedores).toHaveLength(1);
   });
 });
 
 describe("getProveedoresByStore", () => {
-  beforeEach(() => {
-    useProveedoresStore.getState().addProveedor({
+  beforeEach(async () => {
+    await useProveedoresStore.getState().addProveedor({
       name: "Zeta",
       phone: "",
       email: "",
@@ -181,7 +181,7 @@ describe("getProveedoresByStore", () => {
       cuit: "",
       store_id: "store_1",
     });
-    useProveedoresStore.getState().addProveedor({
+    await useProveedoresStore.getState().addProveedor({
       name: "Alpha",
       phone: "",
       email: "",
@@ -189,7 +189,7 @@ describe("getProveedoresByStore", () => {
       cuit: "",
       store_id: "store_1",
     });
-    useProveedoresStore.getState().addProveedor({
+    await useProveedoresStore.getState().addProveedor({
       name: "Otra tienda",
       phone: "",
       email: "",

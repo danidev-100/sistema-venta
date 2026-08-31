@@ -11,7 +11,7 @@ import PurchaseInvoicesSection from "@/components/PurchaseInvoicesSection";
 import CompanySettings from "@/components/CompanySettings";
 import AfipSection from "@/components/AfipSection";
 import ThemeToggle from "@/components/ThemeToggle";
-import { exportBackup, downloadBackup, importBackup } from "@/lib/backup";
+import { exportBackup, importBackup } from "@/lib/backup";
 import { runSeeder } from "@/lib/seeder";
 import { useActiveStore } from "@/store/context";
 
@@ -699,6 +699,7 @@ function BulkPriceSection() {
 
 function BackupSection() {
   const showNotification = useAppStore((s) => s.showNotification);
+  const { storeId } = useActiveStore();
   const [restoring, setRestoring] = useState(false);
   const [exporting, setExporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -706,11 +707,10 @@ function BackupSection() {
   async function handleExport() {
     setExporting(true);
     try {
-      const data = await exportBackup();
-      downloadBackup(data);
+      await exportBackup(storeId);
       showNotification("Respaldo descargado correctamente");
-    } catch {
-      showNotification("Error al generar el respaldo");
+    } catch (err) {
+      showNotification(err instanceof Error ? err.message : "Error al generar el respaldo");
     } finally {
       setExporting(false);
     }
@@ -720,15 +720,18 @@ function BackupSection() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!window.confirm("¿Restaurar este respaldo? Se van a reemplazar TODOS los datos actuales. Esta acción no se puede deshacer.")) {
+    if (!window.confirm("Se van a reemplazar TODOS los datos de la tienda actual con los del respaldo. Esto no se puede deshacer.")) {
       e.target.value = "";
       return;
     }
 
     setRestoring(true);
     try {
-      const result = await importBackup(file);
-      showNotification(`Respaldo restaurado — ${result.tables} tablas, ${result.rows} filas — recargando...`);
+      const result = await importBackup(storeId, file);
+      const detalle = Object.entries(result.counts)
+        .map(([tabla, n]) => `${tabla}: ${n}`)
+        .join(", ");
+      showNotification(`Respaldo restaurado — ${result.tables_restored} tablas (${detalle}) — recargando...`);
       // Force full reload so all stores re-read from the fresh DB data
       setTimeout(() => window.location.reload(), 1500);
     } catch (err) {
@@ -792,9 +795,9 @@ function SettingsSection() {
 
   async function handleSeeder() {
     const confirmed = confirm(
-      "⚠️ Datos de prueba\n\nEsta acción va a ELIMINAR todos los datos actuales y generar:\n" +
-      `• 8000 productos\n• 2000 clientes\n• 200 proveedores\n• 1000 pedidos\n• 5000 comprobantes\n• 500 gastos\n\n` +
-      "¿Estás seguro?",
+      "Datos de prueba\n\nSe van a crear:\n" +
+      "• 20 categorías\n• 10 marcas\n• 500 productos genéricos\n\n" +
+      "No se elimina ningún dato existente. ¿Querés continuar?",
     );
     if (!confirmed) return;
 
@@ -855,7 +858,7 @@ function SettingsSection() {
             Datos de prueba
           </h4>
           <p className="text-xs text-pos-muted mb-3">
-            Generá datos masivos para probar performance. Todos los datos actuales se eliminan.
+            Crea 20 categorías, 10 marcas y 500 productos de prueba vía la API. No elimina datos existentes.
           </p>
           <button
             onClick={handleSeeder}

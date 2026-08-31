@@ -2,9 +2,12 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useAppStore } from "@/store";
-import { useAuthStore } from "@/store/auth";
+import { useAuthStore, type AuthUser, type Permission } from "@/store/auth";
 import { StoreProvider } from "@/store/context";
 import NavigationBar from "@/components/NavigationBar";
+
+// El sidebar se renderiza dos veces (desktop aside + drawer móvil), así que
+// los textos de navegación aparecen duplicados en el DOM. Usamos getAllByText.
 
 function renderNav() {
   return render(
@@ -14,14 +17,38 @@ function renderNav() {
   );
 }
 
-describe("NavigationBar — dashboard integration", () => {
-  beforeEach(() => {
-    useAppStore.setState({ page: "dashboard" });
-  });
+function makeUser(
+  name: string,
+  permissions: Permission[],
+  role: "admin" | "custom" = "custom",
+): AuthUser {
+  return {
+    id: 1,
+    name,
+    role,
+    permissions,
+    active: true,
+    createdAt: new Date().toISOString(),
+  };
+}
 
+function setCurrentUser(user: AuthUser | null) {
+  useAuthStore.setState({ currentUser: user });
+}
+
+function resetState() {
+  useAuthStore.setState({ users: [], currentUser: null });
+  useAppStore.setState({ page: "dashboard" });
+}
+
+beforeEach(() => {
+  resetState();
+});
+
+describe("NavigationBar — dashboard integration", () => {
   it("shows Inicio button as a navigation item", () => {
     renderNav();
-    expect(screen.getByText("Inicio")).toBeInTheDocument();
+    expect(screen.getAllByText("Inicio").length).toBeGreaterThan(0);
   });
 
   it("clicking Inicio navigates to dashboard page", async () => {
@@ -30,7 +57,7 @@ describe("NavigationBar — dashboard integration", () => {
     useAppStore.setState({ page: "pos" });
     renderNav();
 
-    await user.click(screen.getByText("Inicio"));
+    await user.click(screen.getAllByText("Inicio")[0]);
     expect(useAppStore.getState().page).toBe("dashboard");
   });
 });
@@ -39,119 +66,111 @@ describe("NavigationBar — dashboard integration", () => {
 // Permission-based navigation filtering (Task 3.3)
 // ──────────────────────────────────────────────
 
-describe("NavigationBar — permission filtering", () => {
-  beforeEach(async () => {
-    useAuthStore.setState({
-      users: [],
-      currentUser: null,
-      _hydrated: false,
-    });
-    localStorage.removeItem("auth_users");
-    localStorage.removeItem("auth_current_user_id");
-    useAppStore.setState({ page: "dashboard" });
-  });
+const ALL_PERMISSIONS: Permission[] = [
+  "ventas",
+  "caja",
+  "productos",
+  "clientes",
+  "proveedores",
+  "pedidos",
+  "facturacion",
+  "comprobantes",
+  "gastos",
+  "estadisticas",
+  "admin",
+  "usuarios",
+];
 
-  it("shows all pages for admin user with all permissions", async () => {
-    await useAuthStore.getState().init();
-    await useAuthStore.getState().login("admin", "admin");
+describe("NavigationBar — permission filtering", () => {
+  it("shows all pages for admin user with all permissions", () => {
+    setCurrentUser(makeUser("admin", ALL_PERMISSIONS, "admin"));
 
     renderNav();
 
-    // Sidebar: main pages visible (POS appears in subtitle + nav button)
-    expect(screen.getByText("Inicio")).toBeInTheDocument();
+    expect(screen.getAllByText("Inicio").length).toBeGreaterThan(0);
     expect(screen.getAllByText("POS").length).toBeGreaterThan(0);
-    expect(screen.getByText("Caja")).toBeInTheDocument();
+    expect(screen.getAllByText("Caja").length).toBeGreaterThan(0);
 
     // Config section is visible (open by default in sidebar)
-    expect(screen.getByText("Configuración")).toBeInTheDocument();
-    expect(screen.getByText("Productos")).toBeInTheDocument();
-    expect(screen.getByText("Facturación")).toBeInTheDocument();
-    expect(screen.getByText("Clientes")).toBeInTheDocument();
-    expect(screen.getByText("Estadísticas")).toBeInTheDocument();
-    expect(screen.getByText("Admin")).toBeInTheDocument();
+    expect(screen.getAllByText("Configuración").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Productos").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Facturación").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Clientes").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Estadísticas").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Admin").length).toBeGreaterThan(0);
   });
 
-  it("hides stats page when user lacks estadisticas permission", async () => {
-    await useAuthStore.getState().init();
-    await useAuthStore.getState().addUser({
-      name: "limited",
-      password: "pass",
-      role: "custom",
-      permissions: ["ventas", "caja", "productos", "clientes", "proveedores", "pedidos", "facturacion", "comprobantes", "gastos", "admin", "usuarios"],
-      active: true,
-    });
-    await useAuthStore.getState().login("limited", "pass");
+  it("hides stats page when user lacks estadisticas permission", () => {
+    setCurrentUser(
+      makeUser("limited", [
+        "ventas",
+        "caja",
+        "productos",
+        "clientes",
+        "proveedores",
+        "pedidos",
+        "facturacion",
+        "comprobantes",
+        "gastos",
+        "admin",
+        "usuarios",
+      ]),
+    );
 
     renderNav();
 
-    // Config section open by default — Estadísticas NOT in sidebar
-    expect(screen.queryByText("Estadísticas")).toBeNull();
-    // Other pages should be visible
-    expect(screen.getByText("Facturación")).toBeInTheDocument();
-    expect(screen.getByText("Clientes")).toBeInTheDocument();
-    expect(screen.getByText("Admin")).toBeInTheDocument();
+    expect(screen.queryAllByText("Estadísticas")).toHaveLength(0);
+    expect(screen.getAllByText("Facturación").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Clientes").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Admin").length).toBeGreaterThan(0);
   });
 
-  it("hides customers page when user lacks clientes permission", async () => {
-    await useAuthStore.getState().init();
-    await useAuthStore.getState().addUser({
-      name: "limited",
-      password: "pass",
-      role: "custom",
-      permissions: ["ventas", "caja", "productos", "proveedores", "pedidos", "facturacion", "comprobantes", "gastos", "estadisticas", "admin", "usuarios"],
-      active: true,
-    });
-    await useAuthStore.getState().login("limited", "pass");
+  it("hides customers page when user lacks clientes permission", () => {
+    setCurrentUser(
+      makeUser("limited", [
+        "ventas",
+        "caja",
+        "productos",
+        "proveedores",
+        "pedidos",
+        "facturacion",
+        "comprobantes",
+        "gastos",
+        "estadisticas",
+        "admin",
+        "usuarios",
+      ]),
+    );
 
     renderNav();
 
-    expect(screen.queryByText("Clientes")).toBeNull();
-    expect(screen.getByText("Estadísticas")).toBeInTheDocument();
-    expect(screen.getByText("Facturación")).toBeInTheDocument();
-    expect(screen.getByText("Admin")).toBeInTheDocument();
+    expect(screen.queryAllByText("Clientes")).toHaveLength(0);
+    expect(screen.getAllByText("Estadísticas").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Facturación").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Admin").length).toBeGreaterThan(0);
   });
 
-  it("hides admin page when user lacks admin permission", async () => {
-    await useAuthStore.getState().init();
-    await useAuthStore.getState().addUser({
-      name: "limited",
-      password: "pass",
-      role: "custom",
-      permissions: ["ventas", "caja", "productos"],
-      active: true,
-    });
-    await useAuthStore.getState().login("limited", "pass");
+  it("hides admin page when user lacks admin permission", () => {
+    setCurrentUser(makeUser("limited", ["ventas", "caja", "productos"]));
 
     renderNav();
 
-    // Admin should NOT appear (no admin permission)
-    expect(screen.queryByText("Admin")).toBeNull();
+    expect(screen.queryAllByText("Admin")).toHaveLength(0);
   });
 
-  it("shows only Inicio when user has no permissions", async () => {
-    await useAuthStore.getState().init();
-    await useAuthStore.getState().addUser({
-      name: "limited",
-      password: "pass",
-      role: "custom",
-      permissions: [],
-      active: true,
-    });
-    await useAuthStore.getState().login("limited", "pass");
+  it("shows only Inicio when user has no permissions", () => {
+    setCurrentUser(makeUser("limited", []));
 
     renderNav();
 
-    // Dashboard is the only unconditional page
-    expect(screen.getByText("Inicio")).toBeInTheDocument();
+    expect(screen.getAllByText("Inicio").length).toBeGreaterThan(0);
 
-    // All permission-gated main pages should be hidden
-    // "POS" appears only as sidebar subtitle (1 element), not as nav button
-    const posElements = screen.queryAllByText("POS");
-    expect(posElements.length).toBe(1); // just the subtitle
-    expect(screen.queryByText("Caja")).toBeNull();
+    // All permission-gated pages should be hidden
+    expect(screen.queryAllByText("POS")).toHaveLength(0);
+    expect(screen.queryAllByText("Caja")).toHaveLength(0);
 
     // Config dropdown should not exist (no permitted sub-pages)
-    expect(screen.queryByText("Configuración")).toBeNull();
+    expect(screen.queryAllByText("Configuración")).toHaveLength(0);
   });
 });
 
@@ -160,48 +179,33 @@ describe("NavigationBar — permission filtering", () => {
 // ──────────────────────────────────────────────
 
 describe("NavigationBar — user info", () => {
-  beforeEach(async () => {
-    useAuthStore.setState({
-      users: [],
-      currentUser: null,
-      _hydrated: false,
-    });
-    localStorage.removeItem("auth_users");
-    localStorage.removeItem("auth_current_user_id");
-    useAppStore.setState({ page: "dashboard" });
-  });
-
-  it("shows current user name", async () => {
-    await useAuthStore.getState().init();
-    await useAuthStore.getState().login("admin", "admin");
+  it("shows current user name", () => {
+    setCurrentUser(makeUser("admin", ALL_PERMISSIONS, "admin"));
 
     renderNav();
 
-    expect(screen.getByText("admin")).toBeInTheDocument();
+    expect(screen.getAllByText("admin").length).toBeGreaterThan(0);
   });
 
-  it("shows logout button", async () => {
-    await useAuthStore.getState().init();
-    await useAuthStore.getState().login("admin", "admin");
+  it("shows logout button", () => {
+    setCurrentUser(makeUser("admin", ALL_PERMISSIONS, "admin"));
 
     renderNav();
 
-    // Sidebar: user avatar with initial + logout icon
-    expect(screen.getByText("admin")).toBeInTheDocument();
-    expect(screen.getByTitle("Cerrar sesión")).toBeInTheDocument();
+    expect(screen.getAllByText("admin").length).toBeGreaterThan(0);
+    expect(screen.getAllByTitle("Cerrar sesión").length).toBeGreaterThan(0);
   });
 
   it("logout button logs out and navigates to login page", async () => {
     const user = userEvent.setup();
-    await useAuthStore.getState().init();
-    await useAuthStore.getState().login("admin", "admin");
+    setCurrentUser(makeUser("admin", ALL_PERMISSIONS, "admin"));
 
     renderNav();
 
-    await user.click(screen.getByTitle("Cerrar sesión"));
+    await user.click(screen.getAllByTitle("Cerrar sesión")[0]);
+    await user.click(screen.getByRole("button", { name: /sí, cerrar sesión/i }));
 
     expect(useAuthStore.getState().currentUser).toBeNull();
     expect(useAppStore.getState().page).toBe("login");
   });
 });
-

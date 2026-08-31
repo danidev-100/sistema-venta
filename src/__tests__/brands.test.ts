@@ -1,14 +1,19 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useBrandsStore } from "@/store/brands";
 
-vi.mock("@/lib/api", () => ({
-  api: {
-    get: vi.fn(() => Promise.resolve([])),
-    post: vi.fn((_path: string, data: unknown) => Promise.resolve({ ...(data as object), id: Date.now() })),
-    put: vi.fn(() => Promise.resolve(undefined)),
-    del: vi.fn(() => Promise.resolve(undefined)),
-  },
-}));
+vi.mock("@/lib/api", () => {
+  let nextId = 1;
+  return {
+    api: {
+      get: vi.fn(() => Promise.resolve([])),
+      post: vi.fn((_path: string, data: unknown) =>
+        Promise.resolve({ ...(data as object), id: nextId++ }),
+      ),
+      put: vi.fn(() => Promise.resolve(undefined)),
+      del: vi.fn(() => Promise.resolve(undefined)),
+    },
+  };
+});
 
 // ──────────────────────────────────────────────
 // Helpers

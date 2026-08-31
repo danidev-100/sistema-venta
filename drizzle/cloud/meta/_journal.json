@@ -57,6 +57,20 @@
       "when": 1786285083136,
       "tag": "0007_rich_slayback",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788186026391,
+      "tag": "0008_mean_trish_tilby",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788189720872,
+      "tag": "0009_curvy_wrecker",
+      "breakpoints": true
     }
   ]
 }

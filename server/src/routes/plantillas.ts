@@ -47,6 +47,49 @@ router.get("/:id", async (req: Request, res: Response) => {
   }
 });
 
+// POST / — create a new plantilla (one per store + tipo)
+router.post("/", async (req: Request, res: Response) => {
+  try {
+    const { tipo, template_html, store_id } = req.body;
+
+    if (!tipo || !template_html || !store_id) {
+      res.status(400).json({ error: "tipo, template_html y store_id son requeridos" });
+      return;
+    }
+
+    const db = getDb();
+    const [existing] = await db
+      .select()
+      .from(schema.plantillas)
+      .where(
+        and(
+          eq(schema.plantillas.store_id, store_id),
+          eq(schema.plantillas.tipo, tipo),
+        ),
+      )
+      .limit(1);
+
+    if (existing) {
+      const [updated] = await db
+        .update(schema.plantillas)
+        .set({ template_html, updated_at: new Date() })
+        .where(eq(schema.plantillas.id, existing.id))
+        .returning();
+      res.json(updated);
+      return;
+    }
+
+    const [created] = await db
+      .insert(schema.plantillas)
+      .values({ tipo, template_html, store_id })
+      .returning();
+    res.status(201).json(created);
+  } catch (err) {
+    console.error("[plantillas] create error:", err);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 router.put("/:id", async (req: Request, res: Response) => {
   try {
     const db = getDb();

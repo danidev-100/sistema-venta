@@ -7,7 +7,6 @@ import { useComprobantesStore } from "@/store/comprobantes";
 import { useAuthStore } from "@/store/auth";
 import { useCashClosingStore } from "@/store/cash-closing";
 import { exportInvoicePdf, printComprobante } from "@/lib/pdf-export";
-import { api } from "@/lib/api";
 import ProductSearchModal from "@/components/ProductSearchModal";
 import BarcodeScannerModal from "@/components/BarcodeScannerModal";
 import CartPanel from "@/components/CartPanel";
@@ -19,189 +18,6 @@ import QuickSaleModal from "@/components/QuickSaleModal";
 import ReceiptPreview from "@/components/ReceiptPreview";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useBarcodeScan } from "@/hooks/useBarcodeScan";
-
-// ──────────────────────────────────────────────
-// Demo seed data — runs once on first POSPage mount
-// ──────────────────────────────────────────────
-
-let seeded = false;
-
-async function seedDemoProducts() {
-  if (seeded) return;
-  seeded = true;
-
-  const existing = await api.get<any[]>("/products?storeId=store_1").catch(() => []);
-  if (existing.length > 0) return; // database already has products
-
-  const store = useProductsStore.getState();
-
-  const bebidas = await store.addCategory({
-    name: "Bebidas",
-    parent_id: null,
-    store_id: "store_1",
-  });
-  const lacteos = await store.addCategory({
-    name: "Lácteos",
-    parent_id: null,
-    store_id: "store_1",
-  });
-  const almacen = await store.addCategory({
-    name: "Almacén",
-    parent_id: null,
-    store_id: "store_1",
-  });
-
-  await store.addProduct({
-    barcode: "77912345",
-    name: "Coca-Cola 500ml",
-    price: 150,
-    stock: 100,
-    category_id: bebidas.id,
-    store_id: "store_1",
-  });
-  await store.addProduct({
-    barcode: "77912346",
-    name: "Agua Mineral 1L",
-    price: 120,
-    stock: 80,
-    category_id: bebidas.id,
-    store_id: "store_1",
-  });
-  await store.addProduct({
-    barcode: "77912347",
-    name: "Leche Entera 1L",
-    price: 200,
-    stock: 50,
-    category_id: lacteos.id,
-    store_id: "store_1",
-  });
-  await store.addProduct({
-    barcode: "77912348",
-    name: "Yogur Natural 200g",
-    price: 180,
-    stock: 40,
-    category_id: lacteos.id,
-    store_id: "store_1",
-  });
-  await store.addProduct({
-    barcode: "77912349",
-    name: "Arroz 1kg",
-    price: 250,
-    stock: 60,
-    category_id: almacen.id,
-    store_id: "store_1",
-  });
-  await store.addProduct({
-    barcode: "77912350",
-    name: "Fideos Tallarín 500g",
-    price: 120,
-    stock: 90,
-    category_id: almacen.id,
-    store_id: "store_1",
-  });
-  await store.addProduct({
-    barcode: "77912351",
-    name: "Aceite Girasol 1.5L",
-    price: 450,
-    stock: 30,
-    category_id: almacen.id,
-    store_id: "store_1",
-  });
-  await store.addProduct({
-    barcode: "77912352",
-    name: "Harina 0000 1kg",
-    price: 180,
-    stock: 45,
-    category_id: almacen.id,
-    store_id: "store_1",
-  });
-  await store.addProduct({
-    barcode: "77912353",
-    name: "Azúcar 1kg",
-    price: 220,
-    stock: 55,
-    category_id: almacen.id,
-    store_id: "store_1",
-  });
-  await store.addProduct({
-    barcode: "77912354",
-    name: "Yerba Mate 1kg",
-    price: 380,
-    stock: 35,
-    category_id: almacen.id,
-    store_id: "store_1",
-  });
-  await store.addProduct({
-    barcode: "77912355",
-    name: "Galletitas Saladas",
-    price: 160,
-    stock: 70,
-    category_id: almacen.id,
-    store_id: "store_1",
-  });
-  await store.addProduct({
-    barcode: "77912356",
-    name: "Jugo Naranja 1L",
-    price: 190,
-    stock: 8,
-    category_id: bebidas.id,
-    store_id: "store_1",
-  });
-
-  // Weight products (gram)
-  await store.addProduct({
-    barcode: "77912357",
-    name: "Queso Cremoso",
-    price: 250,
-    stock: 5000,
-    saleUnit: "gram",
-    category_id: lacteos.id,
-    store_id: "store_1",
-  });
-  await store.addProduct({
-    barcode: "77912358",
-    name: "Fiambre Jamón Cocido",
-    price: 320,
-    stock: 8000,
-    saleUnit: "gram",
-    category_id: almacen.id,
-    store_id: "store_1",
-  });
-
-  // Weight products (kilogram)
-  await store.addProduct({
-    barcode: "77912359",
-    name: "Carne Molida Especial",
-    price: 450,
-    stock: 15000,
-    saleUnit: "kilogram",
-    category_id: almacen.id,
-    store_id: "store_1",
-  });
-
-  // Also seed store_2 with a few products for cross-store testing
-  const store2Bebidas = await store.addCategory({
-    name: "Bebidas",
-    parent_id: null,
-    store_id: "store_2",
-  });
-  await store.addProduct({
-    barcode: "77922345",
-    name: "Sprite 500ml",
-    price: 140,
-    stock: 50,
-    category_id: store2Bebidas.id,
-    store_id: "store_2",
-  });
-  await store.addProduct({
-    barcode: "77922346",
-    name: "Fanta Naranja 500ml",
-    price: 140,
-    stock: 40,
-    category_id: store2Bebidas.id,
-    store_id: "store_2",
-  });
-}
 
 // ──────────────────────────────────────────────
 // Component
@@ -246,12 +62,11 @@ export default function POSPage() {
   ) ?? null;
   const hasOpenShift = openShiftData !== null;
 
-  // Load shifts, products, customers, and seed demo products on mount
+  // Load shifts, products, and customers on mount
   useEffect(() => {
     loadShifts(storeId);
     loadProducts(storeId).catch(console.error);
     loadCustomers(storeId).catch(console.error);
-    seedDemoProducts();
   }, [storeId, loadShifts, loadProducts, loadCustomers]);
 
   // Hint toast on first POS load

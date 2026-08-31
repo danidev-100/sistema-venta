@@ -35,6 +35,7 @@ const SAMPLE_DATA: TemplateData = {
   fecha: "25/06/2026",
   subtotal: "$1,000.00",
   iva: "$210.00",
+  iva_label: "IVA 21%",
   total: "$1,210.00",
   tipo_label: "Factura",
   notes: "Gracias por su compra",

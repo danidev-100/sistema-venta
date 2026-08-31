@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ProductForm from "@/components/ProductForm";
 import ProductsPage from "@/pages/ProductsPage";
@@ -10,21 +10,54 @@ import { useProductsStore } from "@/store/products";
 import { StoreProvider } from "@/store/context";
 
 // ──────────────────────────────────────────────
+// ProductsPage carga productos/categorías/marcas desde
+// la API al montar (loadProducts et al.). El mock devuelve
+// los datos sembrados para que el render sea determinístico.
+// ──────────────────────────────────────────────
+
+const mockDb = vi.hoisted(() => ({
+  products: [] as Array<Record<string, unknown>>,
+  categories: [] as Array<Record<string, unknown>>,
+  brands: [] as Array<Record<string, unknown>>,
+  nextId: 1,
+}));
+
+vi.mock("@/lib/api", () => ({
+  api: {
+    get: vi.fn((path: string) => {
+      if (path.startsWith("/products/stock-movements")) return Promise.resolve([]);
+      if (path.startsWith("/products")) return Promise.resolve(mockDb.products);
+      if (path.startsWith("/categories")) return Promise.resolve(mockDb.categories);
+      if (path.startsWith("/brands")) return Promise.resolve(mockDb.brands);
+      return Promise.resolve([]);
+    }),
+    post: vi.fn((_path: string, data: unknown) =>
+      Promise.resolve({
+        ...(data as object),
+        id: mockDb.nextId++,
+        created_at: new Date().toISOString(),
+      }),
+    ),
+    put: vi.fn(() => Promise.resolve(undefined)),
+    del: vi.fn(() => Promise.resolve(undefined)),
+  },
+  setToken: vi.fn(),
+  clearToken: vi.fn(),
+}));
+
+// ──────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────
 
 function resetStores() {
-  useAdminStore.setState({
-    theme: "light",
-    preview: null,
-  });
-  useAuthStore.setState({
-    users: [],
-    currentUser: null,
-    _hydrated: true,
-  });
+  useAdminStore.setState({ theme: "light", preview: null });
+  useAuthStore.setState({ users: [], currentUser: null });
   useBrandsStore.setState({ brands: [] });
   useProductsStore.setState({ products: [], categories: [], stockMovements: [] });
+  mockDb.products = [];
+  mockDb.categories = [];
+  mockDb.brands = [];
+  mockDb.nextId = 1;
 }
 
 /** Simulate a logged-in admin user with all permissions. */
@@ -67,20 +100,20 @@ describe("ProductForm — cost & brand fields", () => {
     renderForm();
 
     expect(screen.queryByLabelText(/cost price/i)).toBeNull();
-    expect(screen.queryByLabelText(/brand/i)).toBeNull();
+    expect(screen.queryByLabelText(/marca/i)).toBeNull();
     expect(screen.queryByTestId("product-cost-price")).toBeNull();
     expect(screen.queryByTestId("product-brand")).toBeNull();
   });
 
-  it("shows cost price and brand fields when admin is unlocked", async () => {
+  it("shows cost price and brand fields when admin is unlocked", () => {
     loginAsAdmin();
     renderForm();
 
     expect(screen.getByLabelText(/cost price/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/brand/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/marca/i)).toBeInTheDocument();
   });
 
-  it("shows brand options from the brands store", async () => {
+  it("shows brand options from the brands store", () => {
     loginAsAdmin();
     useBrandsStore.setState({
       brands: [
@@ -90,7 +123,7 @@ describe("ProductForm — cost & brand fields", () => {
     });
     renderForm();
 
-    const select = screen.getByLabelText(/brand/i);
+    const select = screen.getByLabelText(/marca/i);
     expect(select).toBeInTheDocument();
 
     // Check both brand options exist
@@ -102,7 +135,7 @@ describe("ProductForm — cost & brand fields", () => {
     ).toBeInTheDocument();
   });
 
-  it("only shows brands for the active store (store_2 brands hidden)", async () => {
+  it("only shows brands for the active store (store_2 brands hidden)", () => {
     loginAsAdmin();
     useBrandsStore.setState({
       brands: [
@@ -111,7 +144,7 @@ describe("ProductForm — cost & brand fields", () => {
     });
     renderForm();
 
-    const select = screen.getByLabelText(/brand/i);
+    const select = screen.getByLabelText(/marca/i);
     expect(select).toBeInTheDocument();
     expect(
       screen.queryByRole("option", { name: "Store2Brand" }),
@@ -150,18 +183,20 @@ describe("ProductForm — cost & brand fields", () => {
     await user.clear(screen.getByLabelText(/precio/i));
     await user.type(screen.getByLabelText(/precio/i), "99.99");
 
-    // Fill cost price
+    // Fill cost price (NumberInput formatea en es-AR con coma decimal)
     await user.clear(screen.getByLabelText(/cost price/i));
-    await user.type(screen.getByLabelText(/cost price/i), "50.00");
+    await user.type(screen.getByLabelText(/cost price/i), "50,00");
 
     // Select brand
-    const brandSelect = screen.getByLabelText(/brand/i);
+    const brandSelect = screen.getByLabelText(/marca/i);
     await user.selectOptions(brandSelect, "10");
 
     // Submit
     await user.click(screen.getByRole("button", { name: /crear producto/i }));
 
-    expect(saved).not.toBeNull();
+    await waitFor(() => {
+      expect(saved).not.toBeNull();
+    });
     expect(saved!.costPrice).toBe(50);
     expect(saved!.brandId).toBe(10);
   });
@@ -175,7 +210,7 @@ describe("ProductForm — cost & brand fields", () => {
     });
 
     // Add a product to edit
-    const product = useProductsStore.getState().addProduct({
+    const product = await useProductsStore.getState().addProduct({
       name: "Edit Me",
       barcode: null,
       price: 100,
@@ -197,9 +232,9 @@ describe("ProductForm — cost & brand fields", () => {
     );
 
     const costInput = screen.getByLabelText(/cost price/i) as HTMLInputElement;
-    expect(costInput.value).toBe("45");
+    expect(costInput.value).toBe("45,00");
 
-    const brandSelect = screen.getByLabelText(/brand/i) as HTMLSelectElement;
+    const brandSelect = screen.getByLabelText(/marca/i) as HTMLSelectElement;
     expect(brandSelect.value).toBe("99");
   });
 });
@@ -210,47 +245,38 @@ describe("ProductForm — cost & brand fields", () => {
 
 describe("ProductsPage — cost & brand columns", () => {
   function seedData() {
-    useProductsStore.setState({
-      products: [
-        {
-          id: 100,
-          name: "Cola 355ml",
-          barcode: "779001",
-          image: "",
-          price: 150,
-          costPrice: 90,
-          stock: 20,
-          minStock: 0,
-          midStock: 0,
-          category_id: null,
-          brandId: 1,
-          store_id: "store_1",
-          saleUnit: "unit",
-        },
-        {
-          id: 101,
-          name: "Snack Pack",
-          barcode: "779002",
-          image: "",
-          price: 80,
-          costPrice: 0,
-          stock: 5,
-          minStock: 0,
-          midStock: 0,
-          category_id: null,
-          brandId: null,
-          store_id: "store_1",
-          saleUnit: "unit",
-        },
-      ],
-      categories: [],
-      stockMovements: [],
-    });
-    useBrandsStore.setState({
-      brands: [
-        { id: 1, name: "Coca-Cola", store_id: "store_1" },
-      ],
-    });
+    mockDb.products = [
+      {
+        id: 100,
+        name: "Cola 355ml",
+        barcode: "779001",
+        image: "",
+        price: 150,
+        cost_price: 90,
+        stock: 20,
+        min_stock: 0,
+        category_id: null,
+        brand_id: 1,
+        sale_unit: "unit",
+        store_id: "store_1",
+      },
+      {
+        id: 101,
+        name: "Snack Pack",
+        barcode: "779002",
+        image: "",
+        price: 80,
+        cost_price: 0,
+        stock: 5,
+        min_stock: 0,
+        category_id: null,
+        brand_id: null,
+        sale_unit: "unit",
+        store_id: "store_1",
+      },
+    ];
+    mockDb.brands = [{ id: 1, name: "Coca-Cola", store_id: "store_1" }];
+    mockDb.categories = [];
   }
 
   function renderPage() {
@@ -261,13 +287,15 @@ describe("ProductsPage — cost & brand columns", () => {
     );
   }
 
-  it("hides cost column but shows brand column when admin is locked", () => {
+  it("hides cost column but shows brand column when admin is locked", async () => {
     seedData();
     renderPage();
 
+    await screen.findByText("Marca");
+
     // Cost column hidden (admin-gated)
     expect(screen.queryByText("Costo")).toBeNull();
-    expect(screen.queryByText("$90.00")).toBeNull();
+    expect(screen.queryByText("$90,00")).toBeNull();
 
     // Brand column always visible now (not admin-gated)
     expect(screen.getByText("Marca")).toBeInTheDocument();
@@ -275,34 +303,30 @@ describe("ProductsPage — cost & brand columns", () => {
     expect(screen.getAllByText("Coca-Cola").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("shows cost and brand columns when admin is unlocked", () => {
+  it("shows cost and brand columns when admin is unlocked", async () => {
     loginAsAdmin();
     seedData();
     renderPage();
 
     // Column headers visible
-    expect(screen.getByText("Costo")).toBeInTheDocument();
+    await screen.findByText("Costo");
     expect(screen.getByText("Marca")).toBeInTheDocument();
 
-    // Cost value visible
-    expect(screen.getByText("$90.00")).toBeInTheDocument();
+    // Cost value visible (es-AR format)
+    expect(screen.getByText("$90,00")).toBeInTheDocument();
 
-    // Brand name visible: once in BrandFilter sidebar + once in table cell
+    // Brand name visible in the table (y eventualmente en el filtro lateral)
     const brandInstances = screen.getAllByText("Coca-Cola");
-    expect(brandInstances.length).toBeGreaterThanOrEqual(2);
-    expect(brandInstances[0]).toBeInTheDocument();
+    expect(brandInstances.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("shows — for products without costPrice", () => {
+  it("shows $0,00 for products without costPrice", async () => {
     loginAsAdmin();
     seedData();
     renderPage();
 
+    await screen.findByText("Snack Pack");
     // Snack Pack has costPrice = 0
-    expect(screen.getByText("$0.00")).toBeInTheDocument();
-    // Snack Pack has no brand — should show —
-    // We look for "—" in the brand column — but multiple exist.
-    // Verify the row content for Snack Pack (which should have no brand)
-    expect(screen.getByText("Snack Pack")).toBeInTheDocument();
+    expect(screen.getByText("$0,00")).toBeInTheDocument();
   });
 });

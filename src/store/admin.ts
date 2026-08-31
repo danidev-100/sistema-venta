@@ -81,7 +81,7 @@ export type AdminStore = {
    * Uses a snapshot-and-restore pattern for rollback on failure.
    * Throws if preview is stale or empty.
    */
-  bulkPriceConfirm: () => void;
+  bulkPriceConfirm: () => Promise<void>;
 
   /** Clear the current preview without applying changes. */
   clearBulkPreview: () => void;
@@ -161,7 +161,7 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
     return items;
   },
 
-  bulkPriceConfirm: () => {
+  bulkPriceConfirm: async () => {
     const { preview, pendingBulkOpts } = get();
     if (!preview || !pendingBulkOpts) return;
 
@@ -176,11 +176,11 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
     try {
       for (const item of preview) {
         if (item.field === "cost") {
-          useProductsStore.getState().updateProduct(item.productId, {
+          await useProductsStore.getState().updateProduct(item.productId, {
             costPrice: item.newPrice,
           });
         } else {
-          useProductsStore.getState().updateProduct(item.productId, {
+          await useProductsStore.getState().updateProduct(item.productId, {
             price: item.newPrice,
           });
         }

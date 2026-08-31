@@ -10,8 +10,7 @@ import {
 // ──────────────────────────────────────────────
 
 function resetStore() {
-  useExpensesStore.setState({ expenses: [] });
-  localStorage.clear();
+  useExpensesStore.setState({ expenses: [], loading: false });
 }
 
 beforeEach(() => {
@@ -23,8 +22,8 @@ beforeEach(() => {
 // ──────────────────────────────────────────────
 
 describe("Expense CRUD", () => {
-  it("adds an expense with all required fields", () => {
-    const expense = useExpensesStore.getState().addExpense({
+  it("adds an expense with all required fields", async () => {
+    const expense = await useExpensesStore.getState().addExpense({
       description: "Compra de insumos",
       amount: 1500.5,
       category: "Insumos",
@@ -44,8 +43,8 @@ describe("Expense CRUD", () => {
     expect(expense.updatedAt).toBeTruthy();
   });
 
-  it("increments id for each new expense", () => {
-    const e1 = useExpensesStore.getState().addExpense({
+  it("increments id for each new expense", async () => {
+    const e1 = await useExpensesStore.getState().addExpense({
       description: "Gasto 1",
       amount: 100,
       category: "Varios",
@@ -53,7 +52,7 @@ describe("Expense CRUD", () => {
       paymentMethod: "cash",
       storeId: "store_1",
     });
-    const e2 = useExpensesStore.getState().addExpense({
+    const e2 = await useExpensesStore.getState().addExpense({
       description: "Gasto 2",
       amount: 200,
       category: "Varios",
@@ -62,11 +61,11 @@ describe("Expense CRUD", () => {
       storeId: "store_1",
     });
 
-    expect(e2.id).toBe(e1.id + 1);
+    expect(e2.id).toBeGreaterThan(e1.id);
   });
 
-  it("updates an existing expense", () => {
-    const expense = useExpensesStore.getState().addExpense({
+  it("updates an existing expense", async () => {
+    const expense = await useExpensesStore.getState().addExpense({
       description: "Original",
       amount: 100,
       category: "Varios",
@@ -75,7 +74,7 @@ describe("Expense CRUD", () => {
       storeId: "store_1",
     });
 
-    useExpensesStore.getState().updateExpense(expense.id, {
+    await useExpensesStore.getState().updateExpense(expense.id, {
       description: "Actualizado",
       amount: 200,
     });
@@ -88,16 +87,16 @@ describe("Expense CRUD", () => {
     expect(updated.category).toBe("Varios");
   });
 
-  it("throws when updating non-existent expense", () => {
-    expect(() => {
+  it("throws when updating non-existent expense", async () => {
+    await expect(
       useExpensesStore.getState().updateExpense(999, {
         description: "Nope",
-      });
-    }).toThrow(/no encontrado/i);
+      }),
+    ).rejects.toThrow(/no encontrado/i);
   });
 
-  it("deletes an expense", () => {
-    const expense = useExpensesStore.getState().addExpense({
+  it("deletes an expense", async () => {
+    const expense = await useExpensesStore.getState().addExpense({
       description: "To delete",
       amount: 100,
       category: "Varios",
@@ -106,14 +105,14 @@ describe("Expense CRUD", () => {
       storeId: "store_1",
     });
 
-    useExpensesStore.getState().deleteExpense(expense.id);
+    await useExpensesStore.getState().deleteExpense(expense.id);
     expect(
       useExpensesStore.getState().expenses.find((e) => e.id === expense.id),
     ).toBeUndefined();
   });
 
-  it("throws when deleting non-existent expense", () => {
-    useExpensesStore.getState().addExpense({
+  it("throws when deleting non-existent expense", async () => {
+    await useExpensesStore.getState().addExpense({
       description: "Keep me",
       amount: 100,
       category: "Varios",
@@ -122,9 +121,9 @@ describe("Expense CRUD", () => {
       storeId: "store_1",
     });
 
-    expect(() => {
-      useExpensesStore.getState().deleteExpense(999);
-    }).toThrow(/no encontrado/i);
+    await expect(
+      useExpensesStore.getState().deleteExpense(999),
+    ).rejects.toThrow(/no encontrado/i);
     // Verify the existing expense is untouched
     expect(useExpensesStore.getState().expenses).toHaveLength(1);
   });
@@ -135,8 +134,8 @@ describe("Expense CRUD", () => {
 // ──────────────────────────────────────────────
 
 describe("getExpensesByMonth", () => {
-  beforeEach(() => {
-    useExpensesStore.getState().addExpense({
+  beforeEach(async () => {
+    await useExpensesStore.getState().addExpense({
       description: "Ene cash",
       amount: 100,
       category: "Varios",
@@ -144,7 +143,7 @@ describe("getExpensesByMonth", () => {
       paymentMethod: "cash",
       storeId: "store_1",
     });
-    useExpensesStore.getState().addExpense({
+    await useExpensesStore.getState().addExpense({
       description: "Jun cash",
       amount: 200,
       category: "Insumos",
@@ -152,7 +151,7 @@ describe("getExpensesByMonth", () => {
       paymentMethod: "cash",
       storeId: "store_1",
     });
-    useExpensesStore.getState().addExpense({
+    await useExpensesStore.getState().addExpense({
       description: "Jun card",
       amount: 300,
       category: "Servicios",
@@ -160,7 +159,7 @@ describe("getExpensesByMonth", () => {
       paymentMethod: "card",
       storeId: "store_1",
     });
-    useExpensesStore.getState().addExpense({
+    await useExpensesStore.getState().addExpense({
       description: "Other store",
       amount: 400,
       category: "Varios",
@@ -192,8 +191,8 @@ describe("getExpensesByMonth", () => {
 // ──────────────────────────────────────────────
 
 describe("getExpensesByDateRange", () => {
-  beforeEach(() => {
-    useExpensesStore.getState().addExpense({
+  beforeEach(async () => {
+    await useExpensesStore.getState().addExpense({
       description: "Gasto viejo",
       amount: 100,
       category: "Varios",
@@ -201,7 +200,7 @@ describe("getExpensesByDateRange", () => {
       paymentMethod: "cash",
       storeId: "store_1",
     });
-    useExpensesStore.getState().addExpense({
+    await useExpensesStore.getState().addExpense({
       description: "Gasto junio temprano",
       amount: 200,
       category: "Insumos",
@@ -209,7 +208,7 @@ describe("getExpensesByDateRange", () => {
       paymentMethod: "cash",
       storeId: "store_1",
     });
-    useExpensesStore.getState().addExpense({
+    await useExpensesStore.getState().addExpense({
       description: "Gasto junio tarde",
       amount: 300,
       category: "Servicios",
@@ -217,7 +216,7 @@ describe("getExpensesByDateRange", () => {
       paymentMethod: "card",
       storeId: "store_1",
     });
-    useExpensesStore.getState().addExpense({
+    await useExpensesStore.getState().addExpense({
       description: "Otra tienda",
       amount: 400,
       category: "Varios",
@@ -256,8 +255,8 @@ describe("getExpensesByDateRange", () => {
 // ──────────────────────────────────────────────
 
 describe("getExpensesByCategory", () => {
-  beforeEach(() => {
-    useExpensesStore.getState().addExpense({
+  beforeEach(async () => {
+    await useExpensesStore.getState().addExpense({
       description: "Alquiler local",
       amount: 50000,
       category: "Alquiler",
@@ -265,7 +264,7 @@ describe("getExpensesByCategory", () => {
       paymentMethod: "cash",
       storeId: "store_1",
     });
-    useExpensesStore.getState().addExpense({
+    await useExpensesStore.getState().addExpense({
       description: "Compra de resmas",
       amount: 500,
       category: "Insumos",
@@ -273,7 +272,7 @@ describe("getExpensesByCategory", () => {
       paymentMethod: "cash",
       storeId: "store_1",
     });
-    useExpensesStore.getState().addExpense({
+    await useExpensesStore.getState().addExpense({
       description: "Tóner impresora",
       amount: 3000,
       category: "Insumos",
@@ -281,7 +280,7 @@ describe("getExpensesByCategory", () => {
       paymentMethod: "card",
       storeId: "store_1",
     });
-    useExpensesStore.getState().addExpense({
+    await useExpensesStore.getState().addExpense({
       description: "Insumos otra tienda",
       amount: 999,
       category: "Insumos",
@@ -321,8 +320,8 @@ describe("getExpensesByCategory", () => {
 // ──────────────────────────────────────────────
 
 describe("getMonthlySummary", () => {
-  beforeEach(() => {
-    useExpensesStore.getState().addExpense({
+  beforeEach(async () => {
+    await useExpensesStore.getState().addExpense({
       description: "Alquiler",
       amount: 50000,
       category: "Alquiler",
@@ -330,7 +329,7 @@ describe("getMonthlySummary", () => {
       paymentMethod: "cash",
       storeId: "store_1",
     });
-    useExpensesStore.getState().addExpense({
+    await useExpensesStore.getState().addExpense({
       description: "Luz",
       amount: 3000,
       category: "Servicios",
@@ -338,7 +337,7 @@ describe("getMonthlySummary", () => {
       paymentMethod: "card",
       storeId: "store_1",
     });
-    useExpensesStore.getState().addExpense({
+    await useExpensesStore.getState().addExpense({
       description: "Agua",
       amount: 2000,
       category: "Servicios",
@@ -346,7 +345,7 @@ describe("getMonthlySummary", () => {
       paymentMethod: "card",
       storeId: "store_1",
     });
-    useExpensesStore.getState().addExpense({
+    await useExpensesStore.getState().addExpense({
       description: "Resma papel",
       amount: 500,
       category: "Insumos",
@@ -355,7 +354,7 @@ describe("getMonthlySummary", () => {
       storeId: "store_1",
     });
     // Different month — should be excluded
-    useExpensesStore.getState().addExpense({
+    await useExpensesStore.getState().addExpense({
       description: "Otro mes",
       amount: 1000,
       category: "Varios",
@@ -364,7 +363,7 @@ describe("getMonthlySummary", () => {
       storeId: "store_1",
     });
     // Different store — should be excluded
-    useExpensesStore.getState().addExpense({
+    await useExpensesStore.getState().addExpense({
       description: "Otra tienda",
       amount: 999,
       category: "Varios",
@@ -425,8 +424,8 @@ describe("getMonthlySummary", () => {
 // ──────────────────────────────────────────────
 
 describe("Expense validation", () => {
-  it("rejects empty description", () => {
-    expect(() => {
+  it("rejects empty description", async () => {
+    await expect(
       useExpensesStore.getState().addExpense({
         description: "",
         amount: 100,
@@ -434,12 +433,12 @@ describe("Expense validation", () => {
         date: "2026-06-18",
         paymentMethod: "cash",
         storeId: "store_1",
-      });
-    }).toThrow(/descripción/i);
+      }),
+    ).rejects.toThrow(/descripción/i);
   });
 
-  it("rejects zero amount", () => {
-    expect(() => {
+  it("rejects zero amount", async () => {
+    await expect(
       useExpensesStore.getState().addExpense({
         description: "Test",
         amount: 0,
@@ -447,12 +446,12 @@ describe("Expense validation", () => {
         date: "2026-06-18",
         paymentMethod: "cash",
         storeId: "store_1",
-      });
-    }).toThrow(/importe/i);
+      }),
+    ).rejects.toThrow(/importe/i);
   });
 
-  it("rejects negative amount", () => {
-    expect(() => {
+  it("rejects negative amount", async () => {
+    await expect(
       useExpensesStore.getState().addExpense({
         description: "Test",
         amount: -100,
@@ -460,12 +459,12 @@ describe("Expense validation", () => {
         date: "2026-06-18",
         paymentMethod: "cash",
         storeId: "store_1",
-      });
-    }).toThrow(/importe/i);
+      }),
+    ).rejects.toThrow(/importe/i);
   });
 
-  it("rejects invalid category", () => {
-    expect(() => {
+  it("rejects invalid category", async () => {
+    await expect(
       useExpensesStore.getState().addExpense({
         description: "Test",
         amount: 100,
@@ -473,12 +472,12 @@ describe("Expense validation", () => {
         date: "2026-06-18",
         paymentMethod: "cash",
         storeId: "store_1",
-      });
-    }).toThrow(/categoría/i);
+      }),
+    ).rejects.toThrow(/categoría/i);
   });
 
-  it("rejects invalid payment method", () => {
-    expect(() => {
+  it("rejects invalid payment method", async () => {
+    await expect(
       useExpensesStore.getState().addExpense({
         description: "Test",
         amount: 100,
@@ -486,12 +485,12 @@ describe("Expense validation", () => {
         date: "2026-06-18",
         paymentMethod: "invalid" as PaymentMethod,
         storeId: "store_1",
-      });
-    }).toThrow(/pago/i);
+      }),
+    ).rejects.toThrow(/pago/i);
   });
 
-  it("rejects invalid date format", () => {
-    expect(() => {
+  it("rejects invalid date format", async () => {
+    await expect(
       useExpensesStore.getState().addExpense({
         description: "Test",
         amount: 100,
@@ -499,12 +498,12 @@ describe("Expense validation", () => {
         date: "18-06-2026",
         paymentMethod: "cash",
         storeId: "store_1",
-      });
-    }).toThrow(/fecha/i);
+      }),
+    ).rejects.toThrow(/fecha/i);
   });
 
-  it("rejects missing date", () => {
-    expect(() => {
+  it("rejects missing date", async () => {
+    await expect(
       useExpensesStore.getState().addExpense({
         description: "Test",
         amount: 100,
@@ -512,60 +511,7 @@ describe("Expense validation", () => {
         date: "",
         paymentMethod: "cash",
         storeId: "store_1",
-      });
-    }).toThrow(/fecha/i);
-  });
-});
-
-// ──────────────────────────────────────────────
-// 6. localStorage persistence
-// ──────────────────────────────────────────────
-
-describe("localStorage persistence", () => {
-  it("persists expenses to localStorage after add", () => {
-    useExpensesStore.getState().addExpense({
-      description: "Persisted",
-      amount: 500,
-      category: "Varios",
-      date: "2026-06-18",
-      paymentMethod: "cash",
-      storeId: "store_1",
-    });
-
-    const raw = localStorage.getItem("expenses");
-    expect(raw).not.toBeNull();
-    const parsed = JSON.parse(raw!);
-    expect(parsed).toHaveLength(1);
-    expect(parsed[0].description).toBe("Persisted");
-  });
-
-  it("persists after update", () => {
-    const e = useExpensesStore.getState().addExpense({
-      description: "Will update",
-      amount: 100,
-      category: "Varios",
-      date: "2026-06-18",
-      paymentMethod: "cash",
-      storeId: "store_1",
-    });
-    useExpensesStore.getState().updateExpense(e.id, { amount: 999 });
-
-    const raw = JSON.parse(localStorage.getItem("expenses")!);
-    expect(raw[0].amount).toBe(999);
-  });
-
-  it("persists after delete", () => {
-    const e = useExpensesStore.getState().addExpense({
-      description: "Will delete",
-      amount: 100,
-      category: "Varios",
-      date: "2026-06-18",
-      paymentMethod: "cash",
-      storeId: "store_1",
-    });
-    useExpensesStore.getState().deleteExpense(e.id);
-
-    const raw = localStorage.getItem("expenses");
-    expect(JSON.parse(raw!)).toHaveLength(0);
+      }),
+    ).rejects.toThrow(/fecha/i);
   });
 });

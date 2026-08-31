@@ -1,20 +1,59 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useInvoicesStore } from "@/store/invoices";
-import { useAppStore, type CompletedSale } from "@/store";
+import type { CompletedSale } from "@/store";
 
 // ──────────────────────────────────────────────
-// Helpers
+// La numeración de facturas es SERVER-SIDE hoy: el store
+// POSTea el payload y el server devuelve la factura con su
+// invoice_number. El mock simula ese comportamiento.
 // ──────────────────────────────────────────────
+
+const mockState = vi.hoisted(() => ({
+  /** Facturas que devolverá GET /invoices (para loadInvoices). */
+  serverInvoices: [] as Array<Record<string, unknown>>,
+  /** Contador para invoice_number generado en POST /invoices. */
+  nextNumber: 1,
+}));
+
+vi.mock("@/lib/api", () => ({
+  api: {
+    get: vi.fn((path: string) =>
+      Promise.resolve(path.startsWith("/invoices") ? mockState.serverInvoices : []),
+    ),
+    post: vi.fn((path: string, body: any) => {
+      if (path === "/invoices") {
+        return Promise.resolve({
+          id: mockState.nextNumber * 1000,
+          invoice_number: `INV-${String(mockState.nextNumber++).padStart(4, "0")}`,
+          sale_id: body.sale_id,
+          store_id: body.store_id,
+          customer_name: body.customer_name,
+          created_by: body.created_by,
+          total: body.total,
+          payment_method: body.payment_method,
+          created_at: new Date().toISOString(),
+          items: (body.items ?? []).map((i: any) => ({
+            product_id: i.product_id,
+            product_name: i.product_name,
+            quantity: i.quantity,
+            unit_price: i.unit_price,
+            subtotal: i.subtotal,
+          })),
+        });
+      }
+      return Promise.resolve({});
+    }),
+    put: vi.fn(() => Promise.resolve(undefined)),
+    del: vi.fn(() => Promise.resolve(undefined)),
+  },
+  setToken: vi.fn(),
+  clearToken: vi.fn(),
+}));
 
 function resetStores() {
-  useInvoicesStore.setState({ invoices: [], counters: {} });
-  useAppStore.setState({
-    items: [],
-    lastCompletedSale: null,
-    completedSales: [],
-    busy: false,
-    notification: null,
-  });
+  useInvoicesStore.setState({ invoices: [] });
+  mockState.serverInvoices = [];
+  mockState.nextNumber = 1;
 }
 
 beforeEach(() => {
@@ -62,250 +101,133 @@ function makeSale(
 }
 
 // ──────────────────────────────────────────────
-// 5.6 — Sequential numbering per store
-// ──────────────────────────────────────────────
-
-describe("Sequential numbering per store", () => {
-  it("first invoice in a store gets number 1", () => {
-    const sale = makeSale(1, 100, "cash", "store_1");
-    const invoice = useInvoicesStore.getState().generateInvoice(sale);
-
-    expect(invoice.sequentialNumber).toBe(1);
-    expect(invoice.invoiceNumber).toBe("INV-store_1-00001");
-  });
-
-  it("second invoice increments to number 2", () => {
-    const s1 = makeSale(1, 100, "cash", "store_1");
-    useInvoicesStore.getState().generateInvoice(s1);
-
-    const s2 = makeSale(2, 200, "card", "store_1");
-    const inv2 = useInvoicesStore.getState().generateInvoice(s2);
-
-    expect(inv2.sequentialNumber).toBe(2);
-    expect(inv2.invoiceNumber).toBe("INV-store_1-00002");
-  });
-
-  it("numbering is per store — store B starts at 1 even if store A has 5", () => {
-    // Generate 5 invoices for store A
-    for (let i = 1; i <= 5; i++) {
-      useInvoicesStore.getState().generateInvoice(makeSale(i, 100, "cash", "store_A"));
-    }
-
-    // First invoice for store B starts at 1
-    const invB = useInvoicesStore.getState().generateInvoice(
-      makeSale(101, 200, "cash", "store_B"),
-    );
-
-    expect(invB.sequentialNumber).toBe(1);
-    expect(invB.invoiceNumber).toBe("INV-store_B-00001");
-  });
-
-  it("both stores can have the same sequential number", () => {
-    const invA = useInvoicesStore.getState().generateInvoice(
-      makeSale(1, 100, "cash", "store_A"),
-    );
-    const invB = useInvoicesStore.getState().generateInvoice(
-      makeSale(1, 200, "card", "store_B"),
-    );
-
-    expect(invA.sequentialNumber).toBe(1);
-    expect(invB.sequentialNumber).toBe(1);
-    expect(invA.invoiceNumber).not.toBe(invB.invoiceNumber);
-  });
-
-  it("sequential numbers never go backwards", () => {
-    for (let i = 1; i <= 10; i++) {
-      useInvoicesStore.getState().generateInvoice(makeSale(i, 100, "cash", "store_1"));
-    }
-
-    const store = useInvoicesStore.getState();
-    expect(store.counters["store_1"]).toBe(10);
-
-    // All invoices have sequential numbers 1-10
-    const invoices = store.getInvoicesByStore("store_1");
-    const numbers = invoices.map((inv) => inv.sequentialNumber).sort((a, b) => a - b);
-    expect(numbers).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-  });
-
-  it("gaps are not reused", () => {
-    // Simulate: store reaches #3, then we generate #4
-    useInvoicesStore.getState().generateInvoice(makeSale(1, 100, "cash", "store_1"));
-    useInvoicesStore.getState().generateInvoice(makeSale(2, 100, "cash", "store_1"));
-    useInvoicesStore.getState().generateInvoice(makeSale(3, 100, "cash", "store_1"));
-
-    // Next invoice should be #4, not #1 or #2
-    const inv4 = useInvoicesStore.getState().generateInvoice(
-      makeSale(4, 100, "cash", "store_1"),
-    );
-    expect(inv4.sequentialNumber).toBe(4);
-  });
-
-  it("getNextSequentialNumber returns the next available number without issuing", () => {
-    useInvoicesStore.getState().generateInvoice(makeSale(1, 100, "cash", "store_1"));
-    useInvoicesStore.getState().generateInvoice(makeSale(2, 100, "cash", "store_1"));
-
-    const next = useInvoicesStore.getState().getNextSequentialNumber("store_1");
-    expect(next).toBe(3);
-  });
-});
-
-// ──────────────────────────────────────────────
-// 5.6 — Invoice creation from sale
+// 5.6 — Invoice creation from sale (server-side numbering)
 // ──────────────────────────────────────────────
 
 describe("Invoice creation from sale", () => {
-  it("creates an invoice referencing the sale id", () => {
+  it("creates an invoice referencing the sale, with a server-assigned number", async () => {
     const sale = makeSale(42, 500, "cash", "store_1");
-    const invoice = useInvoicesStore.getState().generateInvoice(sale);
+    const invoice = await useInvoicesStore.getState().generateInvoice(sale);
 
     expect(invoice.saleId).toBe(42);
     expect(invoice.storeId).toBe("store_1");
+    expect(invoice.invoiceNumber).toBe("INV-0001");
+    expect(invoice.sequentialNumber).toBe(1);
   });
 
-  it("uses customer name when provided", () => {
+  it("uses customer name when provided", async () => {
     const sale = makeSale(1, 100, "cash", "store_1", "Juan Pérez");
-    const invoice = useInvoicesStore.getState().generateInvoice(sale);
+    const invoice = await useInvoicesStore.getState().generateInvoice(sale);
 
     expect(invoice.customer).toBe("Juan Pérez");
   });
 
-  it('defaults to "Consumidor Final" when no customer name', () => {
+  it('defaults to "Consumidor Final" when no customer name', async () => {
     const sale = makeSale(1, 100, "cash", "store_1", null);
-    const invoice = useInvoicesStore.getState().generateInvoice(sale);
+    const invoice = await useInvoicesStore.getState().generateInvoice(sale);
 
     expect(invoice.customer).toBe("Consumidor Final");
   });
 
-  it("uses override customerName when provided to generateInvoice", () => {
+  it("uses override customerName when provided to generateInvoice", async () => {
     const sale = makeSale(1, 100, "cash", "store_1", "Juan Pérez");
-    const invoice = useInvoicesStore.getState().generateInvoice(sale, "Override Name");
+    const invoice = await useInvoicesStore.getState().generateInvoice(sale, "Override Name");
 
     expect(invoice.customer).toBe("Override Name");
   });
 
-  it("stores payment method from sale", () => {
-    const cashSale = makeSale(1, 100, "cash", "store_1");
-    const cardSale = makeSale(2, 200, "card", "store_1");
-
-    const invCash = useInvoicesStore.getState().generateInvoice(cashSale);
-    const invCard = useInvoicesStore.getState().generateInvoice(cardSale);
+  it("stores payment method from sale", async () => {
+    const invCash = await useInvoicesStore.getState().generateInvoice(makeSale(1, 100, "cash", "store_1"));
+    const invCard = await useInvoicesStore.getState().generateInvoice(makeSale(2, 200, "card", "store_1"));
 
     expect(invCash.paymentMethod).toBe("cash");
     expect(invCard.paymentMethod).toBe("card");
   });
 
-  it("records the date of generation", () => {
-    const before = new Date().toISOString();
+  it("copies items from the sale into the invoice", async () => {
     const sale = makeSale(1, 100, "cash", "store_1");
-    const invoice = useInvoicesStore.getState().generateInvoice(sale);
-    const after = new Date().toISOString();
+    const invoice = await useInvoicesStore.getState().generateInvoice(sale);
 
-    expect(invoice.date).toBeTruthy();
-    expect(invoice.date >= before).toBe(true);
-    expect(invoice.date <= after).toBe(true);
+    expect(invoice.items).toHaveLength(1);
+    expect(invoice.items[0].productName).toBe("Product A");
+    expect(invoice.total).toBe(100);
+  });
+
+  it("appends the generated invoice to the store", async () => {
+    await useInvoicesStore.getState().generateInvoice(makeSale(1, 100, "cash", "store_1"));
+
+    expect(useInvoicesStore.getState().invoices).toHaveLength(1);
   });
 });
 
 // ──────────────────────────────────────────────
-// 5.6 — Invoice items match sale items
+// 5.6 — loadInvoices
 // ──────────────────────────────────────────────
 
-describe("Invoice items match sale items", () => {
-  it("copies all items from the sale", () => {
-    const sale: CompletedSale = {
-      id: 1,
-      items: [
-        {
-          productId: 1,
-          productName: "Coca-Cola",
-          quantity: 2,
-          unitPrice: 150,
-          subtotal: 300,
-          discountPercent: 0,
-          saleUnit: "unit",
-        },
-        {
-          productId: 2,
-          productName: "Papas",
-          quantity: 1,
-          unitPrice: 200,
-          subtotal: 200,
-          discountPercent: 0,
-          saleUnit: "unit",
-        },
-        {
-          productId: 3,
-          productName: "Chocolate",
-          quantity: 3,
-          unitPrice: 80,
-          subtotal: 240,
-          discountPercent: 0,
-          saleUnit: "unit",
-        },
-      ],
-      createdBy: "admin",
-      total: 740,
-      subtotal: 740,
-      discountPercent: 0,
-      discountAmount: 0,
-      paymentMethod: "cash",
-      amountPaid: 740,
-      change: 0,
-      cashAmount: 740,
-      cardAmount: null,
-      mercadopagoAmount: null,
-      date: new Date().toISOString(),
-      storeId: "store_1",
-      customerName: "Maria",
-      status: "completed",
-      priceListId: null,
-    };
+describe("loadInvoices", () => {
+  it("loads and normalizes server invoices", async () => {
+    mockState.serverInvoices = [
+      {
+        id: 11,
+        invoice_number: "INV-0003",
+        sale_id: 3,
+        customer_name: "Maria",
+        total: 300,
+        payment_method: "card",
+        created_at: "2026-06-01T10:00:00Z",
+        store_id: "store_1",
+        created_by: "admin",
+      },
+      {
+        id: 12,
+        invoice_number: "INV-0007",
+        sale_id: 7,
+        customer_name: "Juan",
+        total: 700,
+        payment_method: "cash",
+        created_at: "2026-06-02T10:00:00Z",
+        store_id: "store_1",
+        created_by: "admin",
+      },
+    ];
 
-    const invoice = useInvoicesStore.getState().generateInvoice(sale);
+    await useInvoicesStore.getState().loadInvoices("store_1");
 
-    expect(invoice.items).toHaveLength(3);
-    expect(invoice.items[0].productName).toBe("Coca-Cola");
-    expect(invoice.items[0].quantity).toBe(2);
-    expect(invoice.items[0].unitPrice).toBe(150);
-    expect(invoice.items[0].subtotal).toBe(300);
+    const invoices = useInvoicesStore.getState().invoices;
+    expect(invoices).toHaveLength(2);
+    expect(invoices[0].sequentialNumber).toBe(3);
+    expect(invoices[1].sequentialNumber).toBe(7);
   });
 
-  it("preserves correct total from sale", () => {
-    const sale: CompletedSale = {
-      id: 1,
-      items: [
-        { productId: 1, productName: "A", quantity: 2, unitPrice: 150, subtotal: 300, discountPercent: 0, saleUnit: "unit" },
-        { productId: 2, productName: "B", quantity: 1, unitPrice: 450, subtotal: 450, discountPercent: 0, saleUnit: "unit" },
-      ],
-      createdBy: "admin",
-      total: 750,
-      subtotal: 750,
-      discountPercent: 0,
-      discountAmount: 0,
-      paymentMethod: "cash",
-      amountPaid: 750,
-      change: 0,
-      cashAmount: 750,
-      cardAmount: null,
-      mercadopagoAmount: null,
-      date: new Date().toISOString(),
-      storeId: "store_1",
-      customerName: null,
-      status: "completed",
-      priceListId: null,
-    };
+  it("getNextSequentialNumber returns max+1 based on loaded invoices", async () => {
+    mockState.serverInvoices = [
+      {
+        id: 11,
+        invoice_number: "INV-0003",
+        sale_id: 3,
+        customer_name: "Maria",
+        total: 300,
+        payment_method: "card",
+        created_at: "2026-06-01T10:00:00Z",
+        store_id: "store_1",
+        created_by: "admin",
+      },
+      {
+        id: 12,
+        invoice_number: "INV-0007",
+        sale_id: 7,
+        customer_name: "Juan",
+        total: 700,
+        payment_method: "cash",
+        created_at: "2026-06-02T10:00:00Z",
+        store_id: "store_1",
+        created_by: "admin",
+      },
+    ];
 
-    const invoice = useInvoicesStore.getState().generateInvoice(sale);
-    expect(invoice.total).toBe(750);
-  });
+    await useInvoicesStore.getState().loadInvoices("store_1");
 
-  it("does not mutate the original sale items", () => {
-    const sale = makeSale(1, 100, "cash", "store_1");
-    const originalItems = [...sale.items];
-
-    useInvoicesStore.getState().generateInvoice(sale);
-
-    expect(sale.items).toEqual(originalItems);
+    expect(useInvoicesStore.getState().getNextSequentialNumber("store_1")).toBe(8);
   });
 });
 
@@ -314,47 +236,41 @@ describe("Invoice items match sale items", () => {
 // ──────────────────────────────────────────────
 
 describe("Invoice search and filter", () => {
-  it("returns invoices by store only", () => {
-    useInvoicesStore.getState().generateInvoice(makeSale(1, 100, "cash", "store_A"));
-    useInvoicesStore.getState().generateInvoice(makeSale(2, 200, "cash", "store_B"));
+  beforeEach(async () => {
+    await useInvoicesStore.getState().generateInvoice(makeSale(1, 100, "cash", "store_A", "Juan"));
+    await useInvoicesStore.getState().generateInvoice(makeSale(2, 200, "cash", "store_B", "Maria"));
+    await useInvoicesStore.getState().generateInvoice(makeSale(3, 300, "card", "store_1", "Pedro"));
+  });
 
+  it("returns invoices by store only", () => {
     const storeAInvs = useInvoicesStore.getState().getInvoicesByStore("store_A");
     expect(storeAInvs).toHaveLength(1);
     expect(storeAInvs[0].storeId).toBe("store_A");
   });
 
   it("searches by invoice number", () => {
-    useInvoicesStore.getState().generateInvoice(makeSale(1, 100, "cash", "store_1"));
-    useInvoicesStore.getState().generateInvoice(makeSale(2, 200, "cash", "store_1"));
-
-    const results = useInvoicesStore.getState().searchInvoices("store_1", "00002");
+    const results = useInvoicesStore.getState().searchInvoices("store_A", "INV-0001");
     expect(results).toHaveLength(1);
-    expect(results[0].sequentialNumber).toBe(2);
   });
 
-  it("searches by customer name", () => {
-    useInvoicesStore.getState().generateInvoice(makeSale(1, 100, "cash", "store_1", "Juan"));
-    useInvoicesStore.getState().generateInvoice(makeSale(2, 200, "cash", "store_1", "Maria"));
-
-    const results = useInvoicesStore.getState().searchInvoices("store_1", "maria");
+  it("searches by customer name (case-insensitive)", () => {
+    const results = useInvoicesStore.getState().searchInvoices("store_1", "pedro");
     expect(results).toHaveLength(1);
-    expect(results[0].customer).toBe("Maria");
+    expect(results[0].customer).toBe("Pedro");
   });
 
   it("returns empty when no match", () => {
-    useInvoicesStore.getState().generateInvoice(makeSale(1, 100, "cash", "store_1"));
-
     const results = useInvoicesStore.getState().searchInvoices("store_1", "nonexistent");
     expect(results).toHaveLength(0);
   });
 
-  it("sorts invoices newest first", () => {
-    useInvoicesStore.getState().generateInvoice(makeSale(1, 100, "cash", "store_1"));
-    useInvoicesStore.getState().generateInvoice(makeSale(2, 200, "cash", "store_1"));
+  it("sorts invoices newest first (by id)", async () => {
+    await useInvoicesStore.getState().generateInvoice(makeSale(4, 400, "cash", "store_A", "Ana"));
 
-    const invoices = useInvoicesStore.getState().getInvoicesByStore("store_1");
-    expect(invoices[0].sequentialNumber).toBe(2);
-    expect(invoices[1].sequentialNumber).toBe(1);
+    const invoices = useInvoicesStore.getState().getInvoicesByStore("store_A");
+    expect(invoices).toHaveLength(2);
+    expect(invoices[0].customer).toBe("Ana");
+    expect(invoices[1].customer).toBe("Juan");
   });
 });
 
@@ -363,10 +279,8 @@ describe("Invoice search and filter", () => {
 // ──────────────────────────────────────────────
 
 describe("Invoice retrieval", () => {
-  it("getInvoiceById returns the correct invoice", () => {
-    const inv = useInvoicesStore.getState().generateInvoice(
-      makeSale(1, 100, "cash", "store_1"),
-    );
+  it("getInvoiceById returns the correct invoice", async () => {
+    const inv = await useInvoicesStore.getState().generateInvoice(makeSale(1, 100, "cash", "store_1"));
 
     const found = useInvoicesStore.getState().getInvoiceById(inv.id);
     expect(found).not.toBeNull();

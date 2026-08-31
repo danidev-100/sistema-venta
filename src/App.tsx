@@ -4,7 +4,6 @@ import { useAdminStore } from "@/store/admin";
 import { useAuthStore } from "@/store/auth";
 import { usePermission } from "@/hooks/usePermission";
 import { StoreProvider, useActiveStore } from "@/store/context";
-import { initAllStores } from "@/lib/init-stores";
 import AdminRoute from "@/components/AdminRoute";
 import NavigationBar from "@/components/NavigationBar";
 
@@ -23,8 +22,6 @@ import StatsPage from "@/pages/StatsPage";
 import AdminPage from "@/pages/AdminPage";
 import UserManagementPage from "@/pages/UserManagementPage";
 import LoginPage from "@/pages/LoginPage";
-// [ACTIVATION BYPASS] Import preserved for later uncomment
-// import ActivationPage from "@/pages/ActivationPage";
 
 // ──────────────────────────────────────────────
 // Page router — maps enum to component
@@ -76,11 +73,6 @@ export default function App() {
   const theme = useAdminStore((s) => s.theme);
   const currentUser = useAuthStore((s) => s.currentUser);
   const hasAccess = usePermission(page);
-
-  // Check stored token on mount
-  useEffect(() => {
-    initAllStores();
-  }, []);
 
   // F4 toggles the sidebar (collapse/expand) in every view
   useEffect(() => {

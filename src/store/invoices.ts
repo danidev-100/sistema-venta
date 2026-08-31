@@ -27,7 +27,7 @@ export type Invoice = {
 export type InvoicesStore = {
   invoices: Invoice[];
 
-  loadInvoices: () => Promise<void>;
+  loadInvoices: (storeId: string) => Promise<void>;
   generateInvoice: (
     sale: CompletedSale,
     customerName?: string,
@@ -48,24 +48,69 @@ export type InvoicesStore = {
   getNextSequentialNumber: (storeId: string) => number;
 };
 
+/** Extrae el número secuencial del invoice_number generado por el server (ej. "INV-0003" → 3). */
+function parseSequentialNumber(invoiceNumber: string): number {
+  const match = /(\d+)$/.exec(invoiceNumber);
+  if (match) return parseInt(match[1], 10);
+  return 0;
+}
+
+/** Normaliza una fila del server (snake_case) al tipo Invoice (camelCase). */
+function normalizeInvoice(raw: any): Invoice {
+  return {
+    id: raw.id,
+    invoiceNumber: raw.invoice_number,
+    sequentialNumber: parseSequentialNumber(raw.invoice_number ?? ""),
+    saleId: raw.sale_id,
+    customer: raw.customer_name ?? "Consumidor Final",
+    items: Array.isArray(raw.items)
+      ? raw.items.map((i: any, idx: number) => ({
+          productId: i.product_id ?? idx,
+          productName: i.product_name,
+          quantity: i.quantity,
+          unitPrice: i.unit_price,
+          subtotal: i.subtotal,
+        }))
+      : [],
+    total: raw.total ?? 0,
+    paymentMethod: raw.payment_method ?? "cash",
+    date: raw.created_at ?? new Date().toISOString(),
+    storeId: raw.store_id,
+    createdBy: raw.created_by ?? "—",
+  };
+}
+
 export const useInvoicesStore = create<InvoicesStore>((set, get) => ({
   invoices: [],
 
-  loadInvoices: async () => {
+  loadInvoices: async (storeId) => {
     try {
-      const invoices = await api.get<Invoice[]>("/invoices");
-      set({ invoices });
+      const rows = await api.get<any[]>(
+        `/invoices?storeId=${encodeURIComponent(storeId)}`,
+      );
+      set({ invoices: rows.map(normalizeInvoice) });
     } catch (err) {
       console.error("[invoices] loadInvoices failed:", err);
     }
   },
 
   generateInvoice: async (sale, customerName, createdBy) => {
-    const invoice = await api.post<Invoice>("/invoices", {
-      sale,
-      customerName,
-      createdBy,
-    });
+    const payload = {
+      sale_id: sale.id,
+      store_id: sale.storeId,
+      customer_name: customerName ?? sale.customerName ?? "Consumidor Final",
+      created_by: createdBy ?? sale.createdBy,
+      total: sale.total,
+      payment_method: sale.paymentMethod,
+      items: sale.items.map((i) => ({
+        product_id: i.productId >= 0 ? i.productId : null,
+        product_name: i.productName,
+        quantity: i.quantity,
+        unit_price: i.unitPrice,
+        subtotal: i.subtotal,
+      })),
+    };
+    const invoice = normalizeInvoice(await api.post<any>("/invoices", payload));
     set({ invoices: [...get().invoices, invoice] });
     return invoice;
   },

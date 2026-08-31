@@ -50,8 +50,8 @@ export async function buildComprobanteHtml(data: TemplateData, tipo: string, sto
   // Fetch company data
   let companyLogo = "";
   try {
-    const c = await api.get<{ name: string; phone: string; address: string; cuit: string; email: string; web: string; logo_base64: string }>(
-      `/api/company?storeId=${storeId}`,
+    const c = await api.get<{ name: string; phone: string; address: string; cuit: string; email: string; web: string; logo_base64: string; iva_alicuota: number }>(
+      `/company?storeId=${storeId}`,
     );
     if (c) {
       data.company_name = c.name;
@@ -60,6 +60,7 @@ export async function buildComprobanteHtml(data: TemplateData, tipo: string, sto
       data.company_cuit = c.cuit;
       data.company_email = c.email;
       data.company_web = c.web;
+      data.iva_label = c.iva_alicuota ? `IVA ${c.iva_alicuota}%` : data.iva_label;
       companyLogo = c.logo_base64;
     }
   } catch {

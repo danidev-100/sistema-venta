@@ -1,62 +1,69 @@
-// ── Backup now exports store state (data lives in Zustand + PostgreSQL) ──
+// ── Backup real contra la API del servidor (Express + Postgres) ──
+//
+// El export ya no lee el estado en memoria de Zustand: descarga un JSON
+// completo de TODAS las tablas de la tienda desde el servidor.
+// El import envía ese JSON al servidor, que reemplaza los datos dentro de
+// una transacción (rollback total si algo falla).
 
-import { useProductsStore } from "@/store/products";
-import { useCustomersStore } from "@/store/customers";
-import { useAppStore } from "@/store";
+import { api } from "@/lib/api";
 
-type BackupData = Record<string, Record<string, unknown>[]>;
+export type BackupDocument = {
+  version: number;
+  exported_at: string;
+  store_id: string;
+  data: Record<string, Record<string, unknown>[]>;
+};
 
-export async function exportBackup(): Promise<BackupData> {
-  const data: BackupData = {};
+export type ImportResult = {
+  tables_restored: number;
+  counts: Record<string, number>;
+  deleted?: Record<string, number>;
+};
 
-  try {
-    const products = useProductsStore.getState();
-    if (products) {
-      data.products = products.products?.map((p) => ({ ...p })) ?? [];
-      data.categories = products.categories?.map((c) => ({ ...c })) ?? [];
-    }
-
-    const customers = useCustomersStore.getState();
-    if (customers) {
-      data.customers = customers.customers?.map((c) => ({ ...c })) ?? [];
-    }
-
-    const app = useAppStore.getState();
-    if (app) {
-      data.sales = app.completedSales?.map((s) => ({ ...s })) ?? [];
-    }
-  } catch (err) {
-    console.error("[backup] export failed:", err);
-  }
-
-  return data;
+function buildFilename(storeId: string): string {
+  const date = new Date().toISOString().slice(0, 10);
+  return `respaldo-${storeId}-${date}.json`;
 }
 
-export function downloadBackup(data: BackupData): void {
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], { type: "application/json" });
+export async function exportBackup(storeId: string): Promise<BackupDocument> {
+  const doc = await api.get<BackupDocument>(
+    "/backup/export?storeId=" + encodeURIComponent(storeId),
+  );
+
+  const blob = new Blob([JSON.stringify(doc, null, 2)], {
+    type: "application/json",
+  });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `bazar-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = buildFilename(storeId);
   a.click();
   URL.revokeObjectURL(url);
+
+  return doc;
 }
 
-export async function importBackup(file: File): Promise<{ tables: number; rows: number }> {
+export async function importBackup(storeId: string, file: File): Promise<ImportResult> {
   const text = await file.text();
-  const data: BackupData = JSON.parse(text);
 
-  let tables = 0;
-  let rows = 0;
-
-  for (const [table, records] of Object.entries(data)) {
-    if (Array.isArray(records) && records.length > 0) {
-      tables++;
-      rows += records.length;
-    }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error("El archivo no es un JSON válido");
   }
 
-  console.log("[backup] Import preview:", { tables, rows });
-  return { tables, rows };
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new Error("Formato de respaldo inválido");
+  }
+
+  const doc = parsed as Partial<BackupDocument>;
+  if (typeof doc.version !== "number" || doc.version <= 0) {
+    throw new Error("El respaldo no tiene una versión válida");
+  }
+  if (!doc.data || typeof doc.data !== "object") {
+    throw new Error("El respaldo no contiene datos de tablas");
+  }
+
+  return api.post<ImportResult>("/backup/import", { storeId, data: parsed });
 }

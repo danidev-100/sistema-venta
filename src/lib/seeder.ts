@@ -13,7 +13,6 @@ const TARGETS = {
   categories: 20,
   brands: 10,
   products: 500,
-  customers: 200,
 } as const;
 
 function randomPrice(): number {
@@ -46,7 +45,7 @@ async function createProduct(name: string, price: number, stock: number, categor
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       name, price, stock: Math.floor(stock),
-      category_id: categoryId, brandId,
+      category_id: categoryId, brand_id: brandId,
       store_id: STORE_ID,
       barcode: Math.random().toString(36).slice(2, 12),
     }),

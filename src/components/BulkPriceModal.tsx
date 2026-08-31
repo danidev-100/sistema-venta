@@ -137,11 +137,21 @@ export default function BulkPriceModal({ onClose }: BulkPriceModalProps) {
     setApplying(true);
 
     try {
-      bulkPriceConfirm();
-      showNotification(
-        `Precios actualizados correctamente — ${preview?.length ?? 0} campo(s) modificados`,
-      );
-      onClose();
+      void bulkPriceConfirm()
+        .then(() => {
+          showNotification(
+            `Precios actualizados correctamente — ${preview?.length ?? 0} campo(s) modificados`,
+          );
+          onClose();
+        })
+        .catch((err) => {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Error al aplicar los cambios de precio",
+          );
+          setApplying(false);
+        });
     } catch (err) {
       setError(
         err instanceof Error

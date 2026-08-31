@@ -1,28 +1,110 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+﻿import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useAppStore } from "@/store";
 import { useAuthStore } from "@/store/auth";
+import { ROLE_PERMISSIONS } from "@/store/auth";
 import UserManagementPage from "@/pages/UserManagementPage";
+
+// ──────────────────────────────────────────────
+// La gestión de usuarios es server-side: el store habla con
+// /users. El mock simula un mini-registro de usuarios.
+// ──────────────────────────────────────────────
+
+const mockState = vi.hoisted(() => ({
+  users: new Map<string, Record<string, unknown>>(),
+  nextId: 2,
+}));
+
+function makeAdminRaw(): Record<string, unknown> {
+  return {
+    id: 1,
+    name: "admin",
+    role: "admin",
+    permissions: ROLE_PERMISSIONS.admin,
+    active: true,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+vi.mock("@/lib/api", () => {
+  const idFromPath = (path: string) => {
+    const m = /(\d+)$/.exec(path.replace(/\/$/, ""));
+    return m ? parseInt(m[1], 10) : undefined;
+  };
+  return {
+    api: {
+      get: vi.fn(() => Promise.resolve(Array.from(mockState.users.values()))),
+      post: vi.fn((path: string, body: any) => {
+        if (path === "/auth/login") {
+          return Promise.resolve({ token: "test-token", user: makeAdminRaw() });
+        }
+        if (path === "/users") {
+          if (mockState.users.has(body.name)) {
+            return Promise.reject(new Error("El nombre de usuario ya existe"));
+          }
+          const user = {
+            id: mockState.nextId++,
+            name: body.name,
+            role: body.role,
+            permissions:
+              body.permissions ?? ROLE_PERMISSIONS[body.role as "admin"] ?? [],
+            active: body.active,
+            createdAt: new Date().toISOString(),
+          };
+          mockState.users.set(body.name, user);
+          return Promise.resolve(user);
+        }
+        return Promise.resolve({});
+      }),
+      put: vi.fn((path: string, body: any) => {
+        const id = idFromPath(path);
+        const existing = Array.from(mockState.users.values()).find(
+          (u) => u.id === id,
+        );
+        const merged = { ...(existing ?? {}), ...body, id };
+        if (body.permissions === undefined && existing) {
+          // El backend conserva los permisos si no se envían (caso rol admin)
+          merged.permissions = existing.permissions;
+        }
+        if (merged.permissions && typeof merged.permissions !== "string") {
+          merged.permissions = JSON.stringify(merged.permissions);
+        }
+        if (typeof merged.name === "string" && existing) {
+          const oldName = existing.name as string;
+          mockState.users.delete(oldName);
+        }
+        mockState.users.set(merged.name as string, merged);
+        return Promise.resolve(merged);
+      }),
+      del: vi.fn(() => Promise.resolve(undefined)),
+    },
+    setToken: vi.fn(),
+    clearToken: vi.fn(),
+  };
+});
 
 // ──────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────
 
 function resetAll() {
-  useAuthStore.setState({
-    users: [],
-    currentUser: null,
-    _hydrated: false,
-  });
+  useAuthStore.setState({ users: [], currentUser: null });
   useAppStore.setState({ page: "dashboard" });
-  localStorage.removeItem("auth_users");
-  localStorage.removeItem("auth_current_user_id");
+  mockState.users.clear();
+  mockState.users.set("admin", makeAdminRaw());
+  mockState.nextId = 2;
 }
 
 async function loginAsAdmin() {
-  await useAuthStore.getState().init();
   await useAuthStore.getState().login("admin", "admin");
+}
+
+async function renderPageAndWaitAdmin() {
+  render(<UserManagementPage />);
+  await waitFor(() => {
+    expect(screen.getAllByText("admin").length).toBeGreaterThan(0);
+  });
 }
 
 // ──────────────────────────────────────────────
@@ -43,9 +125,8 @@ describe("UserManagementPage", () => {
   it("renders user table with existing users", async () => {
     await loginAsAdmin();
 
-    render(<UserManagementPage />);
+    await renderPageAndWaitAdmin();
 
-    expect(screen.getAllByText("admin").length).toBeGreaterThan(0);
     expect(screen.getAllByText("POS / Ventas").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Clientes").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Estadísticas").length).toBeGreaterThan(0);
@@ -70,8 +151,8 @@ describe("UserManagementPage", () => {
     await userEvent.click(screen.getByRole("button", { name: /agregar usuario/i }));
 
     expect(screen.getByText(/nuevo usuario/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/nombre/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/contraseña/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Nombre de usuario")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Contraseña")).toBeInTheDocument();
   });
 
   it("adds a new user successfully", async () => {
@@ -81,12 +162,11 @@ describe("UserManagementPage", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /agregar usuario/i }));
 
-    await userEvent.type(screen.getByPlaceholderText(/nombre/i), "nuevo");
-    await userEvent.type(screen.getByPlaceholderText(/contraseña/i), "1234");
+    await userEvent.type(screen.getByPlaceholderText("Nombre de usuario"), "nuevo");
+    await userEvent.type(screen.getByPlaceholderText("Contraseña"), "1234");
 
     // Toggle a permission checkbox
     const checkboxes = screen.getAllByRole("checkbox");
-    // Click the first permission checkbox (Ventas)
     await userEvent.click(checkboxes[0]);
 
     await userEvent.click(screen.getByRole("button", { name: /guardar/i }));
@@ -103,7 +183,7 @@ describe("UserManagementPage", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /agregar usuario/i }));
 
-    await userEvent.type(screen.getByPlaceholderText(/contraseña/i), "1234");
+    await userEvent.type(screen.getByPlaceholderText("Contraseña"), "1234");
     await userEvent.click(screen.getByRole("button", { name: /guardar/i }));
 
     expect(screen.getByText(/nombre.*obligatorio/i)).toBeInTheDocument();
@@ -116,7 +196,7 @@ describe("UserManagementPage", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /agregar usuario/i }));
 
-    await userEvent.type(screen.getByPlaceholderText(/nombre/i), "nuevo");
+    await userEvent.type(screen.getByPlaceholderText("Nombre de usuario"), "nuevo");
     await userEvent.click(screen.getByRole("button", { name: /guardar/i }));
 
     expect(screen.getByText(/contraseña.*obligatoria/i)).toBeInTheDocument();
@@ -129,8 +209,8 @@ describe("UserManagementPage", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /agregar usuario/i }));
 
-    await userEvent.type(screen.getByPlaceholderText(/nombre/i), "admin");
-    await userEvent.type(screen.getByPlaceholderText(/contraseña/i), "1234");
+    await userEvent.type(screen.getByPlaceholderText("Nombre de usuario"), "admin");
+    await userEvent.type(screen.getByPlaceholderText("Contraseña"), "1234");
     await userEvent.click(screen.getByRole("button", { name: /guardar/i }));
 
     await waitFor(() => {
@@ -143,7 +223,7 @@ describe("UserManagementPage", () => {
   it("opens edit modal when clicking edit button", async () => {
     await loginAsAdmin();
 
-    render(<UserManagementPage />);
+    await renderPageAndWaitAdmin();
 
     await userEvent.click(screen.getAllByLabelText(/editar admin/i)[0]);
 
@@ -154,9 +234,9 @@ describe("UserManagementPage", () => {
   it("edits user name successfully", async () => {
     await loginAsAdmin();
 
-    render(<UserManagementPage />);
+    await renderPageAndWaitAdmin();
 
-    // Two "✎ Editar" buttons exist (desktop table + mobile card) — click the first
+    // Two "Editar" buttons exist (desktop table + mobile card) — click the first
     await userEvent.click(screen.getAllByLabelText(/editar admin/i)[0]);
 
     const nameInput = screen.getByDisplayValue("admin");
@@ -180,16 +260,15 @@ describe("UserManagementPage", () => {
       active: true,
     });
 
-    render(<UserManagementPage />);
+    await renderPageAndWaitAdmin();
 
     // Click edit on "limited" user — pick first between desktop table + mobile card
+    await waitFor(() => {
+      expect(screen.getAllByLabelText(/editar limited/i).length).toBeGreaterThan(0);
+    });
     await userEvent.click(screen.getAllByLabelText(/editar limited/i)[0]);
 
-    // The edit modal should show checkboxes — find all of them
-    const checkboxes = screen.getAllByRole("checkbox");
-
-    // Uncheck POS / Ventas (the first permission checkbox)
-    // Find the checkbox labeled "POS / Ventas" and uncheck it
+    // Uncheck POS / Ventas
     const ventasCheckbox = screen.getByLabelText("POS / Ventas");
     await userEvent.click(ventasCheckbox);
 
@@ -200,8 +279,6 @@ describe("UserManagementPage", () => {
     await userEvent.click(screen.getByRole("button", { name: /guardar/i }));
 
     await waitFor(() => {
-      // After saving, the "limited" user should not show "POS / Ventas" badge in table
-      // But admin still has POS / Ventas — use within the limited row context
       const rows = screen.getAllByRole("row");
       const limitedRow = rows.find((r) => r.textContent?.includes("limited"));
       expect(limitedRow).toBeDefined();
@@ -225,11 +302,12 @@ describe("UserManagementPage", () => {
       active: true,
     });
 
-    render(<UserManagementPage />);
+    await renderPageAndWaitAdmin();
 
-    expect(screen.getAllByText("deleteme").length).toBeGreaterThan(0);
+    await waitFor(() => {
+      expect(screen.getAllByLabelText(/eliminar deleteme/i).length).toBeGreaterThan(0);
+    });
 
-    // Pick first delete button between desktop + mobile
     await userEvent.click(screen.getAllByLabelText(/eliminar deleteme/i)[0]);
 
     await waitFor(() => {
@@ -242,13 +320,11 @@ describe("UserManagementPage", () => {
   it("cannot delete the admin user", async () => {
     await loginAsAdmin();
 
-    render(<UserManagementPage />);
+    await renderPageAndWaitAdmin();
 
-    // Admin should have a lock icon or disabled delete button
-    const adminElements = screen.getAllByText("admin");
-    // The admin should not have a delete button with aria-label containing "eliminar admin"
+    // Admin should not have a delete button with aria-label "Eliminar admin"
     expect(screen.queryByLabelText(/eliminar admin/i)).toBeNull();
-    // Admin should show a lock indicator (at least one lock icon exists)
+    // Admin should show a lock indicator
     expect(screen.getAllByTitle(/admin.*no.*eliminar/i).length).toBeGreaterThan(0);
   });
 
@@ -293,4 +369,3 @@ describe("UserManagementPage", () => {
     });
   });
 });
-

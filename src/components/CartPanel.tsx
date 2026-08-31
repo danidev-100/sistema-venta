@@ -3,7 +3,9 @@ import { useAppStore, usePriceListsStore } from "@/store";
 import { useProductsStore } from "@/store/products";
 import { useAuthStore } from "@/store/auth";
 import { useCashClosingStore } from "@/store/cash-closing";
+import { useCompanyStore } from "@/store/company";
 import { useActiveStore } from "@/store/context";
+import { computeIva } from "@/lib/iva";
 import CashMovementModal from "@/components/CashMovementModal";
 import ProductImage from "@/components/ProductImage";
 import { formatCurrency } from "@/lib/format";
@@ -42,14 +44,23 @@ export default function CartPanel({
   const currentUser = useAuthStore((s) => s.currentUser);
   const products = useProductsStore((s) => s.products);
   const { storeId } = useActiveStore();
+  const companyData = useCompanyStore((s) => s.data);
+  const companyLoaded = useCompanyStore((s) => s.loaded);
+  const loadCompany = useCompanyStore((s) => s.loadCompany);
   const shifts = useCashClosingStore((s) => s.shifts);
   const closeShift = useCashClosingStore((s) => s.closeShift);
+
+  useEffect(() => {
+    if (!companyLoaded) loadCompany(storeId).catch(console.error);
+  }, [storeId, companyLoaded, loadCompany]);
 
   const comboInfo = useAppStore((s) => s.getComboInfo());
   const selectedPriceListId = useAppStore((s) => s.selectedPriceListId);
   const priceLists = usePriceListsStore((s) => s.priceLists);
   const activePriceList = selectedPriceListId != null ? priceLists.find((pl) => pl.id === selectedPriceListId) : null;
-  const total = cartTotal();
+  const net = cartTotal();
+  const ivaInfo = computeIva(net, companyData?.iva_alicuota ?? 0, companyData?.iva_incluido === 1);
+  const total = ivaInfo.total;
   const rawSubtotal = items.reduce((sum, i) => sum + i.subtotal, 0);
   const count = itemCount();
   const isEmpty = items.length === 0;
@@ -558,11 +569,13 @@ export default function CartPanel({
             </div>
           )}
 
-          {/* Tax (placeholder — 0% for now) */}
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-pos-muted">Impuesto</span>
-            <span className="font-mono font-medium">$0.00</span>
-          </div>
+          {/* IVA — calculado según la configuración de la empresa */}
+          {ivaInfo.alicuota > 0 && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-pos-muted">IVA {ivaInfo.alicuota}%</span>
+              <span className="font-mono font-medium">{formatCurrency(ivaInfo.iva)}</span>
+            </div>
+          )}
 
           {/* Total */}
           <div className="flex items-center justify-between text-base font-bold">

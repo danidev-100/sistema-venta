@@ -165,11 +165,13 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
 
   const handleFocus = useCallback(
     (e: React.FocusEvent<HTMLInputElement>) => {
+      const inputEl = e.currentTarget;
       setFocused(true);
       // Mostrar valor crudo y seleccionar todo para que al escribir reemplace
       setDisplay(value.toFixed(decimals));
+      // currentTarget se anula al terminar el handler: capturar el nodo antes
       requestAnimationFrame(() => {
-        e.currentTarget.select();
+        inputEl.select();
       });
       onFocus?.(e);
     },

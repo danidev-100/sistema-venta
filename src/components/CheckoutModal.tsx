@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppStore, useCustomersStore, usePriceListsStore } from "@/store";
 import { useActiveStore } from "@/store/context";
+import { useCompanyStore } from "@/store/company";
 import { type ComprobanteTipo, getTipoLabel } from "@/store/comprobantes";
+import { computeIva } from "@/lib/iva";
 import { formatCurrency } from "@/lib/format";
 import NumberInput from "@/components/NumberInput";
 
@@ -30,13 +32,22 @@ export default function CheckoutModal({
   const selectedPriceListId = useAppStore((s) => s.selectedPriceListId);
   const setSelectedPriceListId = useAppStore((s) => s.setSelectedPriceListId);
   const priceLists = usePriceListsStore((s) => s.priceLists);
+  const companyData = useCompanyStore((s) => s.data);
+  const companyLoaded = useCompanyStore((s) => s.loaded);
+  const loadCompany = useCompanyStore((s) => s.loadCompany);
+
+  useEffect(() => {
+    if (!companyLoaded) loadCompany(storeId).catch(console.error);
+  }, [storeId, companyLoaded, loadCompany]);
 
   const comboInfo = useAppStore((s) => s.getComboInfo());
   const subtotal = items.reduce((sum, i) => sum + i.subtotal, 0);
-  const total = cartTotal();
+  const net = cartTotal();
+  const ivaInfo = computeIva(net, companyData?.iva_alicuota ?? 0, companyData?.iva_incluido === 1);
+  const total = ivaInfo.total;
   const beforeGlobal = comboInfo ? subtotal - comboInfo.totalSavings : subtotal;
-  const nextDiscount = Math.round((beforeGlobal - total) * 100) / 100;
-  const discountAmount = Math.round((subtotal - total) * 100) / 100;
+  const nextDiscount = Math.round((beforeGlobal - net) * 100) / 100;
+  const discountAmount = Math.round((subtotal - net) * 100) / 100;
   const isEmpty = items.length === 0;
 
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "mixed" | "credit" | "mercadopago" | null>(null);

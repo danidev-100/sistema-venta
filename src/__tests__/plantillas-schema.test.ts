@@ -6,7 +6,7 @@ import { describe, it, expect } from "vitest";
 
 describe("plantillas Drizzle schema", () => {
   it("exports plantillas table definition from schema", async () => {
-    const schema = await import("@db/schema");
+    const schema = await import("@db/cloud-schema");
     expect(schema.plantillas).toBeDefined();
     // Verify it's a Drizzle table (has columns like id, tipo, store_id)
     expect(schema.plantillas.id).toBeDefined();
@@ -16,7 +16,7 @@ describe("plantillas Drizzle schema", () => {
   });
 
   it("plantillas has unique index on store_id + tipo", async () => {
-    const schema = await import("@db/schema");
+    const schema = await import("@db/cloud-schema");
     // Verify the unique constraint exists
     expect(schema.plantillas).toBeDefined();
   });

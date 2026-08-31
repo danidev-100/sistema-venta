@@ -1,0 +1,1 @@
+ALTER TABLE "bultos" ALTER COLUMN "product_id" DROP NOT NULL;

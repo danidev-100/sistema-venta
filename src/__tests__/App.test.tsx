@@ -1,18 +1,27 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { useAppStore } from "@/store";
-import { useAuthStore } from "@/store/auth";
+import { useAuthStore, type AuthUser, type Permission } from "@/store/auth";
 import App from "@/App";
 
+function makeUser(
+  name: string,
+  permissions: Permission[],
+  role: "admin" | "custom" = "custom",
+): AuthUser {
+  return {
+    id: 1,
+    name,
+    role,
+    permissions,
+    active: true,
+    createdAt: new Date().toISOString(),
+  };
+}
+
 function resetAll() {
-  useAuthStore.setState({
-    users: [],
-    currentUser: null,
-    _hydrated: false,
-  });
+  useAuthStore.setState({ users: [], currentUser: null });
   useAppStore.setState({ page: "pos" });
-  localStorage.removeItem("auth_users");
-  localStorage.removeItem("auth_current_user_id");
 }
 
 beforeEach(() => {
@@ -20,14 +29,21 @@ beforeEach(() => {
 });
 
 describe("App — auth gate", () => {
-  it("auto-logs in as admin and renders POS page", async () => {
-    await useAuthStore.getState().init();
+  it("renders LoginPage when there is no authenticated user", () => {
+    render(<App />);
+
+    expect(screen.getByText("Iniciar Sesión")).toBeInTheDocument();
+  });
+
+  it("renders the app shell when an admin user is logged in", async () => {
+    useAuthStore.setState({ currentUser: makeUser("admin", [], "admin") });
+    useAppStore.setState({ page: "dashboard" });
 
     render(<App />);
 
     await waitFor(() => {
-      // Navigation bar should be visible (admin is auto-logged-in)
-      expect(screen.getByText("Inicio")).toBeInTheDocument();
+      // Navigation bar should be visible (authenticated shell)
+      expect(screen.getAllByText("Inicio").length).toBeGreaterThan(0);
     });
   });
 
@@ -37,26 +53,13 @@ describe("App — auth gate", () => {
   });
 
   it("redirects to dashboard when page lacks permission", async () => {
-    await useAuthStore.getState().init();
-    // Create a user without "estadisticas" permission
-    await useAuthStore.getState().addUser({
-      name: "limited",
-      password: "pass",
-      role: "custom",
-      permissions: ["ventas"],
-      active: true,
-    });
-    await useAuthStore.getState().login("limited", "pass");
-
-    // Try to navigate to stats page without permission
-    useAppStore.getState().setPage("stats");
+    useAuthStore.setState({ currentUser: makeUser("limited", ["ventas"]) });
+    useAppStore.setState({ page: "stats" });
 
     render(<App />);
 
-    // Should redirect to dashboard
     await waitFor(() => {
       expect(useAppStore.getState().page).toBe("dashboard");
     });
   });
 });
-

@@ -130,6 +130,32 @@ router.delete("/:id", async (req: Request, res: Response) => {
   }
 });
 
+// GET /credit-payments — list credit payments for a store (optionally filtered by customer)
+router.get("/credit-payments", async (req: Request, res: Response) => {
+  try {
+    const storeId = req.query.storeId as string;
+    if (!storeId) {
+      res.status(400).json({ error: "storeId es requerido" });
+      return;
+    }
+    const db = getDb();
+    const conditions = [eq(schema.creditPayments.store_id, storeId)];
+    const customerId = req.query.customerId ? Number(req.query.customerId) : undefined;
+    if (customerId && !isNaN(customerId)) {
+      conditions.push(eq(schema.creditPayments.customer_id, customerId));
+    }
+    const rows = await db
+      .select()
+      .from(schema.creditPayments)
+      .where(and(...conditions))
+      .orderBy(desc(schema.creditPayments.date));
+    res.json(rows);
+  } catch (err) {
+    console.error("[customers] credit-payments error:", err);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 // POST /credit-payment — record credit payment & update balance
 router.post("/credit-payment", async (req: Request, res: Response) => {
   try {

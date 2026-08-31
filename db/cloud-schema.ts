@@ -156,6 +156,7 @@ export const sales = pgTable(
     customer_name: text("customer_name"),
     total: doublePrecision("total").notNull(),
     subtotal: doublePrecision("subtotal").notNull().default(0),
+    iva: doublePrecision("iva").notNull().default(0),
     discount_percent: doublePrecision("discount_percent").notNull().default(0),
     discount_amount: doublePrecision("discount_amount").notNull().default(0),
     payment_method: text("payment_method").notNull(),
@@ -335,7 +336,10 @@ export const invoices = pgTable(
     customer_name: text("customer_name"),
     customer_doc: text("customer_doc"),
     total: doublePrecision("total").notNull(),
-    payment_method: text("payment_method", { enum: ["cash", "card"] }).notNull(),
+    payment_method: text("payment_method", {
+      enum: ["cash", "card", "mixed", "credit", "mercadopago"],
+    }).notNull(),
+    created_by: text("created_by").notNull().default("—"),
     store_id: text("store_id").notNull(),
     created_at: timestamp("created_at").notNull().defaultNow(),
     updated_at: timestamp("updated_at").notNull().defaultNow(),
@@ -346,7 +350,7 @@ export const invoices = pgTable(
   (table) => ({
     saleIdx: index("idx_invoices_sale").on(table.sale_id),
     storeIdx: index("idx_invoices_store").on(table.store_id),
-    invoiceNumberIdx: uniqueIndex("idx_invoices_number").on(table.invoice_number),
+    invoiceNumberIdx: uniqueIndex("idx_invoices_number").on(table.store_id, table.invoice_number),
   }),
 );
 
@@ -359,6 +363,7 @@ export const invoiceItems = pgTable(
   {
     id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
     invoice_id: integer("invoice_id").notNull(),
+    product_id: integer("product_id"),
     product_name: text("product_name").notNull(),
     quantity: integer("quantity").notNull(),
     unit_price: doublePrecision("unit_price").notNull(),
@@ -720,6 +725,8 @@ export const company = pgTable(
     email: text("email").notNull().default(""),
     cuit: text("cuit").notNull().default(""),
     logo: text("logo").notNull().default(""),
+    iva_alicuota: doublePrecision("iva_alicuota").notNull().default(0),
+    iva_incluido: integer("iva_incluido").notNull().default(0),
     store_id: text("store_id").notNull(),
     created_at: timestamp("created_at").notNull().defaultNow(),
     updated_at: timestamp("updated_at").notNull().defaultNow(),
@@ -866,7 +873,7 @@ export const bultos = pgTable(
   {
     id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
     name: text("name").notNull(),
-    product_id: integer("product_id").notNull(),
+    product_id: integer("product_id"),
     quantity: integer("quantity").notNull().default(1),
     bulto_price: doublePrecision("bulto_price").notNull().default(0),
     store_id: text("store_id").notNull(),

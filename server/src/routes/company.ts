@@ -6,8 +6,8 @@ import * as schema from "../../../db/cloud-schema.js";
 
 const router = Router();
 
-router.use(authMiddleware, requireRole("admin"));
-
+// GET es accesible para cualquier usuario autenticado: los datos de la empresa
+// se inyectan en los tickets/comprobantes que imprime el cajero.
 router.get("/", async (req: Request, res: Response) => {
   try {
     const storeId = req.query.storeId as string;
@@ -35,14 +35,36 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
-router.put("/", async (req: Request, res: Response) => {
+router.put("/", authMiddleware, requireRole("admin"), async (req: Request, res: Response) => {
   try {
-    const { store_id, name, address, phone, email, cuit, logo } = req.body;
+    const {
+      store_id,
+      name,
+      address,
+      phone,
+      email,
+      cuit,
+      logo,
+      iva_alicuota,
+      iva_incluido,
+    } = req.body;
 
     if (!store_id) {
       res.status(400).json({ error: "store_id es requerido" });
       return;
     }
+
+    const updateData: Record<string, unknown> = {
+      name,
+      address,
+      phone,
+      email,
+      cuit,
+      logo,
+      updated_at: new Date(),
+    };
+    if (iva_alicuota !== undefined) updateData.iva_alicuota = Number(iva_alicuota) || 0;
+    if (iva_incluido !== undefined) updateData.iva_incluido = iva_incluido ? 1 : 0;
 
     const db = getDb();
     const [existing] = await db
@@ -54,14 +76,14 @@ router.put("/", async (req: Request, res: Response) => {
     if (existing) {
       const [updated] = await db
         .update(schema.company)
-        .set({ name, address, phone, email, cuit, logo, updated_at: new Date() })
+        .set(updateData)
         .where(eq(schema.company.store_id, store_id))
         .returning();
       res.json(updated);
     } else {
       const [created] = await db
         .insert(schema.company)
-        .values({ store_id, name, address, phone, email, cuit, logo })
+        .values({ store_id, ...updateData, created_at: new Date() })
         .returning();
       res.status(201).json(created);
     }

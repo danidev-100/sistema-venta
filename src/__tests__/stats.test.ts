@@ -477,24 +477,24 @@ describe("Revenue aggregation", () => {
 // ──────────────────────────────────────────────
 
 describe("End-to-end data flow: checkout → stats", () => {
-  it("completedSales are populated after checkout", () => {
+  it("completedSales are populated after checkout", async () => {
     const store = useAppStore.getState();
     store.addItem(1, "Coca-Cola", 150);
     store.addItem(2, "Fanta", 100);
-    store.checkout("cash", 250, "store_1");
+    await store.checkout("cash", 250, "store_1");
 
     expect(useAppStore.getState().completedSales).toHaveLength(1);
   });
 
-  it("aggregates across multiple checkouts", () => {
+  it("aggregates across multiple checkouts", async () => {
     const store = useAppStore.getState();
 
     store.addItem(1, "Coca-Cola", 150);
-    store.checkout("cash", 150, "store_1");
+    await store.checkout("cash", 150, "store_1");
 
     store.addItem(1, "Coca-Cola", 150);
     store.addItem(2, "Fanta", 100);
-    store.checkout("cash", 250, "store_1");
+    await store.checkout("cash", 250, "store_1");
 
     const sales = useAppStore.getState().completedSales;
     expect(sales).toHaveLength(2);
@@ -506,14 +506,14 @@ describe("End-to-end data flow: checkout → stats", () => {
     expect(ranking[1].productName).toBe("Fanta");
   });
 
-  it("respects store isolation in stats query", () => {
+  it("respects store isolation in stats query", async () => {
     const store = useAppStore.getState();
 
     store.addItem(1, "Coca-Cola", 150);
-    store.checkout("cash", 150, "store_1");
+    await store.checkout("cash", 150, "store_1");
 
     store.addItem(1, "Coca-Cola", 150);
-    store.checkout("cash", 150, "store_2");
+    await store.checkout("cash", 150, "store_2");
 
     const sales = useAppStore.getState().completedSales;
     expect(sales).toHaveLength(2);

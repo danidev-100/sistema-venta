@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useAppStore, type CompletedSale } from "@/store";
 import { useAuthStore } from "@/store/auth";
 import { useActiveStore } from "@/store/context";
@@ -34,7 +34,12 @@ export default function BillingPage() {
   const { storeId } = useActiveStore();
   const completedSales = useAppStore((s) => s.completedSales);
   const generateInvoice = useInvoicesStore((s) => s.generateInvoice);
+  const loadInvoices = useInvoicesStore((s) => s.loadInvoices);
   const currentUser = useAuthStore((s) => s.currentUser);
+
+  useEffect(() => {
+    loadInvoices(storeId).catch(console.error);
+  }, [storeId, loadInvoices]);
 
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(
     null,

@@ -1,11 +1,10 @@
-import { useState, useEffect, useCallback, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useAppStore, useAuthStore, type Page } from "@/store";
 import { useExpensesStore } from "@/store/expenses";
 import { useComprobantesStore } from "@/store/comprobantes";
 import { useProductsStore } from "@/store/products";
 import { useCashClosingStore } from "@/store/cash-closing";
 import { type Permission } from "@/store/auth";
-import { getSyncState, triggerSync } from "@/hooks/useSync";
 import ThemeToggle from "@/components/ThemeToggle";
 import ConfirmModal from "@/components/ConfirmModal";
 
@@ -136,31 +135,6 @@ const SettingsIcon = () => (
   </NavIcon>
 );
 
-function SyncIcon({ status }: { status: "idle" | "syncing" | "success" | "error" | "offline" }) {
-  if (status === "syncing") {
-    return (
-      <NavIcon>
-        <polyline points="23 4 23 10 17 10" />
-        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-      </NavIcon>
-    );
-  }
-  if (status === "error") {
-    return (
-      <NavIcon>
-        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-        <line x1="12" y1="9" x2="12" y2="13" />
-        <line x1="12" y1="17" x2="12.01" y2="17" />
-      </NavIcon>
-    );
-  }
-  return (
-    <NavIcon>
-      <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
-    </NavIcon>
-  );
-}
-
 // ──────────────────────────────────────────────
 // Page definitions
 // ──────────────────────────────────────────────
@@ -223,15 +197,6 @@ export default function NavigationBar() {
   });
 
   const isInConfig = visibleConfig.some((p) => p.id === page);
-
-  const handleSync = useCallback(() => { triggerSync(); }, []);
-
-  const syncState = getSyncState();
-  const syncStatus = syncState.status;
-  const syncError = syncState.error;
-  const lastSync = syncState.lastSyncedAt
-    ? new Date(syncState.lastSyncedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    : null;
 
   function handleLogout() {
     setShowLogoutConfirm(true);
@@ -332,23 +297,8 @@ export default function NavigationBar() {
         )}
       </nav>
 
-      {/* Bottom: user + sync + theme */}
+      {/* Bottom: user + theme */}
       <div className="border-t border-white/10 px-3 py-3 space-y-2">
-        {/* Sync */}
-        <button
-          onClick={handleSync}
-          className="w-full flex items-center gap-2 text-xs text-white/50 hover:text-white transition-colors px-2 py-1.5 rounded-lg hover:bg-white/10"
-          title={syncStatus === "error" ? `Error: ${syncError}` : "Sincronizar ahora"}
-        >
-          <span className="shrink-0"><SyncIcon status={syncStatus} /></span>
-          <span className="text-xs">
-            {syncStatus === "syncing" ? "Sincronizando..."
-            : syncStatus === "success" ? "Sincronizado"
-            : syncStatus === "error" ? "Error de sincro"
-            : "Sincronizar"}
-          </span>
-        </button>
-
         {/* User */}
         {currentUser && (
           <div className="flex items-center justify-between px-2 py-1.5">

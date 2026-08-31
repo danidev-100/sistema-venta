@@ -15,6 +15,8 @@ export type CompanyData = {
   email: string;
   web: string;
   logo_base64: string;
+  iva_alicuota: number;
+  iva_incluido: number;
 };
 
 export type CompanyInput = {
@@ -25,6 +27,8 @@ export type CompanyInput = {
   email: string;
   web: string;
   logo_base64: string;
+  iva_alicuota: number;
+  iva_incluido: number;
 };
 
 export type CompanyStore = {
@@ -47,6 +51,8 @@ function normalizeCompany(raw: Record<string, unknown>): CompanyData {
     email: raw.email as string,
     web: (raw.web as string) ?? "",
     logo_base64: (raw.logo as string) ?? "",
+    iva_alicuota: Number(raw.iva_alicuota ?? 0),
+    iva_incluido: Number(raw.iva_incluido ?? 0),
   };
 }
 
@@ -80,6 +86,8 @@ export const useCompanyStore = create<CompanyStore>((set) => ({
         email: input.email,
         cuit: input.cuit,
         logo: input.logo_base64,
+        iva_alicuota: input.iva_alicuota,
+        iva_incluido: input.iva_incluido ? 1 : 0,
       };
       const raw = await api.put<Record<string, unknown>>("/company", body);
       set({ data: normalizeCompany(raw) });

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useBrandsStore } from "@/store/brands";
 import BrandList from "@/components/BrandList";
@@ -109,10 +109,11 @@ describe("BrandForm — submit validation", () => {
     await user.type(input, "Nueva Marca");
     await user.click(screen.getByRole("button", { name: /Crear/i }));
 
-    // Brand should be added to store
-    const brands = useBrandsStore.getState().brands;
-    expect(brands).toHaveLength(1);
-    expect(brands[0].name).toBe("Nueva Marca");
+    // Brand should be added to store (async via the API)
+    await waitFor(() => {
+      expect(useBrandsStore.getState().brands).toHaveLength(1);
+    });
+    expect(useBrandsStore.getState().brands[0].name).toBe("Nueva Marca");
     expect(onSaved).toHaveBeenCalled();
   });
 
@@ -121,7 +122,7 @@ describe("BrandForm — submit validation", () => {
     const onSaved = vi.fn();
 
     // Pre-populate a brand
-    useBrandsStore.getState().addBrand({
+    await useBrandsStore.getState().addBrand({
       name: "Coca-Cola",
       store_id: "store_1",
     });

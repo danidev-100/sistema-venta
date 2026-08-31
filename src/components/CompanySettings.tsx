@@ -21,6 +21,8 @@ export default function CompanySettings() {
   const [web, setWeb] = useState("");
   const [logoPreview, setLogoPreview] = useState("");
   const [logoBase64, setLogoBase64] = useState("");
+  const [ivaAlicuota, setIvaAlicuota] = useState("0");
+  const [ivaIncluido, setIvaIncluido] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -42,6 +44,8 @@ export default function CompanySettings() {
       setWeb(data.web);
       setLogoBase64(data.logo_base64);
       setLogoPreview(data.logo_base64);
+      setIvaAlicuota(String(data.iva_alicuota ?? 0));
+      setIvaIncluido(data.iva_incluido === 1);
     }
   }, [data]);
 
@@ -89,6 +93,8 @@ export default function CompanySettings() {
         email,
         web,
         logo_base64: logoBase64,
+        iva_alicuota: parseFloat(ivaAlicuota) || 0,
+        iva_incluido: ivaIncluido ? 1 : 0,
       };
       await saveCompany(storeId, input);
       setSaved(true);
@@ -207,6 +213,46 @@ export default function CompanySettings() {
             placeholder="www.miempresa.com"
             className="w-full border border-pos-muted/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pos-secondary touch-target bg-pos-surface" />
         </div>
+      </div>
+
+      {/* IVA configurable */}
+      <div className="rounded-xl border border-pos-muted/20 p-4 space-y-3">
+        <div>
+          <label className="block text-sm font-medium text-pos-text mb-2">Alícuota de IVA</label>
+          <div className="flex items-center gap-2 flex-wrap">
+            {[0, 10.5, 21, 27].map((alicuota) => (
+              <button
+                key={alicuota}
+                type="button"
+                onClick={() => setIvaAlicuota(String(alicuota))}
+                className={`px-4 py-2 rounded-lg text-sm font-medium touch-target transition-all ${
+                  parseFloat(ivaAlicuota) === alicuota
+                    ? "bg-pos-secondary text-white"
+                    : "border border-pos-muted/20 text-pos-text hover:border-pos-secondary hover:text-pos-secondary"
+                }`}
+              >
+                {alicuota === 0 ? "0%" : `${alicuota}%`}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-pos-muted mt-2">
+            Se aplica sobre el neto (después de descuentos y combos) en el cobro y en el comprobante.
+          </p>
+        </div>
+        <label className="flex items-center gap-2 text-sm text-pos-text cursor-pointer touch-target">
+          <input
+            type="checkbox"
+            checked={ivaIncluido}
+            onChange={(e) => setIvaIncluido(e.target.checked)}
+            className="w-4 h-4 accent-pos-secondary"
+          />
+          Los precios ya incluyen IVA
+        </label>
+        <p className="text-xs text-pos-muted">
+          {ivaIncluido
+            ? "El IVA se muestra como información: base = total ÷ (1 + alícuota), IVA = total − base."
+            : "El IVA se suma al total cobrado: IVA = neto × alícuota."}
+        </p>
       </div>
 
       {/* Actions */}

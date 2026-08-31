@@ -2,12 +2,12 @@
 import { useCashClosingStore, computeExpectedCash, computeVariance } from "@/store/cash-closing";
 import { useAppStore, type CompletedSale } from "@/store";
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
 // Helpers
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
 
 function resetCashStore() {
-  useCashClosingStore.setState({ shifts: [] });
+  useCashClosingStore.setState({ shifts: [], cashMovements: [], loading: false });
 }
 
 function resetAppStore() {
@@ -65,23 +65,23 @@ function makeSale(
   };
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// 4.5 â€” Shift lifecycle: open â†’ close
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
+// 4.5 — Shift lifecycle: open → close
+// ──────────────────────────────────────────────
 
-describe("Shift lifecycle: open â†’ close", () => {
-  it("opens a new shift with employee and store", () => {
-    const shift = useCashClosingStore.getState().openShift("Juan PÃ©rez", "store_1");
+describe("Shift lifecycle: open → close", () => {
+  it("opens a new shift with employee and store", async () => {
+    const shift = await useCashClosingStore.getState().openShift("Juan Pérez", "store_1");
 
-    expect(shift.employee).toBe("Juan PÃ©rez");
+    expect(shift.employee).toBe("Juan Pérez");
     expect(shift.storeId).toBe("store_1");
     expect(shift.status).toBe("open");
     expect(shift.openTime).toBeTruthy();
     expect(shift.closeTime).toBeNull();
   });
 
-  it("marks the shift as the open shift for the store", () => {
-    useCashClosingStore.getState().openShift("Maria", "store_1");
+  it("marks the shift as the open shift for the store", async () => {
+    await useCashClosingStore.getState().openShift("Maria", "store_1");
 
     const open = useCashClosingStore.getState().getOpenShift("store_1");
     expect(open).not.toBeNull();
@@ -89,16 +89,16 @@ describe("Shift lifecycle: open â†’ close", () => {
     expect(open!.status).toBe("open");
   });
 
-  it("is not visible as open for a different store", () => {
-    useCashClosingStore.getState().openShift("Maria", "store_1");
+  it("is not visible as open for a different store", async () => {
+    await useCashClosingStore.getState().openShift("Maria", "store_1");
 
     const open = useCashClosingStore.getState().getOpenShift("store_2");
     expect(open).toBeNull();
   });
 
-  it("closes an open shift with a close timestamp", () => {
-    const shift = useCashClosingStore.getState().openShift("Juan", "store_1");
-    useCashClosingStore.getState().closeShift(shift.id);
+  it("closes an open shift with a close timestamp", async () => {
+    const shift = await useCashClosingStore.getState().openShift("Juan", "store_1");
+    await useCashClosingStore.getState().closeShift(shift.id);
 
     const closed = useCashClosingStore.getState().shifts.find((s) => s.id === shift.id)!;
     expect(closed.status).toBe("closed");
@@ -107,10 +107,10 @@ describe("Shift lifecycle: open â†’ close", () => {
     expect(useCashClosingStore.getState().getOpenShift("store_1")).toBeNull();
   });
 
-  it("lists all shifts for a store, newest first", () => {
-    const s1 = useCashClosingStore.getState().openShift("Shift 1", "store_1");
-    useCashClosingStore.getState().closeShift(s1.id);
-    const s2 = useCashClosingStore.getState().openShift("Shift 2", "store_1");
+  it("lists all shifts for a store, newest first", async () => {
+    const s1 = await useCashClosingStore.getState().openShift("Shift 1", "store_1");
+    await useCashClosingStore.getState().closeShift(s1.id);
+    const s2 = await useCashClosingStore.getState().openShift("Shift 2", "store_1");
 
     const storeShifts = useCashClosingStore.getState().getShiftsByStore("store_1");
     expect(storeShifts).toHaveLength(2);
@@ -119,9 +119,9 @@ describe("Shift lifecycle: open â†’ close", () => {
     expect(storeShifts[1].employee).toBe("Shift 1");
   });
 
-  it("does not return shifts from other stores", () => {
-    useCashClosingStore.getState().openShift("Store 1 shift", "store_1");
-    useCashClosingStore.getState().openShift("Store 2 shift", "store_2");
+  it("does not return shifts from other stores", async () => {
+    await useCashClosingStore.getState().openShift("Store 1 shift", "store_1");
+    await useCashClosingStore.getState().openShift("Store 2 shift", "store_2");
 
     const store1Shifts = useCashClosingStore.getState().getShiftsByStore("store_1");
     expect(store1Shifts).toHaveLength(1);
@@ -129,47 +129,47 @@ describe("Shift lifecycle: open â†’ close", () => {
   });
 });
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// 4.5 â€” Double-open rejection
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
+// 4.5 — Double-open rejection
+// ──────────────────────────────────────────────
 
 describe("Double-open rejection", () => {
-  it("throws when trying to open a second shift for the same store", () => {
-    useCashClosingStore.getState().openShift("First", "store_1");
+  it("throws when trying to open a second shift for the same store", async () => {
+    await useCashClosingStore.getState().openShift("First", "store_1");
 
-    expect(() => {
-      useCashClosingStore.getState().openShift("Second", "store_1");
-    }).toThrow(/close current shift first/i);
+    await expect(
+      useCashClosingStore.getState().openShift("Second", "store_1"),
+    ).rejects.toThrow(/close current shift first/i);
   });
 
-  it("allows opening a shift for a different store while another is open", () => {
-    useCashClosingStore.getState().openShift("Store 1 shift", "store_1");
+  it("allows opening a shift for a different store while another is open", async () => {
+    await useCashClosingStore.getState().openShift("Store 1 shift", "store_1");
 
-    expect(() => {
-      useCashClosingStore.getState().openShift("Store 2 shift", "store_2");
-    }).not.toThrow();
+    await expect(
+      useCashClosingStore.getState().openShift("Store 2 shift", "store_2"),
+    ).resolves.toBeDefined();
   });
 
-  it("allows opening a new shift after closing the previous one", () => {
-    const s1 = useCashClosingStore.getState().openShift("First", "store_1");
-    useCashClosingStore.getState().closeShift(s1.id);
+  it("allows opening a new shift after closing the previous one", async () => {
+    const s1 = await useCashClosingStore.getState().openShift("First", "store_1");
+    await useCashClosingStore.getState().closeShift(s1.id);
 
-    expect(() => {
-      useCashClosingStore.getState().openShift("Second", "store_1");
-    }).not.toThrow();
+    await expect(
+      useCashClosingStore.getState().openShift("Second", "store_1"),
+    ).resolves.toBeDefined();
   });
 
-  it("getOpenShift returns null after closing", () => {
-    const s = useCashClosingStore.getState().openShift("Test", "store_1");
-    useCashClosingStore.getState().closeShift(s.id);
+  it("getOpenShift returns null after closing", async () => {
+    const s = await useCashClosingStore.getState().openShift("Test", "store_1");
+    await useCashClosingStore.getState().closeShift(s.id);
 
     expect(useCashClosingStore.getState().getOpenShift("store_1")).toBeNull();
   });
 });
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// 4.5 â€” Variance calculation
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
+// 4.5 — Variance calculation
+// ──────────────────────────────────────────────
 
 describe("Variance calculation", () => {
   it("computeVariance returns positive variance", () => {
@@ -221,7 +221,7 @@ describe("Variance calculation", () => {
     const now = new Date();
     const sales: CompletedSale[] = [
       makeSale(1, 400, "cash", now),
-      makeSale(2, 200, "cash", new Date(now.getTime() + 86400000)), // 1 day later â€” within open shift
+      makeSale(2, 200, "cash", new Date(now.getTime() + 86400000)), // 1 day later — within open shift
     ];
 
     const expected = computeExpectedCash(sales, now.toISOString(), null);
@@ -229,21 +229,22 @@ describe("Variance calculation", () => {
   });
 });
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// 4.5 â€” Shift reconciliation
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
+// 4.5 — Shift reconciliation
+// ──────────────────────────────────────────────
 
 describe("Shift reconciliation", () => {
-  it("reconcile marks as matched when variance is zero", () => {
-    const now = new Date();
-    const shift = useCashClosingStore.getState().openShift("Juan", "store_1");
-    useCashClosingStore.getState().closeShift(shift.id);
+  it("reconcile marks as matched when variance is zero", async () => {
+    const shift = await useCashClosingStore.getState().openShift("Juan", "store_1");
+    await useCashClosingStore.getState().closeShift(shift.id);
+
+    const inWindow = new Date(shift.openTime); // dentro del turno abierto
 
     const sales: CompletedSale[] = [
-      makeSale(1, 1000, "cash", now),
+      makeSale(1, 1000, "cash", inWindow),
     ];
 
-    useCashClosingStore.getState().reconcile(shift.id, 1000, sales);
+    await useCashClosingStore.getState().reconcile(shift.id, 1000, sales);
 
     const reconciled = useCashClosingStore.getState().shifts.find((s) => s.id === shift.id)!;
     expect(reconciled.reconciliationStatus).toBe("matched");
@@ -252,16 +253,17 @@ describe("Shift reconciliation", () => {
     expect(reconciled.reconciledAt).not.toBeNull();
   });
 
-  it("reconcile marks as mismatched when variance is non-zero", () => {
-    const now = new Date();
-    const shift = useCashClosingStore.getState().openShift("Juan", "store_1");
-    useCashClosingStore.getState().closeShift(shift.id);
+  it("reconcile marks as mismatched when variance is non-zero", async () => {
+    const shift = await useCashClosingStore.getState().openShift("Juan", "store_1");
+    await useCashClosingStore.getState().closeShift(shift.id);
+
+    const inWindow = new Date(shift.openTime); // dentro del turno abierto
 
     const sales: CompletedSale[] = [
-      makeSale(1, 1000, "cash", now),
+      makeSale(1, 1000, "cash", inWindow),
     ];
 
-    useCashClosingStore.getState().reconcile(shift.id, 950, sales);
+    await useCashClosingStore.getState().reconcile(shift.id, 950, sales);
 
     const reconciled = useCashClosingStore.getState().shifts.find((s) => s.id === shift.id)!;
     expect(reconciled.reconciliationStatus).toBe("mismatch");
@@ -269,32 +271,33 @@ describe("Shift reconciliation", () => {
     expect(reconciled.variance).toBe(-50);
   });
 
-  it("throws when reconciling an open shift", () => {
-    const shift = useCashClosingStore.getState().openShift("Juan", "store_1");
+  it("throws when reconciling an open shift", async () => {
+    const shift = await useCashClosingStore.getState().openShift("Juan", "store_1");
 
-    expect(() => {
-      useCashClosingStore.getState().reconcile(shift.id, 500, []);
-    }).toThrow(/cannot reconcile an open shift/i);
+    await expect(
+      useCashClosingStore.getState().reconcile(shift.id, 500, []),
+    ).rejects.toThrow(/cannot reconcile an open shift/i);
   });
 
-  it("throws when shift does not exist", () => {
-    expect(() => {
-      useCashClosingStore.getState().reconcile(999, 500, []);
-    }).toThrow(/shift not found/i);
+  it("throws when shift does not exist", async () => {
+    await expect(
+      useCashClosingStore.getState().reconcile(999, 500, []),
+    ).rejects.toThrow(/shift not found/i);
   });
 
-  it("card sales do not affect variance", () => {
-    const now = new Date();
-    const shift = useCashClosingStore.getState().openShift("Juan", "store_1");
-    useCashClosingStore.getState().closeShift(shift.id);
+  it("card sales do not affect variance", async () => {
+    const shift = await useCashClosingStore.getState().openShift("Juan", "store_1");
+    await useCashClosingStore.getState().closeShift(shift.id);
+
+    const inWindow = new Date(shift.openTime); // dentro del turno abierto
 
     const sales: CompletedSale[] = [
-      makeSale(1, 800, "cash", now),
-      makeSale(2, 400, "card", now),
+      makeSale(1, 800, "cash", inWindow),
+      makeSale(2, 400, "card", inWindow),
     ];
 
     // Cash in drawer = 800 (card doesn't go in drawer)
-    useCashClosingStore.getState().reconcile(shift.id, 800, sales);
+    await useCashClosingStore.getState().reconcile(shift.id, 800, sales);
 
     const reconciled = useCashClosingStore.getState().shifts.find((s) => s.id === shift.id)!;
     expect(reconciled.reconciliationStatus).toBe("matched");
@@ -302,27 +305,28 @@ describe("Shift reconciliation", () => {
   });
 });
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// 4.5 â€” Shift Summary / Closure Report
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
+// 4.5 — Shift Summary / Closure Report
+// ──────────────────────────────────────────────
 
 describe("Shift closure summary", () => {
-  it("generates summary with sales breakdown", () => {
-    const now = new Date();
-    const shift = useCashClosingStore.getState().openShift("Juan", "store_1");
-    useCashClosingStore.getState().closeShift(shift.id);
+  it("generates summary with sales breakdown", async () => {
+    const shift = await useCashClosingStore.getState().openShift("Juan", "store_1");
+    await useCashClosingStore.getState().closeShift(shift.id);
+
+    const inWindow = new Date(shift.openTime); // dentro del turno abierto
 
     const sales: CompletedSale[] = [
-      makeSale(1, 800, "cash", now, [
+      makeSale(1, 800, "cash", inWindow, [
         { name: "Coca-Cola", qty: 2, subtotal: 300 },
         { name: "Arroz", qty: 1, subtotal: 500 },
       ]),
-      makeSale(2, 400, "card", now, [
+      makeSale(2, 400, "card", inWindow, [
         { name: "Leche", qty: 3, subtotal: 400 },
       ]),
     ];
 
-    useCashClosingStore.getState().reconcile(shift.id, 800, sales);
+    await useCashClosingStore.getState().reconcile(shift.id, 800, sales);
 
     const summary = useCashClosingStore.getState().getShiftSummary(shift.id, sales);
     expect(summary).not.toBeNull();
@@ -333,17 +337,18 @@ describe("Shift closure summary", () => {
     expect(summary!.itemCount).toBe(6); // 2 + 1 + 3
   });
 
-  it("returns top products sorted by quantity", () => {
-    const now = new Date();
-    const shift = useCashClosingStore.getState().openShift("Juan", "store_1");
-    useCashClosingStore.getState().closeShift(shift.id);
+  it("returns top products sorted by quantity", async () => {
+    const shift = await useCashClosingStore.getState().openShift("Juan", "store_1");
+    await useCashClosingStore.getState().closeShift(shift.id);
+
+    const inWindow = new Date(shift.openTime); // dentro del turno abierto
 
     const sales: CompletedSale[] = [
-      makeSale(1, 400, "cash", now, [
+      makeSale(1, 400, "cash", inWindow, [
         { name: "Arroz", qty: 5, subtotal: 250 },
         { name: "Fideos", qty: 3, subtotal: 150 },
       ]),
-      makeSale(2, 300, "cash", now, [
+      makeSale(2, 300, "cash", inWindow, [
         { name: "Arroz", qty: 3, subtotal: 150 },
         { name: "Aceite", qty: 2, subtotal: 150 },
       ]),
@@ -359,9 +364,9 @@ describe("Shift closure summary", () => {
     expect(summary!.topProducts[2].quantity).toBe(2);
   });
 
-  it("returns empty top products for empty shift", () => {
-    const shift = useCashClosingStore.getState().openShift("Juan", "store_1");
-    useCashClosingStore.getState().closeShift(shift.id);
+  it("returns empty top products for empty shift", async () => {
+    const shift = await useCashClosingStore.getState().openShift("Juan", "store_1");
+    await useCashClosingStore.getState().closeShift(shift.id);
 
     const summary = useCashClosingStore.getState().getShiftSummary(shift.id, []);
     expect(summary).not.toBeNull();
@@ -376,21 +381,21 @@ describe("Shift closure summary", () => {
   });
 });
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// 4.5 â€” Edge: No open shift cannot reconcile
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────
+// 4.5 — Edge: No open shift cannot reconcile
+// ──────────────────────────────────────────────
 
 describe("Cannot reconcile without a closed shift", () => {
-  it("throws if no shifts exist", () => {
-    expect(() => {
-      useCashClosingStore.getState().reconcile(999, 100, []);
-    }).toThrow(/shift not found/i);
+  it("throws if no shifts exist", async () => {
+    await expect(
+      useCashClosingStore.getState().reconcile(999, 100, []),
+    ).rejects.toThrow(/shift not found/i);
   });
 
-  it("throws when trying to reconcile an open shift", () => {
-    const shift = useCashClosingStore.getState().openShift("Juan", "store_1");
-    expect(() => {
-      useCashClosingStore.getState().reconcile(shift.id, 100, []);
-    }).toThrow(/cannot reconcile an open shift/i);
+  it("throws when trying to reconcile an open shift", async () => {
+    const shift = await useCashClosingStore.getState().openShift("Juan", "store_1");
+    await expect(
+      useCashClosingStore.getState().reconcile(shift.id, 100, []),
+    ).rejects.toThrow(/cannot reconcile an open shift/i);
   });
 });

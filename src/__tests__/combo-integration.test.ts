@@ -1,16 +1,27 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useAppStore } from "@/store/index";
-import { useCombosStore, setNextComboId } from "@/store/combos";
+import { useCombosStore } from "@/store/combos";
 import { useProductsStore } from "@/store/products";
 
-vi.mock("@/lib/api", () => ({
-  api: {
-    get: vi.fn(() => Promise.resolve([])),
-    post: vi.fn((_path: string, data: unknown) => Promise.resolve({ ...(data as object), id: Date.now(), created_at: new Date().toISOString() })),
-    put: vi.fn(() => Promise.resolve(undefined)),
-    del: vi.fn(() => Promise.resolve(undefined)),
-  },
-}));
+vi.mock("@/lib/api", () => {
+  let nextId = 1;
+  const idFromPath = (path: string) => {
+    const m = /(\d+)$/.exec(path.replace(/\/$/, ""));
+    return m ? parseInt(m[1], 10) : undefined;
+  };
+  return {
+    api: {
+      get: vi.fn(() => Promise.resolve([])),
+      post: vi.fn((_path: string, data: unknown) =>
+        Promise.resolve({ ...(data as object), id: nextId++, created_at: new Date().toISOString() }),
+      ),
+      put: vi.fn((path: string, data: unknown) =>
+        Promise.resolve({ ...(data as object), id: idFromPath(path) }),
+      ),
+      del: vi.fn(() => Promise.resolve(undefined)),
+    },
+  };
+});
 
 const STORE = "store_1";
 
@@ -18,7 +29,6 @@ beforeEach(() => {
   useAppStore.setState({ items: [], globalDiscountPercent: 0, lastCompletedSale: null });
   useCombosStore.setState({ combos: [] });
   useProductsStore.setState({ products: [] });
-  setNextComboId(1);
 });
 
 async function addProductToStore(id: number, name: string, price: number) {
@@ -38,7 +48,7 @@ describe("Integration: Combo CRUD + POS flow", () => {
     const p1 = await addProductToStore(1, "Product A", 100);
     const p2 = await addProductToStore(2, "Product B", 200);
 
-    useCombosStore.getState().addCombo({
+    await useCombosStore.getState().addCombo({
       name: "Combo AB",
       comboPrice: 250,
       items: [{ productId: p1.id, quantity: 1 }, { productId: p2.id, quantity: 1 }],
@@ -66,7 +76,7 @@ describe("Integration: Combo CRUD + POS flow", () => {
     const p1 = await addProductToStore(1, "Product A", 100);
     const p2 = await addProductToStore(2, "Product B", 200);
 
-    useCombosStore.getState().addCombo({
+    await useCombosStore.getState().addCombo({
       name: "Combo AB",
       comboPrice: 250,
       items: [{ productId: p1.id, quantity: 1 }, { productId: p2.id, quantity: 1 }],
@@ -89,14 +99,14 @@ describe("Integration: Combo CRUD + POS flow", () => {
     const p1 = await addProductToStore(1, "Product A", 100);
     const p2 = await addProductToStore(2, "Product B", 200);
 
-    useCombosStore.getState().addCombo({
+    const created = await useCombosStore.getState().addCombo({
       name: "Combo AB",
       comboPrice: 250,
       items: [{ productId: p1.id, quantity: 1 }, { productId: p2.id, quantity: 1 }],
       storeId: STORE,
     });
 
-    useCombosStore.getState().updateCombo(1, {
+    await useCombosStore.getState().updateCombo(created.id, {
       name: "Combo AB Mejorado",
       comboPrice: 200,
       items: [{ productId: p1.id, quantity: 1 }, { productId: p2.id, quantity: 1 }],
@@ -117,7 +127,7 @@ describe("Integration: Combo CRUD + POS flow", () => {
     const p1 = await addProductToStore(1, "Product A", 100);
     const p2 = await addProductToStore(2, "Product B", 200);
 
-    useCombosStore.getState().addCombo({
+    const created = await useCombosStore.getState().addCombo({
       name: "Combo AB",
       comboPrice: 250,
       items: [{ productId: p1.id, quantity: 1 }, { productId: p2.id, quantity: 1 }],
@@ -129,7 +139,7 @@ describe("Integration: Combo CRUD + POS flow", () => {
 
     expect(useAppStore.getState().cartTotal()).toBe(250);
 
-    useCombosStore.getState().deleteCombo(1);
+    await useCombosStore.getState().deleteCombo(created.id);
 
     expect(useCombosStore.getState().combos).toHaveLength(0);
     const total = useAppStore.getState().cartTotal();
@@ -141,7 +151,7 @@ describe("Integration: Combo CRUD + POS flow", () => {
     const p1 = await addProductToStore(1, "Product A", 100);
     const p2 = await addProductToStore(2, "Product B", 200);
 
-    useCombosStore.getState().addCombo({
+    await useCombosStore.getState().addCombo({
       name: "Combo AB",
       comboPrice: 250,
       items: [{ productId: p1.id, quantity: 1 }, { productId: p2.id, quantity: 1 }],

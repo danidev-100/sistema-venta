@@ -62,7 +62,7 @@ describe("Keyboard shortcuts — input gate", () => {
   async function openSearchInput(user: ReturnType<typeof userEvent.setup>) {
     // Open ProductSearchModal with F2 so the search input renders
     await user.keyboard("{F2}");
-    return screen.getByPlaceholderText("Buscá por nombre o código de barras…");
+    return screen.getByPlaceholderText("Buscá por nombre, código de barras o ID…");
   }
 
   it("does not trigger shortcuts when typing in a text input", async () => {
@@ -347,7 +347,7 @@ describe("Keyboard shortcuts — F2 and Escape", () => {
     await user.keyboard("{F2}");
 
     // ProductSearchModal should appear — look for its search input placeholder
-    expect(screen.getByPlaceholderText("Buscá por nombre o código de barras…")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Buscá por nombre, código de barras o ID…")).toBeInTheDocument();
   });
 
   it("Escape closes the checkout modal", async () => {

@@ -5,6 +5,8 @@ import { useAuthStore } from "./auth";
 import { useComprobantesStore, type ComprobanteTipo } from "./comprobantes";
 import { useCombosStore } from "./combos";
 import { useBultosStore } from "./bultos";
+import { useCompanyStore } from "./company";
+import { computeIva } from "@/lib/iva";
 import { detectActiveCombos, type ComboMatch } from "@/lib/combos";
 import { detectActiveBultos, type BultoMatch } from "@/lib/bultos";
 import { api } from "@/lib/api";
@@ -52,6 +54,7 @@ export type CompletedSale = {
   items: CartItem[];
   total: number;
   subtotal: number;
+  iva: number;
   discountPercent: number;
   discountAmount: number;
   paymentMethod: "cash" | "card" | "mixed" | "credit" | "mercadopago";
@@ -258,6 +261,7 @@ function normalizeLoadedSale(row: any, fallbackStoreId: string): CompletedSale {
     status: row.status === "refunded" ? "refunded" : "completed",
     total: row.total,
     subtotal: row.subtotal ?? row.total,
+    iva: row.iva ?? 0,
     discountPercent: row.discount_percent ?? 0,
     discountAmount: row.discount_amount ?? 0,
     change: row.change ?? null,
@@ -432,10 +436,24 @@ export const useAppStore = create<AppStore>((set, get) => ({
     }
 
     const resolvedModo: "afip" | "interno" = modo === "afip" ? "afip" : "interno";
+    const resolvedStoreId = storeId ?? "store_1";
 
-    const total = cartTotal();
+    // Cargar la configuración de la empresa (alícuota de IVA) si aún no está disponible.
+    const company = useCompanyStore.getState();
+    if (!company.loaded) {
+      await company.loadCompany(resolvedStoreId);
+    }
+    const companyData = useCompanyStore.getState().data;
+    const alicuota = companyData?.iva_alicuota ?? 0;
+    const incluido = companyData?.iva_incluido === 1;
+
+    const net = cartTotal();
     const subtotal = items.reduce((sum, i) => sum + i.subtotal, 0);
-    const discountAmount = Math.round((subtotal - total) * 100) / 100;
+    const discountAmount = Math.round((subtotal - net) * 100) / 100;
+
+    const ivaInfo = computeIva(net, alicuota, incluido);
+    const total = ivaInfo.total;
+    const iva = ivaInfo.iva;
 
     let change: number | null = null;
     if (paymentMethod === "cash" && amountPaid != null) {
@@ -461,8 +479,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
       // Electronic payment — no cash handling needed
     }
 
-    const resolvedStoreId = storeId ?? "store_1";
-
     const currentUserName = useAuthStore.getState().currentUser?.name ?? "—";
     const resolvedPayment = paymentMethod;
     const paidAmount = paymentMethod === "mixed" ? (cashAmount ?? 0) + (cardAmount ?? 0) + (mercadopagoAmount ?? 0) : paymentMethod === "mercadopago" ? total : (amountPaid ?? null);
@@ -473,6 +489,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       createdBy: currentUserName,
       total,
       subtotal,
+      iva,
       discountPercent: globalDiscountPercent,
       discountAmount,
       paymentMethod: resolvedPayment,
@@ -492,6 +509,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       items: items.map((i) => ({ ...i })),
       total,
       subtotal,
+      iva,
       discountPercent: globalDiscountPercent,
       discountAmount,
       paymentMethod: resolvedPayment,
@@ -569,9 +587,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
         created_by: currentUserName,
         store_id: resolvedStoreId,
         sale_id: sale.id,
-        subtotal: sale.subtotal,
+        subtotal: ivaInfo.base,
         total: sale.total,
-        iva: 0,
+        iva: sale.iva,
+        ivaPercent: ivaInfo.alicuota,
         items: sale.items.map((i) => ({
           product_name: i.productName,
           quantity: i.quantity,

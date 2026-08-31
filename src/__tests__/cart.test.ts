@@ -12,6 +12,7 @@ function resetStore() {
     completedSales: [],
     busy: false,
     notification: null,
+    selectedComprobanteTipo: null,
   });
 }
 
@@ -163,27 +164,27 @@ describe("Quantity updates", () => {
 // ──────────────────────────────────────────────
 
 describe("Empty cart checkout guard", () => {
-  it("throws error when checking out with an empty cart", () => {
-    expect(() => {
-      useAppStore.getState().checkout("cash", 0, "store_1");
-    }).toThrow(/empty cart/i);
+  it("throws error when checking out with an empty cart", async () => {
+    await expect(
+      useAppStore.getState().checkout("cash", 0, "store_1"),
+    ).rejects.toThrow(/empty cart/i);
   });
 
-  it("throws error when checking out with 0 items after clearing", () => {
+  it("throws error when checking out with 0 items after clearing", async () => {
     addItemToCart(1, "Product A", 100);
     useAppStore.getState().clearCart();
 
-    expect(() => {
-      useAppStore.getState().checkout("card", undefined, "store_1");
-    }).toThrow(/empty cart/i);
+    await expect(
+      useAppStore.getState().checkout("card", undefined, "store_1"),
+    ).rejects.toThrow(/empty cart/i);
   });
 
-  it("does not throw when cart has items", () => {
+  it("does not throw when cart has items", async () => {
     addItemToCart(1, "Product A", 100);
 
-    expect(() => {
-      useAppStore.getState().checkout("card", undefined, "store_1");
-    }).not.toThrow();
+    await expect(
+      useAppStore.getState().checkout("card", undefined, "store_1"),
+    ).resolves.toBeDefined();
   });
 });
 
@@ -192,66 +193,66 @@ describe("Empty cart checkout guard", () => {
 // ──────────────────────────────────────────────
 
 describe("Cash payment change calculation", () => {
-  it("calculates change correctly for exact amount", () => {
+  it("calculates change correctly for exact amount", async () => {
     addItemToCart(1, "Product A", 100);
     addItemToCart(2, "Product B", 50);
 
-    const sale = useAppStore.getState().checkout("cash", 150, "store_1");
+    const sale = await useAppStore.getState().checkout("cash", 150, "store_1");
 
     expect(sale.change).toBe(0);
     expect(sale.amountPaid).toBe(150);
     expect(sale.total).toBe(150);
   });
 
-  it("calculates change correctly for overpayment", () => {
+  it("calculates change correctly for overpayment", async () => {
     addItemToCart(1, "Product A", 100);
     addItemToCart(2, "Product B", 50);
 
-    const sale = useAppStore.getState().checkout("cash", 200, "store_1");
+    const sale = await useAppStore.getState().checkout("cash", 200, "store_1");
 
     expect(sale.change).toBe(50);
     expect(sale.amountPaid).toBe(200);
     expect(sale.total).toBe(150);
   });
 
-  it("calculates change correctly for large overpayment", () => {
+  it("calculates change correctly for large overpayment", async () => {
     addItemToCart(1, "Product A", 550);
 
-    const sale = useAppStore.getState().checkout("cash", 600, "store_1");
+    const sale = await useAppStore.getState().checkout("cash", 600, "store_1");
 
     expect(sale.change).toBe(50);
     expect(sale.amountPaid).toBe(600);
     expect(sale.total).toBe(550);
   });
 
-  it("handles cent-level precision in change", () => {
+  it("handles cent-level precision in change", async () => {
     useAppStore.getState().addItem(1, "Product A", 99.99);
 
-    const sale = useAppStore.getState().checkout("cash", 100, "store_1");
+    const sale = await useAppStore.getState().checkout("cash", 100, "store_1");
 
     expect(sale.change).toBe(0.01);
   });
 
-  it("throws an error when payment is less than total", () => {
+  it("throws an error when payment is less than total", async () => {
     addItemToCart(1, "Product A", 550);
 
-    expect(() => {
-      useAppStore.getState().checkout("cash", 500, "store_1");
-    }).toThrow(/pago insuficiente/i);
+    await expect(
+      useAppStore.getState().checkout("cash", 500, "store_1"),
+    ).rejects.toThrow(/pago insuficiente/i);
   });
 
-  it("throws an error when payment is significantly less than total", () => {
+  it("throws an error when payment is significantly less than total", async () => {
     addItemToCart(1, "Product A", 1000);
 
-    expect(() => {
-      useAppStore.getState().checkout("cash", 100, "store_1");
-    }).toThrow(/pago insuficiente/i);
+    await expect(
+      useAppStore.getState().checkout("cash", 100, "store_1"),
+    ).rejects.toThrow(/pago insuficiente/i);
   });
 
-  it("has null change for card payments", () => {
+  it("has null change for card payments", async () => {
     addItemToCart(1, "Product A", 200);
 
-    const sale = useAppStore.getState().checkout("card", undefined, "store_1");
+    const sale = await useAppStore.getState().checkout("card", undefined, "store_1");
 
     expect(sale.change).toBeNull();
     expect(sale.amountPaid).toBeNull();
@@ -264,11 +265,11 @@ describe("Cash payment change calculation", () => {
 // ──────────────────────────────────────────────
 
 describe("Cart cleared after successful checkout", () => {
-  it("clears cart items after cash checkout", () => {
+  it("clears cart items after cash checkout", async () => {
     addItemToCart(1, "Product A", 100);
     addItemToCart(2, "Product B", 200);
 
-    useAppStore.getState().checkout("cash", 300, "store_1");
+    await useAppStore.getState().checkout("cash", 300, "store_1");
 
     const state = useAppStore.getState();
     expect(state.items).toHaveLength(0);
@@ -276,19 +277,19 @@ describe("Cart cleared after successful checkout", () => {
     expect(state.itemCount()).toBe(0);
   });
 
-  it("clears cart items after card checkout", () => {
+  it("clears cart items after card checkout", async () => {
     addItemToCart(1, "Product A", 100);
 
-    useAppStore.getState().checkout("card", undefined, "store_1");
+    await useAppStore.getState().checkout("card", undefined, "store_1");
 
     const state = useAppStore.getState();
     expect(state.items).toHaveLength(0);
   });
 
-  it("stores the completed sale in lastCompletedSale", () => {
+  it("stores the completed sale in lastCompletedSale", async () => {
     addItemToCart(1, "Product A", 100);
 
-    const sale = useAppStore.getState().checkout("cash", 100, "store_1");
+    const sale = await useAppStore.getState().checkout("cash", 100, "store_1");
 
     const state = useAppStore.getState();
     expect(state.lastCompletedSale).not.toBeNull();
@@ -297,12 +298,12 @@ describe("Cart cleared after successful checkout", () => {
     expect(state.lastCompletedSale?.items).toHaveLength(1);
   });
 
-  it("appends to completedSales history", () => {
+  it("appends to completedSales history", async () => {
     addItemToCart(1, "Product A", 100);
-    useAppStore.getState().checkout("card", undefined, "store_1");
+    await useAppStore.getState().checkout("card", undefined, "store_1");
 
     addItemToCart(2, "Product B", 50);
-    useAppStore.getState().checkout("cash", 50, "store_1");
+    await useAppStore.getState().checkout("cash", 50, "store_1");
 
     const state = useAppStore.getState();
     expect(state.completedSales).toHaveLength(2);
@@ -310,9 +311,9 @@ describe("Cart cleared after successful checkout", () => {
     expect(state.completedSales[1].paymentMethod).toBe("cash");
   });
 
-  it("dismisses the receipt via dismissReceipt", () => {
+  it("dismisses the receipt via dismissReceipt", async () => {
     addItemToCart(1, "Product A", 100);
-    useAppStore.getState().checkout("cash", 100, "store_1");
+    await useAppStore.getState().checkout("cash", 100, "store_1");
 
     useAppStore.getState().dismissReceipt();
 
@@ -322,10 +323,10 @@ describe("Cart cleared after successful checkout", () => {
     expect(state.completedSales).toHaveLength(1);
   });
 
-  it("stores store_id in completed sale", () => {
+  it("stores store_id in completed sale", async () => {
     addItemToCart(1, "Product A", 100);
 
-    const sale = useAppStore.getState().checkout("cash", 100, "store_2");
+    const sale = await useAppStore.getState().checkout("cash", 100, "store_2");
 
     expect(sale.storeId).toBe("store_2");
   });

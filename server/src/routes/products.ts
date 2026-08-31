@@ -61,6 +61,32 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
+// GET /stock-movements — list movements for a store (optionally filtered by product), newest first
+router.get("/stock-movements", async (req: Request, res: Response) => {
+  try {
+    const storeId = req.query.storeId as string;
+    if (!storeId) {
+      res.status(400).json({ error: "storeId es requerido" });
+      return;
+    }
+    const db = getDb();
+    const conditions = [eq(schema.stockMovements.store_id, storeId)];
+    const productId = req.query.productId ? Number(req.query.productId) : undefined;
+    if (productId && !isNaN(productId)) {
+      conditions.push(eq(schema.stockMovements.product_id, productId));
+    }
+    const rows = await db
+      .select()
+      .from(schema.stockMovements)
+      .where(and(...conditions))
+      .orderBy(desc(schema.stockMovements.created_at));
+    res.json(rows);
+  } catch (err) {
+    console.error("[products] stock-movements error:", err);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 // GET /:id — single product
 router.get("/:id", async (req: Request, res: Response) => {
   try {
@@ -192,7 +218,7 @@ router.post("/stock-movement", async (req: Request, res: Response) => {
     const db = getDb();
     const [movement] = await db
       .insert(schema.stockMovements)
-      .values({ product_id, type, quantity: quantity ?? 0, delta, reference_id, user_id, store_id })
+      .values({ product_id, type, quantity: quantity ?? 0, delta, reference_id, user_id: user_id ? Number(user_id) : null, store_id })
       .returning();
     await db
       .update(schema.products)

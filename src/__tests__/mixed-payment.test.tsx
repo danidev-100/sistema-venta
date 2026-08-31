@@ -67,11 +67,11 @@ beforeEach(() => {
 // ──────────────────────────────────────────────
 
 describe("Mixed payment — store unit", () => {
-  it("3.1 saves correct cashAmount and cardAmount on mixed checkout", () => {
+  it("3.1 saves correct cashAmount and cardAmount on mixed checkout", async () => {
     addItemToCart(1, "Producto A", 100);
     addItemToCart(2, "Producto B", 50);
 
-    const sale = useAppStore.getState().checkout("mixed", 150, "store_1", undefined, 80, 70);
+    const sale = await useAppStore.getState().checkout("mixed", 150, "store_1", undefined, 80, 70);
 
     expect(sale.paymentMethod).toBe("mixed");
     expect(sale.cashAmount).toBe(80);
@@ -80,46 +80,46 @@ describe("Mixed payment — store unit", () => {
     expect(sale.change).toBe(0);
   });
 
-  it("3.1 handles mixed with only cash (cardAmount=0)", () => {
+  it("3.1 handles mixed with only cash (cardAmount=0)", async () => {
     addItemToCart(1, "Producto A", 200);
 
-    const sale = useAppStore.getState().checkout("mixed", 200, "store_1", undefined, 200, 0);
+    const sale = await useAppStore.getState().checkout("mixed", 200, "store_1", undefined, 200, 0);
 
     expect(sale.cashAmount).toBe(200);
     expect(sale.cardAmount).toBe(0);
     expect(sale.change).toBe(0);
   });
 
-  it("3.1 handles mixed with only card (cashAmount=0)", () => {
+  it("3.1 handles mixed with only card (cashAmount=0)", async () => {
     addItemToCart(1, "Producto A", 200);
 
-    const sale = useAppStore.getState().checkout("mixed", 200, "store_1", undefined, 0, 200);
+    const sale = await useAppStore.getState().checkout("mixed", 200, "store_1", undefined, 0, 200);
 
     expect(sale.cashAmount).toBe(0);
     expect(sale.cardAmount).toBe(200);
     expect(sale.change).toBe(0);
   });
 
-  it("3.2 throws validation error when split sum is less than total", () => {
+  it("3.2 throws validation error when split sum is less than total", async () => {
     addItemToCart(1, "Producto A", 150);
 
-    expect(() => {
-      useAppStore.getState().checkout("mixed", 150, "store_1", undefined, 50, 50);
-    }).toThrow(/total ingresado|faltan/i);
+    await expect(
+      useAppStore.getState().checkout("mixed", 150, "store_1", undefined, 50, 50),
+    ).rejects.toThrow(/total ingresado|faltan/i);
   });
 
-  it("3.2 throws validation error when cash+card < total", () => {
+  it("3.2 throws validation error when cash+card < total", async () => {
     addItemToCart(1, "Producto A", 200);
 
-    expect(() => {
-      useAppStore.getState().checkout("mixed", 200, "store_1", undefined, 0, 100);
-    }).toThrow(/total ingresado|faltan/i);
+    await expect(
+      useAppStore.getState().checkout("mixed", 200, "store_1", undefined, 0, 100),
+    ).rejects.toThrow(/total ingresado|faltan/i);
   });
 
-  it("3.3 checkout('cash') regression — works as before", () => {
+  it("3.3 checkout('cash') regression — works as before", async () => {
     addItemToCart(1, "Producto A", 100);
 
-    const sale = useAppStore.getState().checkout("cash", 100, "store_1");
+    const sale = await useAppStore.getState().checkout("cash", 100, "store_1");
 
     expect(sale.paymentMethod).toBe("cash");
     expect(sale.amountPaid).toBe(100);
@@ -127,10 +127,10 @@ describe("Mixed payment — store unit", () => {
     expect(sale.cashAmount).toBe(100);
   });
 
-  it("3.3 checkout('card') regression — works as before", () => {
+  it("3.3 checkout('card') regression — works as before", async () => {
     addItemToCart(1, "Producto A", 200);
 
-    const sale = useAppStore.getState().checkout("card", undefined, "store_1");
+    const sale = await useAppStore.getState().checkout("card", undefined, "store_1");
 
     expect(sale.paymentMethod).toBe("card");
     expect(sale.amountPaid).toBeNull();
@@ -198,8 +198,8 @@ describe("Mixed payment — integration", () => {
     await user.clear(cardInput);
     await user.type(cardInput, "150");
 
-    // Total ingresado should be shown as $350.00 (total + entered total)
-    const totals = screen.getAllByText("$350.00");
+    // Total ingresado should be shown as $350,00 (es-AR format)
+    const totals = screen.getAllByText("$350,00");
     expect(totals.length).toBeGreaterThanOrEqual(2);
   });
 });

@@ -246,7 +246,7 @@ const FACTURA_TEMPLATE = wrapPage("Factura", `
   <div class="totals">
     <table>
       <tr><td style="text-align:right;color:#666;font-size:10px;">Subtotal</td><td>{{subtotal}}</td></tr>
-      <tr><td style="text-align:right;color:#666;font-size:10px;">IVA 21%</td><td>{{iva}}</td></tr>
+      <tr><td style="text-align:right;color:#666;font-size:10px;">{{iva_label}}</td><td>{{iva}}</td></tr>
       <tr><td style="text-align:right;color:#059669;font-size:10px;">Ahorro combos</td><td style="color:#059669;">−{{combo_savings}}</td></tr>
       <tr><td style="text-align:right;color:#06b6d4;font-size:10px;">Ahorro bultos</td><td style="color:#06b6d4;">−{{bulto_savings}}</td></tr>
       <tr class="line"><td></td><td></td></tr>
@@ -343,7 +343,7 @@ const NOTA_CREDITO_TEMPLATE = wrapPage("Nota de Crédito", `
   <div class="totals">
     <table>
       <tr><td style="text-align:right;color:#666;font-size:10px;">Subtotal</td><td>{{subtotal}}</td></tr>
-      <tr><td style="text-align:right;color:#666;font-size:10px;">IVA 21%</td><td>{{iva}}</td></tr>
+      <tr><td style="text-align:right;color:#666;font-size:10px;">{{iva_label}}</td><td>{{iva}}</td></tr>
       <tr class="line"><td></td><td></td></tr>
       <tr class="grand-total"><td style="text-align:right;">TOTAL A CREDITAR</td><td>{{total}}</td></tr>
     </table>
@@ -373,7 +373,7 @@ const NOTA_DEBITO_TEMPLATE = wrapPage("Nota de Débito", `
   <div class="totals">
     <table>
       <tr><td style="text-align:right;color:#666;font-size:10px;">Subtotal</td><td>{{subtotal}}</td></tr>
-      <tr><td style="text-align:right;color:#666;font-size:10px;">IVA 21%</td><td>{{iva}}</td></tr>
+      <tr><td style="text-align:right;color:#666;font-size:10px;">{{iva_label}}</td><td>{{iva}}</td></tr>
       <tr class="line"><td></td><td></td></tr>
       <tr class="grand-total"><td style="text-align:right;">TOTAL A DEBITAR</td><td>{{total}}</td></tr>
     </table>

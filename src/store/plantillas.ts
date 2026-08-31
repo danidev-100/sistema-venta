@@ -52,10 +52,12 @@ export const usePlantillasStore = create<PlantillasStore>((set, get) => ({
       `/plantillas?storeId=${encodeURIComponent(storeId)}&tipo=${encodeURIComponent(tipo)}`,
     );
 
+    const payload = { tipo, template_html: html, store_id: storeId };
+
     if (existing.length > 0) {
-      await api.put(`/plantillas/${existing[0].id}`, { tipo, html, storeId });
+      await api.put(`/plantillas/${existing[0].id}`, payload);
     } else {
-      await api.post("/plantillas", { tipo, html, storeId });
+      await api.post("/plantillas", payload);
     }
 
     // Update cache

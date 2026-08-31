@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { useAppStore } from "@/store/index";
-import { useCombosStore, setNextComboId } from "@/store/combos";
+import { useCombosStore } from "@/store/combos";
 import { useProductsStore } from "@/store/products";
 import { detectActiveCombos } from "@/lib/combos";
 import type { Combo } from "@/store/combos";
@@ -21,7 +21,6 @@ beforeEach(() => {
   useAppStore.setState({ items: [], globalDiscountPercent: 0, lastCompletedSale: null });
   useCombosStore.setState({ combos: [] });
   useProductsStore.setState({ products: [] });
-  setNextComboId(1);
 });
 
 describe("cartTotal with combos", () => {
