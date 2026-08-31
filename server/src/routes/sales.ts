@@ -41,7 +41,7 @@ router.get("/", async (req: Request, res: Response) => {
 router.post("/:id/refund", async (req: Request, res: Response) => {
   try {
     const db = getDb();
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id as string, 10);
     if (isNaN(id)) {
       res.status(400).json({ error: "ID inválido" });
       return;
@@ -65,7 +65,7 @@ router.post("/:id/refund", async (req: Request, res: Response) => {
 router.get("/:id", async (req: Request, res: Response) => {
   try {
     const db = getDb();
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id as string, 10);
     if (isNaN(id)) {
       res.status(400).json({ error: "ID inválido" });
       return;

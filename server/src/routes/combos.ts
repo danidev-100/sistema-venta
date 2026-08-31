@@ -50,7 +50,7 @@ router.get("/", async (req: Request, res: Response) => {
 // GET /:id — single combo with items
 router.get("/:id", async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const db = getDb();
 
     const [combo] = await db
@@ -115,7 +115,7 @@ router.post("/", async (req: Request, res: Response) => {
 // PUT /:id — update combo and replace items
 router.put("/:id", async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const { name, combo_price, items } = req.body;
     const db = getDb();
 
@@ -150,7 +150,7 @@ router.put("/:id", async (req: Request, res: Response) => {
 // DELETE /:id
 router.delete("/:id", async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const db = getDb();
 
     await db.delete(schema.comboItems).where(eq(schema.comboItems.combo_id, id));

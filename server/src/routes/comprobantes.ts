@@ -103,7 +103,7 @@ router.get("/", async (req: Request, res: Response) => {
 // GET /:id — single comprobante with items
 router.get("/:id", async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const db = getDb();
 
     const [comp] = await db

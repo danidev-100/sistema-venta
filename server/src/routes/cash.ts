@@ -54,7 +54,7 @@ router.post("/shifts", async (req: Request, res: Response) => {
 router.put("/shifts/:id/close", async (req: Request, res: Response) => {
   try {
     const db = getDb();
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id as string, 10);
     if (isNaN(id)) {
       res.status(400).json({ error: "ID inválido" });
       return;

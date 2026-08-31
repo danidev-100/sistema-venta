@@ -80,7 +80,7 @@ router.get("/", async (req: Request, res: Response) => {
 // GET /:id — single purchase invoice with items
 router.get("/:id", async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id as string, 10);
     if (isNaN(id)) {
       res.status(400).json({ error: "ID inválido" });
       return;

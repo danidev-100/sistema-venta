@@ -59,7 +59,7 @@ router.get("/", async (req: Request, res: Response) => {
 // GET /:id — single pedido with items
 router.get("/:id", async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const db = getDb();
     const [pedido] = await db
       .select()
@@ -131,7 +131,7 @@ router.post("/", async (req: Request, res: Response) => {
 // PUT /:id — update pedido + replace items
 router.put("/:id", async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const { proveedor_id, status, notes, total, items } = req.body;
     const db = getDb();
 
@@ -185,7 +185,7 @@ router.put("/:id", async (req: Request, res: Response) => {
 // PUT /:id/status — update pedido status
 router.put("/:id/status", async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const { status } = req.body;
 
     if (!["pending", "received", "cancelled", "partial"].includes(status)) {
@@ -223,8 +223,8 @@ router.put("/:id/status", async (req: Request, res: Response) => {
 // PUT /:id/items/:itemId/receive — receive part of an item
 router.put("/:id/items/:itemId/receive", async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
-    const itemId = parseInt(req.params.itemId);
+    const id = parseInt(req.params.id as string);
+    const itemId = parseInt(req.params.itemId as string);
     const { quantity } = req.body;
 
     if (typeof quantity !== "number" || !Number.isFinite(quantity) || quantity <= 0) {
@@ -301,7 +301,7 @@ router.put("/:id/items/:itemId/receive", async (req: Request, res: Response) => 
 // DELETE /:id
 router.delete("/:id", async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const db = getDb();
 
     await db.delete(schema.pedidoItems).where(eq(schema.pedidoItems.pedido_id, id));

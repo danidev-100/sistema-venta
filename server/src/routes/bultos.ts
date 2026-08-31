@@ -37,7 +37,7 @@ router.get("/", async (req: Request, res: Response) => {
 // GET /:id
 router.get("/:id", async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const db = getDb();
 
     const [bulto] = await db
@@ -80,7 +80,7 @@ router.post("/", async (req: Request, res: Response) => {
 // PUT /:id
 router.put("/:id", async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const { name, product_id, quantity, bulto_price } = req.body;
     const db = getDb();
 
@@ -101,7 +101,7 @@ router.put("/:id", async (req: Request, res: Response) => {
 // DELETE /:id
 router.delete("/:id", async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const db = getDb();
     await db.delete(schema.bultos).where(eq(schema.bultos.id, id));
     res.json({ success: true });

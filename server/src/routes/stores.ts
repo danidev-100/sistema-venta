@@ -61,7 +61,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     const [store] = await db
       .update(schema.stores)
       .set({ name, updated_at: new Date() })
-      .where(eq(schema.stores.id, req.params.id))
+      .where(eq(schema.stores.id, req.params.id as string))
       .returning();
 
     if (!store) {
