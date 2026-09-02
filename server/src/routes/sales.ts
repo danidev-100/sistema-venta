@@ -5,6 +5,12 @@ import * as schema from "../../../db/cloud-schema.js";
 
 const router = Router();
 
+class HttpError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
+
 router.get("/", async (req: Request, res: Response) => {
   try {
     const { storeId } = req.query;
@@ -46,17 +52,80 @@ router.post("/:id/refund", async (req: Request, res: Response) => {
       res.status(400).json({ error: "ID inválido" });
       return;
     }
-    const [updated] = await db
-      .update(schema.sales)
-      .set({ status: "refunded" })
-      .where(eq(schema.sales.id, id))
-      .returning();
-    if (!updated) {
-      res.status(404).json({ error: "Venta no encontrada" });
-      return;
-    }
+
+    const updated = await db.transaction(async (tx) => {
+      const [sale] = await tx
+        .select()
+        .from(schema.sales)
+        .where(eq(schema.sales.id, id))
+        .limit(1);
+
+      if (!sale) {
+        throw new HttpError(404, "Venta no encontrada");
+      }
+      if (sale.status === "refunded") {
+        throw new HttpError(400, "La venta ya fue devuelta");
+      }
+
+      const items = await tx
+        .select()
+        .from(schema.saleItems)
+        .where(eq(schema.saleItems.sale_id, id));
+
+      // Revertir stock server-side, scoped a la tienda de la venta.
+      // Ítems custom (product_id nulo/negativo) no tocan stock.
+      for (const item of items) {
+        if (item.product_id == null || item.product_id <= 0) continue;
+
+        const [product] = await tx
+          .select()
+          .from(schema.products)
+          .where(
+            and(
+              eq(schema.products.id, item.product_id),
+              eq(schema.products.store_id, sale.store_id),
+            ),
+          )
+          .limit(1);
+
+        if (!product) {
+          throw new HttpError(
+            400,
+            `El producto '${item.product_name}' no pertenece a esta sucursal`,
+          );
+        }
+
+        await tx
+          .update(schema.products)
+          .set({ stock: sql`${schema.products.stock} + ${item.quantity}`, updated_at: new Date() })
+          .where(and(eq(schema.products.id, product.id), eq(schema.products.store_id, sale.store_id)));
+
+        await tx.insert(schema.stockMovements).values({
+          product_id: product.id,
+          type: "adjustment",
+          quantity: item.quantity,
+          delta: item.quantity,
+          reference_id: `refund-${id}`,
+          user_id: (req as any).user?.userId ?? null,
+          store_id: sale.store_id,
+        });
+      }
+
+      const [updated] = await tx
+        .update(schema.sales)
+        .set({ status: "refunded", updated_at: new Date() })
+        .where(eq(schema.sales.id, id))
+        .returning();
+
+      return updated;
+    });
+
     res.json(updated);
   } catch (err) {
+    if (err instanceof HttpError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
     console.error("[sales] refund error:", err);
     res.status(500).json({ error: "Error interno del servidor" });
   }
@@ -150,6 +219,53 @@ router.post("/", async (req: Request, res: Response) => {
           subtotal: item.subtotal ?? item.quantity * item.unitPrice,
           store_id: storeId,
         });
+
+        // Descontar stock server-side, scoped a la tienda de la venta.
+        // Ítems custom (combo/bulto/venta libre) se detectan por productId
+        // nulo o negativo: no validan ni descuentan stock.
+        if (item.productId != null && Number(item.productId) > 0) {
+          const qty = safe(item.quantity);
+
+          const [product] = await tx
+            .select()
+            .from(schema.products)
+            .where(
+              and(
+                eq(schema.products.id, Number(item.productId)),
+                eq(schema.products.store_id, storeId),
+              ),
+            )
+            .limit(1);
+
+          if (!product) {
+            throw new HttpError(
+              400,
+              `El producto '${item.productName || item.productId}' no pertenece a esta sucursal`,
+            );
+          }
+
+          if (product.stock < qty) {
+            throw new HttpError(
+              400,
+              `Stock insuficiente de '${product.name}' en esta sucursal: hay ${product.stock}, se requieren ${qty}`,
+            );
+          }
+
+          await tx
+            .update(schema.products)
+            .set({ stock: sql`${schema.products.stock} - ${qty}`, updated_at: new Date() })
+            .where(and(eq(schema.products.id, product.id), eq(schema.products.store_id, storeId)));
+
+          await tx.insert(schema.stockMovements).values({
+            product_id: product.id,
+            type: "sale",
+            quantity: qty,
+            delta: -qty,
+            reference_id: `sale-${s.id}`,
+            user_id: (req as any).user?.userId ?? null,
+            store_id: storeId,
+          });
+        }
       }
 
       if (customerName && paymentMethod === "credit") {
@@ -191,6 +307,10 @@ router.post("/", async (req: Request, res: Response) => {
 
     res.status(201).json({ ...sale, items: saleItems });
   } catch (err) {
+    if (err instanceof HttpError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
     console.error("[sales] create error:", err);
     res.status(500).json({ error: "Error interno del servidor" });
   }

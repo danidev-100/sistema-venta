@@ -24,14 +24,13 @@ export default function PedidosPage() {
   const pedidos = usePedidosStore((s) => s.pedidos);
   const updateStatus = usePedidosStore((s) => s.updateStatus);
   const deletePedido = usePedidosStore((s) => s.deletePedido);
-  const adjustStock = useProductsStore((s) => s.adjustStock);
-  const products = useProductsStore((s) => s.products);
+  const applyLocalStockDelta = useProductsStore((s) => s.applyLocalStockDelta);
   const loadPedidos = usePedidosStore((s) => s.loadPedidos);
 
-  const pedidosLoadedRef = useRef(false);
+  const pedidosLoadedStoreIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (pedidosLoadedRef.current) return;
-    pedidosLoadedRef.current = true;
+    if (pedidosLoadedStoreIdRef.current === storeId) return;
+    pedidosLoadedStoreIdRef.current = storeId;
     loadPedidos(storeId).catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId]);
@@ -109,27 +108,26 @@ export default function PedidosPage() {
     }
     updateStatus(pedido.id, status);
 
-    // Auto-update stock when receiving a pedido (only for remaining quantities)
+    // Auto-update local stock when receiving a pedido (only for remaining
+    // quantities). El server YA ajusta el stock (scoped a la tienda) en
+    // PUT /:id/status; acá solo reflejamos el cambio local para que la UI de
+    // productos no muestre stock viejo, sin llamar al endpoint de movimiento.
     if (status === "received" && pedido.status !== "received") {
       for (const item of pedido.items) {
         if (item.product_id == null) continue;
-        const prod = products.find((p) => p.id === item.product_id);
-        if (prod) {
-          const remaining = item.quantity - (item.received_qty ?? 0);
-          if (remaining > 0) {
-            adjustStock(item.product_id, prod.stock + remaining);
-          }
+        const remaining = item.quantity - (item.received_qty ?? 0);
+        if (remaining > 0) {
+          applyLocalStockDelta(item.product_id, remaining);
         }
       }
     }
-    // Revert stock if un-receiving
+    // Revert local stock if un-receiving
     if (pedido.status === "received" && status !== "received") {
       for (const item of pedido.items) {
         if (item.product_id == null) continue;
-        const prod = products.find((p) => p.id === item.product_id);
-        if (prod) {
-          const newStock = Math.max(0, prod.stock - (item.quantity - (item.received_qty ?? 0)));
-          adjustStock(item.product_id, newStock);
+        const remaining = item.quantity - (item.received_qty ?? 0);
+        if (remaining > 0) {
+          applyLocalStockDelta(item.product_id, -remaining);
         }
       }
     }

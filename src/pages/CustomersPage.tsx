@@ -28,10 +28,10 @@ export default function CustomersPage() {
   const loadCustomers = useCustomersStore((s) => s.loadCustomers);
   const loadCreditPayments = useCustomersStore((s) => s.loadCreditPayments);
 
-  const customersLoadedRef = useRef(false);
+  const customersLoadedStoreIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (customersLoadedRef.current) return;
-    customersLoadedRef.current = true;
+    if (customersLoadedStoreIdRef.current === storeId) return;
+    customersLoadedStoreIdRef.current = storeId;
     loadCustomers(storeId).catch(console.error);
     loadCreditPayments(storeId).catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps

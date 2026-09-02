@@ -526,21 +526,16 @@ export const useAppStore = create<AppStore>((set, get) => ({
       priceListId: get().selectedPriceListId,
     };
 
-    // ── Record stock movements for each item ──
-    // Items with a negative product id are free-sale entries with no real
-    // product behind them — skip stock movement entirely.
-    const { recordMovement } = useProductsStore.getState();
+    // ── Sync local product stock in memory ──
+    // El stock YA se descontó server-side durante POST /sales (scoped a la
+    // tienda, con movimiento registrado). Acá solo reflejamos ese cambio en el
+    // store en memoria para que la UI no muestre stock viejo, sin duplicar el
+    // movimiento vía el endpoint. Ítems con product_id negativo son ventas
+    // libres sin producto real — no tocan stock.
+    const { applyLocalStockDelta } = useProductsStore.getState();
     for (const item of items) {
       if (item.productId < 0) continue;
-      await recordMovement({
-        product_id: item.productId,
-        type: "sale",
-        quantity: item.quantity,
-        delta: -item.quantity,
-        reference_id: `sale-${sale.id}`,
-        user_id: null,
-        store_id: sale.storeId,
-      });
+      applyLocalStockDelta(item.productId, -item.quantity);
     }
 
     // ── Compute combo_id x qty map for sale_items ──
@@ -634,20 +629,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
     await api.post(`/sales/${saleId}/refund`);
 
-    // Reverse stock movements
+    // Sync local product stock in memory — el server YA revirtió el stock
+    // (scoped a la tienda) y registró el movimiento durante el refund.
     // Negative product ids are free-sale items — no real product to restore.
-    const { recordMovement } = useProductsStore.getState();
+    const { applyLocalStockDelta } = useProductsStore.getState();
     for (const item of sale.items) {
       if (item.productId < 0) continue;
-      await recordMovement({
-        product_id: item.productId,
-        type: "adjustment",
-        quantity: item.quantity,
-        delta: item.quantity,
-        reference_id: `refund-${sale.id}`,
-        user_id: null,
-        store_id: sale.storeId,
-      });
+      applyLocalStockDelta(item.productId, item.quantity);
     }
 
     // Mark sale as refunded in memory

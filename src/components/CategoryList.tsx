@@ -15,10 +15,10 @@ export default function CategoryList() {
   const deleteCategory = useProductsStore((s) => s.deleteCategory);
   const loadCategories = useProductsStore((s) => s.loadCategories);
 
-  const categoriesLoadedRef = useRef(false);
+  const categoriesLoadedStoreIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (categoriesLoadedRef.current) return;
-    categoriesLoadedRef.current = true;
+    if (categoriesLoadedStoreIdRef.current === storeId) return;
+    categoriesLoadedStoreIdRef.current = storeId;
     loadCategories(storeId).catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId]);

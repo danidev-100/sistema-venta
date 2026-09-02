@@ -1,10 +1,16 @@
 import { Router, Request, Response } from "express";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "../db.js";
 import * as schema from "../../../db/cloud-schema.js";
 
 const router = Router();
+
+class HttpError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
 
 const createProductSchema = z.object({
   barcode: z.string().nullable().optional(),
@@ -83,6 +89,81 @@ router.get("/stock-movements", async (req: Request, res: Response) => {
     res.json(rows);
   } catch (err) {
     console.error("[products] stock-movements error:", err);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+// GET /stock-consolidated — stock consolidado por código de barras.
+// Agrupa las filas con el mismo barcode (no null/vacío) en TODAS las tiendas
+// ACTIVAS: suma el stock y expone el detalle por sucursal. `storeId` es la
+// "tienda de referencia" para name/price; si no viene o el barcode no existe
+// en ella, usa la primera fila encontrada.
+router.get("/stock-consolidated", async (req: Request, res: Response) => {
+  try {
+    const storeId = (req.query.storeId as string) || undefined;
+    const db = getDb();
+    const rows = await db
+      .select({
+        barcode: schema.products.barcode,
+        name: schema.products.name,
+        price: schema.products.price,
+        stock: schema.products.stock,
+        store_id: schema.products.store_id,
+        store_name: schema.stores.name,
+      })
+      .from(schema.products)
+      .innerJoin(
+        schema.stores,
+        and(
+          eq(schema.products.store_id, schema.stores.id),
+          eq(schema.stores.active, true),
+        ),
+      )
+      .where(isNotNull(schema.products.barcode));
+
+    const byBarcode = new Map<string, {
+      barcode: string;
+      name: string;
+      price: number;
+      total_stock: number;
+      per_store: Array<{ store_id: string; store_name: string; stock: number }>;
+    }>();
+
+    for (const row of rows) {
+      const barcode = (row.barcode ?? "").trim();
+      if (!barcode) continue;
+      let entry = byBarcode.get(barcode);
+      if (!entry) {
+        entry = {
+          barcode,
+          name: row.name,
+          price: row.price,
+          total_stock: 0,
+          per_store: [],
+        };
+        byBarcode.set(barcode, entry);
+      }
+      entry.total_stock += row.stock;
+      entry.per_store.push({
+        store_id: row.store_id,
+        store_name: row.store_name,
+        stock: row.stock,
+      });
+      // La tienda de referencia define name/price cuando el query la incluye.
+      if (storeId && row.store_id === storeId) {
+        entry.name = row.name;
+        entry.price = row.price;
+      }
+    }
+
+    const result = [...byBarcode.values()].sort(
+      (a, b) =>
+        a.name.localeCompare(b.name, "es") ||
+        a.barcode.localeCompare(b.barcode),
+    );
+    res.json(result);
+  } catch (err) {
+    console.error("[products] stock-consolidated error:", err);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });
@@ -216,16 +297,34 @@ router.post("/stock-movement", async (req: Request, res: Response) => {
     }
     const { product_id, type, quantity, delta, reference_id, user_id, store_id } = parsed.data;
     const db = getDb();
-    const [movement] = await db
-      .insert(schema.stockMovements)
-      .values({ product_id, type, quantity: quantity ?? 0, delta, reference_id, user_id: user_id ? Number(user_id) : null, store_id })
-      .returning();
-    await db
-      .update(schema.products)
-      .set({ stock: sql`${schema.products.stock} + ${delta}`, updated_at: new Date() })
-      .where(eq(schema.products.id, product_id));
+
+    const movement = await db.transaction(async (tx) => {
+      const [inserted] = await tx
+        .insert(schema.stockMovements)
+        .values({ product_id, type, quantity: quantity ?? 0, delta, reference_id, user_id: user_id ? Number(user_id) : null, store_id })
+        .returning();
+
+      // El stock se actualiza SIEMPRE scoped a la tienda del movimiento:
+      // si el producto no existe en esa tienda, no se toca nada y se revierte.
+      const [updated] = await tx
+        .update(schema.products)
+        .set({ stock: sql`${schema.products.stock} + ${delta}`, updated_at: new Date() })
+        .where(and(eq(schema.products.id, product_id), eq(schema.products.store_id, store_id)))
+        .returning();
+
+      if (!updated) {
+        throw new HttpError(404, "Producto no encontrado en esta tienda");
+      }
+
+      return inserted;
+    });
+
     res.status(201).json(movement);
   } catch (err) {
+    if (err instanceof HttpError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
     console.error("[products] stock-movement error:", err);
     res.status(500).json({ error: "Error interno del servidor" });
   }

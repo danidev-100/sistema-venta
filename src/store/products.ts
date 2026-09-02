@@ -87,6 +87,12 @@ export type ProductsStore = {
   /** Record a stock movement AND update the product's running quantity. */
   recordMovement: (data: Omit<StockMovement, "id" | "created_at">) => Promise<StockMovement>;
 
+  /** Apply a stock delta to the in-memory product list WITHOUT hitting the API.
+   *  Used after operations where the server already persisted the change
+   *  (venta, devolución, recepción) so the UI stays in sync without duplicating
+   *  movements. */
+  applyLocalStockDelta: (productId: number, delta: number) => void;
+
   /** Shortcut: adjust product stock to an absolute value (creates "adjustment" movement). */
   adjustStock: (productId: number, newQuantity: number, userId?: string) => Promise<void>;
 
@@ -341,6 +347,14 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
     }
 
     return movement;
+  },
+
+  applyLocalStockDelta: (productId, delta) => {
+    set({
+      products: get().products.map((p) =>
+        p.id === productId ? { ...p, stock: Math.max(0, p.stock + delta) } : p,
+      ),
+    });
   },
 
   adjustStock: async (productId, newQuantity, userId) => {

@@ -1,9 +1,11 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { useAppStore, useAuthStore, type Page } from "@/store";
 import { useExpensesStore } from "@/store/expenses";
 import { useComprobantesStore } from "@/store/comprobantes";
 import { useProductsStore } from "@/store/products";
 import { useCashClosingStore } from "@/store/cash-closing";
+import { useStoresStore } from "@/store/stores";
+import { useActiveStore } from "@/store/context";
 import { type Permission } from "@/store/auth";
 import ThemeToggle from "@/components/ThemeToggle";
 import ConfirmModal from "@/components/ConfirmModal";
@@ -135,6 +137,95 @@ const SettingsIcon = () => (
   </NavIcon>
 );
 
+const StoreIcon = () => (
+  <NavIcon>
+    <path d="M3 9l1.5-5h15L21 9" />
+    <path d="M4 9h16v12H4z" />
+    <path d="M9 21v-6h6v6" />
+    <path d="M3 9h18" />
+  </NavIcon>
+);
+
+// ──────────────────────────────────────────────
+// Store selector — cambia el punto de venta activo.
+// Visible para todos los roles (cajero incluido).
+// ──────────────────────────────────────────────
+
+function StoreSelector() {
+  const { storeId, setStoreId } = useActiveStore();
+  const activeStores = useStoresStore((s) => s.activeStores);
+  const loading = useStoresStore((s) => s.loading);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  const currentName =
+    activeStores.find((s) => s.id === storeId)?.name ?? storeId;
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm text-white transition-colors text-left touch-target"
+        title="Cambiar punto de venta"
+        aria-label="Cambiar punto de venta"
+      >
+        <span className="shrink-0 text-pos-secondary"><StoreIcon /></span>
+        <span className="flex-1 min-w-0 truncate">{currentName}</span>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={`w-3.5 h-3.5 text-white/50 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute left-0 right-0 mt-1.5 z-30 rounded-lg border border-white/10 bg-pos-primary shadow-xl overflow-hidden">
+          {activeStores.length === 0 ? (
+            <div className="px-3 py-2.5 text-xs text-white/50">
+              {loading ? "Cargando…" : "No hay puntos de venta activos"}
+            </div>
+          ) : (
+            activeStores.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => {
+                  setStoreId(s.id);
+                  setOpen(false);
+                }}
+                className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
+                  s.id === storeId
+                    ? "bg-pos-secondary/20 text-white font-medium"
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-pos-secondary" />
+                <span className="flex-1 min-w-0 truncate">{s.name}</span>
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ──────────────────────────────────────────────
 // Page definitions
 // ──────────────────────────────────────────────
@@ -225,6 +316,14 @@ export default function NavigationBar() {
         <p className="text-xs text-white/50 mt-1 capitalize tabular-nums leading-relaxed">
           {clock.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })}
         </p>
+      </div>
+
+      {/* Store selector */}
+      <div className="px-3 py-3 border-b border-white/10 space-y-1.5">
+        <p className="text-[10px] uppercase tracking-wider text-white/40 font-medium px-1">
+          Punto de venta
+        </p>
+        <StoreSelector />
       </div>
 
       {/* Navigation */}

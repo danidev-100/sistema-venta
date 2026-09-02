@@ -3,6 +3,7 @@ import { useAppStore, useAuthStore, useAdminStore } from "@/store";
 import { useCombosStore, useProductsStore } from "@/store";
 import { usePriceListsStore, type PriceListItem } from "@/store/price-lists";
 import { useBultosStore } from "@/store/bultos";
+import { useStoresStore, type StoreInfo } from "@/store/stores";
 import BrandList from "@/components/BrandList";
 import CategoryList from "@/components/CategoryList";
 import BulkPriceModal from "@/components/BulkPriceModal";
@@ -19,7 +20,7 @@ import { useActiveStore } from "@/store/context";
 // Admin section definitions
 // ──────────────────────────────────────────────
 
-type SectionId = "categories" | "brands" | "bulk-price" | "backup" | "settings" | "plantillas" | "empresa" | "combos" | "bultos" | "price-lists" | "purchase-invoices" | "afip";
+type SectionId = "categories" | "brands" | "bulk-price" | "backup" | "settings" | "plantillas" | "empresa" | "combos" | "bultos" | "price-lists" | "purchase-invoices" | "afip" | "stores";
 
 type SectionDef = {
   id: SectionId;
@@ -158,6 +159,17 @@ function AfipIcon() {
   );
 }
 
+function StoresIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
+      <path d="M3 9l1.5-5h15L21 9" />
+      <path d="M4 9h16v12H4z" />
+      <path d="M9 21v-6h6v6" />
+      <path d="M3 9h18" />
+    </svg>
+  );
+}
+
 const SECTIONS: SectionDef[] = [
   {
     id: "categories",
@@ -231,6 +243,12 @@ const SECTIONS: SectionDef[] = [
     description: "facturá con CAE ante AFIP",
     icon: <AfipIcon />,
   },
+  {
+    id: "stores",
+    label: "Puntos de Venta",
+    description: "creá, renombrá o activá/desactivá tiendas",
+    icon: <StoresIcon />,
+  },
 ];
 
 // ──────────────────────────────────────────────
@@ -257,6 +275,7 @@ const ACCENTS: Record<string, { bg: string; text: string; bar: string }> = {
   "price-lists":       NEUTRAL_ACCENT,
   "purchase-invoices": NEUTRAL_ACCENT,
   afip:                NEUTRAL_ACCENT,
+  stores:              NEUTRAL_ACCENT,
 };
 
 // ──────────────────────────────────────────────
@@ -357,6 +376,7 @@ export default function AdminPage() {
       {activeSection === "price-lists" && <PriceListsSection />}
       {activeSection === "purchase-invoices" && <PurchaseInvoicesSection />}
       {activeSection === "afip" && <AfipSection />}
+      {activeSection === "stores" && <StoresSection />}
     </div>
   );
 }
@@ -386,10 +406,10 @@ function BultosSection() {
   const loadBultos = useBultosStore((s) => s.loadBultos);
   const showNotification = useAppStore((s) => s.showNotification);
 
-  const bultosLoadedRef = useRef(false);
+  const bultosLoadedStoreIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (bultosLoadedRef.current) return;
-    bultosLoadedRef.current = true;
+    if (bultosLoadedStoreIdRef.current === storeId) return;
+    bultosLoadedStoreIdRef.current = storeId;
     loadBultos(storeId).catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId]);
@@ -402,6 +422,12 @@ function BultosSection() {
   const [productSearch, setProductSearch] = useState("");
   const [highlightIndex, setHighlightIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
+
+  // Salir del modo edición al cambiar de tienda para no mostrar datos de otra sucursal.
+  useEffect(() => {
+    resetForm();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId]);
 
   function resetForm() {
     setEditingId(null);
@@ -926,10 +952,10 @@ function CombosSection() {
   const loadCombos = useCombosStore((s) => s.loadCombos);
   const showNotification = useAppStore((s) => s.showNotification);
 
-  const combosLoadedRef = useRef(false);
+  const combosLoadedStoreIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (combosLoadedRef.current) return;
-    combosLoadedRef.current = true;
+    if (combosLoadedStoreIdRef.current === storeId) return;
+    combosLoadedStoreIdRef.current = storeId;
     loadCombos(storeId).catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId]);
@@ -941,6 +967,12 @@ function CombosSection() {
   const [productSearch, setProductSearch] = useState("");
   const [highlightIndex, setHighlightIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
+
+  // Salir del modo edición al cambiar de tienda para no mostrar datos de otra sucursal.
+  useEffect(() => {
+    resetForm();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId]);
 
   function resetForm() {
     setEditingId(null);
@@ -1262,26 +1294,29 @@ function PriceListsSection() {
   const [bulkPctDraft, setBulkPctDraft] = useState("");
   const [confirmAction, setConfirmAction] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
 
-  const priceListsLoadedRef = useRef(false);
+  const priceListsLoadedStoreIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (priceListsLoadedRef.current) return;
-    if (priceLists.length === 0 && !loading) {
-      priceListsLoadedRef.current = true;
-      setLoadError(false);
-      loadPriceLists(storeId).catch(() => setLoadError(true));
-    }
+    if (priceListsLoadedStoreIdRef.current === storeId) return;
+    priceListsLoadedStoreIdRef.current = storeId;
+    setLoadError(false);
+    loadPriceLists(storeId).catch(() => setLoadError(true));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId]);
 
-  const productsLoadedRef = useRef(false);
+  const productsLoadedStoreIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (productsLoadedRef.current) return;
-    productsLoadedRef.current = true;
+    if (productsLoadedStoreIdRef.current === storeId) return;
+    productsLoadedStoreIdRef.current = storeId;
     loadProducts(storeId).catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId]);
 
   const storeLists = priceLists.filter((pl) => pl.storeId === storeId);
+
+  // Salir del modo edición al cambiar de tienda: la lista en edición pertenece a otra sucursal.
+  useEffect(() => {
+    setEditingListId(null);
+  }, [storeId]);
 
   // ── Vista 2: load items when entering a list (only if not already cached) ──
   const itemsLoadedRef = useRef<number | null>(null);
@@ -1851,4 +1886,218 @@ function PriceListsSection() {
     if (!items) return 0;
     return items.filter((i) => i.price !== null || i.percentage !== null).length;
   }
+}
+
+function StoresSection() {
+  const allStores = useStoresStore((s) => s.allStores);
+  const loading = useStoresStore((s) => s.loading);
+  const createStore = useStoresStore((s) => s.createStore);
+  const updateStore = useStoresStore((s) => s.updateStore);
+  const loadAllStores = useStoresStore((s) => s.loadAllStores);
+  const showNotification = useAppStore((s) => s.showNotification);
+
+  const [newName, setNewName] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const loadedRef = useRef(false);
+  useEffect(() => {
+    if (loadedRef.current) return;
+    loadedRef.current = true;
+    loadAllStores().catch(() => setError("No se pudieron cargar las tiendas"));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadAllStores]);
+
+  function resetForm() {
+    setEditingId(null);
+    setEditName("");
+  }
+
+  async function handleCreate() {
+    const name = newName.trim();
+    if (!name) {
+      showNotification("Ingresá un nombre para la tienda");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await createStore(name);
+      setNewName("");
+      showNotification("Tienda creada");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al crear la tienda");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function startEdit(store: StoreInfo) {
+    setEditingId(store.id);
+    setEditName(store.name);
+  }
+
+  async function handleRename() {
+    if (!editingId) return;
+    const name = editName.trim();
+    if (!name) {
+      showNotification("El nombre no puede estar vacío");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await updateStore(editingId, { name });
+      resetForm();
+      showNotification("Tienda renombrada");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al renombrar la tienda");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleToggle(store: StoreInfo) {
+    const disabling = store.active;
+    if (disabling) {
+      const ok = confirm(
+        `¿Desactivar "${store.name}"?\n\nSe ocultará del selector y dejará de operar, pero NO se borrará su historial.`,
+      );
+      if (!ok) return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await updateStore(store.id, { active: !store.active });
+      if (disabling) resetForm();
+      showNotification(disabling ? "Tienda desactivada" : "Tienda activada");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cambiar el estado de la tienda");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div>
+      <h3 className="text-base font-semibold text-pos-text mb-1">Puntos de Venta</h3>
+      <p className="text-sm text-pos-muted mb-5">
+        Las tiendas desactivadas se ocultan del selector y dejan de operar, pero conservan su historial.
+      </p>
+
+      <div className="max-w-2xl space-y-6">
+        {/* Create form */}
+        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4 dark:border-gray-600/30 dark:bg-gray-800">
+          <h4 className="text-sm font-semibold text-pos-text mb-3">Nueva Tienda</h4>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
+              placeholder="Nombre del punto de venta (ej: Sucursal Centro)"
+              className="flex-1 border border-pos-muted/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pos-secondary bg-pos-surface"
+            />
+            <button
+              onClick={handleCreate}
+              disabled={busy || !newName.trim()}
+              className="px-4 py-2 bg-pos-secondary text-white rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40"
+            >
+              Crear
+            </button>
+          </div>
+        </div>
+
+        {/* Server error feedback */}
+        {error && (
+          <div className="rounded-xl border border-pos-danger/30 bg-pos-danger/10 px-4 py-3 text-sm text-pos-danger dark:border-pos-danger/40 dark:bg-pos-danger/15">
+            {error}
+          </div>
+        )}
+
+        {/* Store list */}
+        <div className="space-y-2">
+          {loading && allStores.length === 0 && (
+            <p className="text-sm text-pos-muted">Cargando tiendas…</p>
+          )}
+          {!loading && allStores.length === 0 && (
+            <p className="text-sm text-pos-muted">No hay tiendas creadas todavía.</p>
+          )}
+          {allStores.map((store) => (
+            <div
+              key={store.id}
+              className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4 dark:border-gray-600/30 dark:bg-gray-800"
+            >
+              {editingId === store.id ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleRename(); if (e.key === "Escape") resetForm(); }}
+                    className="flex-1 border border-pos-muted/30 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pos-secondary bg-pos-surface"
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleRename}
+                    disabled={busy}
+                    className="px-3 py-1.5 bg-pos-secondary text-white rounded-lg text-xs font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40"
+                  >
+                    Guardar
+                  </button>
+                  <button
+                    onClick={resetForm}
+                    className="px-3 py-1.5 border border-pos-muted/30 text-pos-text rounded-lg text-xs touch-target hover:bg-pos-background"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-semibold text-pos-text">{store.name}</h4>
+                      {store.active ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-600/15 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:text-green-400">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-600 dark:bg-green-400" />
+                          Activa
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-pos-muted/15 px-2 py-0.5 text-[10px] font-medium text-pos-muted">
+                          <span className="w-1.5 h-1.5 rounded-full bg-pos-muted" />
+                          Inactiva
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-pos-muted mt-0.5 font-mono">{store.id}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => startEdit(store)}
+                      className="text-xs px-3 py-1.5 rounded-lg border border-pos-muted/20 text-pos-text touch-target hover:bg-pos-background"
+                    >
+                      Renombrar
+                    </button>
+                    <button
+                      onClick={() => handleToggle(store)}
+                      disabled={busy}
+                      className={`text-xs px-3 py-1.5 rounded-lg touch-target transition-colors disabled:opacity-40 ${
+                        store.active
+                          ? "text-pos-danger hover:bg-pos-danger/10"
+                          : "text-green-700 hover:bg-green-600/10 dark:text-green-400"
+                      }`}
+                    >
+                      {store.active ? "Desactivar" : "Activar"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }

@@ -59,10 +59,10 @@ export default function ExpensesPage() {
   const getMonthlySummary = useExpensesStore((s) => s.getMonthlySummary);
   const loadExpenses = useExpensesStore((s) => s.loadExpenses);
 
-  const expensesLoadedRef = useRef(false);
+  const expensesLoadedStoreIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (expensesLoadedRef.current) return;
-    expensesLoadedRef.current = true;
+    if (expensesLoadedStoreIdRef.current === storeId) return;
+    expensesLoadedStoreIdRef.current = storeId;
     loadExpenses(storeId).catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId]);

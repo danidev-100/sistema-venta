@@ -186,13 +186,11 @@ export const usePedidosStore = create<PedidosStore>((set, get) => ({
       i.id === itemId ? { ...i, received_qty: newReceived } : i,
     );
 
-    // Update stock
+    // Update stock in memory — el server YA suma el stock (scoped a la tienda)
+    // y registra el movimiento durante el receive. Acá solo reflejamos el cambio
+    // local sin llamar al endpoint de movimiento para no duplicar.
     if (item.product_id != null) {
-      const productsState = useProductsStore.getState();
-      const product = productsState.products.find((p) => p.id === item.product_id);
-      if (product) {
-        productsState.adjustStock(item.product_id, product.stock + qtyToReceive);
-      }
+      useProductsStore.getState().applyLocalStockDelta(item.product_id, qtyToReceive);
     }
 
     // Recalculate status

@@ -15,10 +15,10 @@ export default function ProveedoresPage() {
   const deleteProveedor = useProveedoresStore((s) => s.deleteProveedor);
   const loadProveedores = useProveedoresStore((s) => s.loadProveedores);
 
-  const proveedoresLoadedRef = useRef(false);
+  const proveedoresLoadedStoreIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (proveedoresLoadedRef.current) return;
-    proveedoresLoadedRef.current = true;
+    if (proveedoresLoadedStoreIdRef.current === storeId) return;
+    proveedoresLoadedStoreIdRef.current = storeId;
     loadProveedores(storeId).catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId]);

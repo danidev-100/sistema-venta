@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useActiveStore } from "@/store/context";
 import { useProductsStore, type Product, type Category } from "@/store/products";
+import { useStockConsolidatedStore, type ConsolidatedProduct } from "@/store/stockConsolidated";
 import { useBrandsStore } from "@/store/brands";
 import { useAuthStore } from "@/store/auth";
 import { useBarcodeInput } from "@/hooks/useBarcodeInput";
@@ -37,16 +38,23 @@ export default function ProductsPage() {
   const loadProducts = useProductsStore((s) => s.loadProducts);
   const loadCategories = useProductsStore((s) => s.loadCategories);
   const loadBrands = useBrandsStore((s) => s.loadBrands);
+  const consolidated = useStockConsolidatedStore((s) => s.consolidated);
+  const loadConsolidated = useStockConsolidatedStore((s) => s.loadConsolidated);
 
-  const productsLoadedRef = useRef(false);
+  const productsLoadedStoreIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (productsLoadedRef.current) return;
-    productsLoadedRef.current = true;
+    if (productsLoadedStoreIdRef.current === storeId) return;
+    productsLoadedStoreIdRef.current = storeId;
     loadProducts(storeId).catch(console.error);
     loadCategories(storeId).catch(console.error);
     loadBrands(storeId).catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId]);
+
+  // Stock consolidado por barcode — se refresca al montar y al cambiar de tienda.
+  useEffect(() => {
+    loadConsolidated(storeId).catch(console.error);
+  }, [storeId, loadConsolidated]);
   const canViewCost = useAuthStore((s) => s.hasPermission("productos"));
   const adjustStock = useProductsStore((s) => s.adjustStock);
   const deleteProduct = useProductsStore((s) => s.deleteProduct);
@@ -119,6 +127,12 @@ export default function ProductsPage() {
   // Pre-compute category lookup + descendant map once
   const catById = useMemo(() => new Map(storeCategories.map((c) => [c.id, c])), [storeCategories]);
   const brandById = useMemo(() => new Map(brandsList.map((b) => [b.id, b.name])), [brandsList]);
+
+  // Barcode → entrada de stock consolidado (todas las tiendas activas).
+  const consolidatedByBarcode = useMemo(
+    () => new Map(consolidated.map((c) => [c.barcode, c])),
+    [consolidated],
+  );
 
   const catDescendants = useMemo(() => {
     const childrenOf = new Map<number, number[]>();
@@ -231,9 +245,16 @@ export default function ProductsPage() {
     { header: "Precio", key: "precio" },
     ...(canViewCost ? [{ header: "Costo", key: "costo" }] : []),
     { header: "Stock", key: "stock" },
+    { header: "Stock total", key: "stockTotal" },
     { header: "Marca", key: "marca" },
     { header: "Categoría", key: "categoria" },
   ];
+
+  const stockTotalForProduct = useCallback(
+    (p: Product) =>
+      p.barcode ? (consolidatedByBarcode.get(p.barcode)?.total_stock ?? p.stock) : p.stock,
+    [consolidatedByBarcode],
+  );
 
   const exportProductData = useCallback(() => {
     const data = filteredProducts.map((p) => {
@@ -245,12 +266,13 @@ export default function ProductsPage() {
         precio: formatCurrency(p.price),
         ...(canViewCost ? { costo: formatCurrency(p.costPrice) } : {}),
         stock: p.stock,
+        stockTotal: stockTotalForProduct(p),
         marca: brandName ?? "—",
         categoria: catName ?? "—",
       };
     });
     exportTableToPdf(data, productExportColumns, "Productos");
-  }, [filteredProducts, catById, brandById, canViewCost]);
+  }, [filteredProducts, catById, brandById, canViewCost, stockTotalForProduct]);
 
   const exportProductExcel = useCallback(() => {
     const data = filteredProducts.map((p) => {
@@ -262,12 +284,13 @@ export default function ProductsPage() {
         precio: p.price,
         ...(canViewCost ? { costo: p.costPrice } : {}),
         stock: p.stock,
+        stockTotal: stockTotalForProduct(p),
         marca: brandName ?? "",
         categoria: catName ?? "",
       };
     });
     exportToExcel(data, productExportColumns, "Productos");
-  }, [filteredProducts, catById, brandById, canViewCost]);
+  }, [filteredProducts, catById, brandById, canViewCost, stockTotalForProduct]);
 
   function handleProductSelect(id: number) {
     setSelectedProductId(id);
@@ -487,6 +510,9 @@ export default function ProductsPage() {
                       <th className="text-right py-2 px-2 font-medium">
                         Stock
                       </th>
+                      <th className="text-right py-2 px-2 font-medium">
+                        Stock total
+                      </th>
                       <th className="text-left py-2 px-2 font-medium">
                         Marca
                       </th>
@@ -502,6 +528,9 @@ export default function ProductsPage() {
                     {filteredProducts.slice(0, renderCount).map((p, idx) => {
                       const catName = p.category_id != null ? catById.get(p.category_id)?.name : undefined;
                       const brandName = p.brandId != null ? brandById.get(p.brandId) : undefined;
+                      const consolidatedEntry = p.barcode ? consolidatedByBarcode.get(p.barcode) : undefined;
+                      const stockTotal = consolidatedEntry?.total_stock ?? null;
+                      const perStoreLine = consolidatedEntry?.per_store ?? [];
                       const isSelected = idx === selectedIndex;
                       return (
                         <tr
@@ -549,7 +578,15 @@ export default function ProductsPage() {
                             {p.barcode ?? "—"}
                           </td>
                           <td className="py-2 px-2 font-medium text-pos-text">
-                            {p.name}
+                            <div>{p.name}</div>
+                            {perStoreLine.length > 1 && (
+                              <div
+                                className="text-[10px] text-pos-muted/60 font-normal mt-0.5 truncate max-w-[220px]"
+                                title={`${perStoreLine.map((s) => `${s.store_name}: ${s.stock}`).join(" · ")} · Total: ${stockTotal}`}
+                              >
+                                {perStoreLine.map((s) => `${s.store_name}: ${s.stock}`).join(" · ")}
+                              </div>
+                            )}
                           </td>
                           <td className="py-2 px-2 text-center text-xs">
                             <span className="inline-block px-1.5 py-0.5 rounded font-medium bg-pos-muted/10 text-pos-muted">
@@ -621,6 +658,16 @@ export default function ProductsPage() {
                             {editingStockId !== p.id && p.minStock > 0 && p.stock > p.minStock && p.midStock > 0 && p.stock <= p.midStock && (
                               <span className="inline-block w-1.5 h-1.5 rounded-full bg-pos-accent ml-1 align-middle" />
                             )}
+                          </td>
+                          <td
+                            className="py-2 px-2 num"
+                            title={
+                              perStoreLine.length > 1
+                                ? `${perStoreLine.map((s) => `${s.store_name}: ${s.stock}`).join(" · ")} · Total: ${stockTotal}`
+                                : undefined
+                            }
+                          >
+                            {p.barcode ? (stockTotal ?? p.stock) : "—"}
                           </td>
                           <td className="py-2 px-2 text-pos-muted text-xs truncate max-w-[100px]">
                             {brandName ?? "—"}

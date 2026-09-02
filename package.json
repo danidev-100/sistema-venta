@@ -15,7 +15,8 @@
     "db:push": "drizzle-kit push --config=db/drizzle.config.cloud.ts",
     "db:push:local": "drizzle-kit push --config=db/drizzle.config.local.ts",
     "start": "node server/dist/index.js",
-    "dev:all": "concurrently -n front,api -c cyan,green \"pnpm dev\" \"pnpm dev:server\""
+    "dev:all": "concurrently -n front,api -c cyan,green \"pnpm dev\" \"pnpm dev:server\"",
+    "dev:local": "set \"DATABASE_URL=postgres://postgres:1234@localhost:5432/sistema_venta_local\" && concurrently -n front,api -c cyan,green \"pnpm dev\" \"pnpm -C server dev\""
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

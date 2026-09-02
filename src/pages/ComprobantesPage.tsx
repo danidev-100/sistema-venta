@@ -94,10 +94,10 @@ export default function ComprobantesPage() {
   const [dateTo, setDateTo] = useState("");
   const [filterCreatedBy, setFilterCreatedBy] = useState("");
 
-  const comprobantesLoadedRef = useRef(false);
+  const comprobantesLoadedStoreIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (comprobantesLoadedRef.current) return;
-    comprobantesLoadedRef.current = true;
+    if (comprobantesLoadedStoreIdRef.current === storeId) return;
+    comprobantesLoadedStoreIdRef.current = storeId;
     loadComprobantes(storeId).catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId]);

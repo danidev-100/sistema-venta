@@ -28,18 +28,18 @@ function loadEnvFile(envPath: string): boolean {
   }
 }
 
-// Skip when DATABASE_URL already comes from the real environment (e.g. Vercel/Neon).
-if (!process.env.DATABASE_URL) {
-  // Try candidates in order: repo root .env (dev), server/.env, then cwd-relative.
-  const candidates = [
-    resolve(__dirname, "../../.env"), // server/src/ -> repo root
-    resolve(__dirname, "../.env"), //    server/src/ -> server/
-    resolve(process.cwd(), "../.env"),
-    resolve(process.cwd(), ".env"),
-  ];
-  for (const candidate of candidates) {
-    if (loadEnvFile(candidate)) break;
-  }
+// Always try to load local env files; real environment variables (e.g. Vercel/Neon)
+// always win because loadEnvFile never overwrites an already-set variable.
+// Load every candidate (no break) so .env.local complements .env instead of shadowing it.
+const candidates = [
+  resolve(__dirname, "../../.env.local"), // repo root .env.local (dev local override)
+  resolve(__dirname, "../../.env"), // server/src/ -> repo root
+  resolve(__dirname, "../.env"), //    server/src/ -> server/
+  resolve(process.cwd(), "../.env"),
+  resolve(process.cwd(), ".env"),
+];
+for (const candidate of candidates) {
+  loadEnvFile(candidate);
 }
 
 // Fallback: Neon production URL used as DATABASE_URL when the local one is missing.

@@ -6,6 +6,7 @@ import {
   uniqueIndex,
   index,
   timestamp,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -33,6 +34,7 @@ export const stores = pgTable(
   {
     id: text("id").primaryKey(),
     name: text("name").notNull(),
+    active: boolean("active").notNull().default(true),
     created_at: timestamp("created_at").notNull().defaultNow(),
     updated_at: timestamp("updated_at").notNull().defaultNow(),
   },

@@ -71,6 +71,13 @@
       "when": 1788189720872,
       "tag": "0009_curvy_wrecker",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788308537060,
+      "tag": "0010_fixed_mister_sinister",
+      "breakpoints": true
     }
   ]
 }

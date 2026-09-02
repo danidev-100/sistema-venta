@@ -121,7 +121,7 @@ export default function App() {
   const needsAdminGate = ADMIN_PAGES.includes(page);
 
   return (
-    <StoreProvider initialStoreId="store_1">
+    <StoreProvider>
       {isAuthenticated ? (
         <div className="flex flex-col h-screen w-screen overflow-hidden lg:flex-row">
           <SalesLoader />

@@ -7,6 +7,7 @@ import { useAdminStore } from "@/store/admin";
 import { useAuthStore } from "@/store/auth";
 import { useBrandsStore } from "@/store/brands";
 import { useProductsStore } from "@/store/products";
+import { useStockConsolidatedStore } from "@/store/stockConsolidated";
 import { StoreProvider } from "@/store/context";
 
 // ──────────────────────────────────────────────
@@ -25,6 +26,7 @@ const mockDb = vi.hoisted(() => ({
 vi.mock("@/lib/api", () => ({
   api: {
     get: vi.fn((path: string) => {
+      if (path.startsWith("/products/stock-consolidated")) return Promise.resolve([]);
       if (path.startsWith("/products/stock-movements")) return Promise.resolve([]);
       if (path.startsWith("/products")) return Promise.resolve(mockDb.products);
       if (path.startsWith("/categories")) return Promise.resolve(mockDb.categories);
@@ -54,6 +56,7 @@ function resetStores() {
   useAuthStore.setState({ users: [], currentUser: null });
   useBrandsStore.setState({ brands: [] });
   useProductsStore.setState({ products: [], categories: [], stockMovements: [] });
+  useStockConsolidatedStore.setState({ consolidated: [], loadedStoreId: null });
   mockDb.products = [];
   mockDb.categories = [];
   mockDb.brands = [];

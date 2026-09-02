@@ -199,7 +199,7 @@ router.post("/", async (req: Request, res: Response) => {
             price: item.sale_price,
             updated_at: new Date(),
           })
-          .where(eq(schema.products.id, product.id));
+          .where(and(eq(schema.products.id, product.id), eq(schema.products.store_id, store_id)));
       }
 
       const [updated] = await tx

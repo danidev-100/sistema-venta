@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useAppStore, usePriceListsStore } from "@/store";
 import { useActiveStore } from "@/store/context";
 import { useProductsStore } from "@/store/products";
+import { useStockConsolidatedStore } from "@/store/stockConsolidated";
 import ProductImage from "@/components/ProductImage";
 
 const RENDER_BATCH = 200;
@@ -34,6 +35,7 @@ export default function ProductSearchModal({
   const products = useProductsStore((s) => s.products);
   const cartItems = useAppStore((s) => s.items);
   const selectedPriceListId = useAppStore((s) => s.selectedPriceListId);
+  const consolidated = useStockConsolidatedStore((s) => s.consolidated);
   const [search, setSearch] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [animOut, setAnimOut] = useState(false);
@@ -64,6 +66,20 @@ export default function ProductSearchModal({
         String(p.id).includes(q),
     );
   }, [storeProducts, search]);
+
+  // Barcode → stock consolidado (todas las tiendas activas).
+  const consolidatedByBarcode = useMemo(
+    () => new Map(consolidated.map((c) => [c.barcode, c])),
+    [consolidated],
+  );
+
+  // Carga el consolidado al abrir la búsqueda si todavía no está cargado.
+  useEffect(() => {
+    const stockStore = useStockConsolidatedStore.getState();
+    if (stockStore.loadedStoreId !== storeId) {
+      stockStore.loadConsolidated(storeId).catch(console.error);
+    }
+  }, [storeId]);
 
   // Reset selection when results change
   useEffect(() => {
@@ -274,6 +290,9 @@ export default function ProductSearchModal({
                   .reduce((sum, i) => sum + i.quantity, 0);
                 const availableStock = product.stock - cartQty;
                 const outOfStock = availableStock <= 0;
+                const totalStock = product.barcode
+                  ? consolidatedByBarcode.get(product.barcode)?.total_stock
+                  : undefined;
                 return (
                   <button
                     key={product.id}
@@ -364,6 +383,9 @@ export default function ProductSearchModal({
                             : product.saleUnit === "unit"
                               ? `${availableStock} uds`
                               : `${availableStock} g`}
+                          {totalStock != null && (
+                            <> · Total: {totalStock}</>
+                          )}
                         </span>
                       </div>
                     </div>

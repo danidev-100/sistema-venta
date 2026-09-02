@@ -1,9 +1,15 @@
 import { Router, Request, Response } from "express";
-import { eq, and, desc, inArray } from "drizzle-orm";
+import { eq, and, desc, inArray, sql } from "drizzle-orm";
 import { getDb } from "../db.js";
 import * as schema from "../../../db/cloud-schema.js";
 
 const router = Router();
+
+class HttpError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
 
 // GET / — list pedidos for a store
 router.get("/", async (req: Request, res: Response) => {
@@ -194,27 +200,98 @@ router.put("/:id/status", async (req: Request, res: Response) => {
     }
 
     const db = getDb();
-    const [pedido] = await db
-      .update(schema.pedidos)
-      .set({ status, updated_at: new Date() })
-      .where(eq(schema.pedidos.id, id))
-      .returning();
 
-    if (!pedido) { res.status(404).json({ error: "Pedido no encontrado" }); return; }
+    const result = await db.transaction(async (tx) => {
+      const [pedido] = await tx
+        .select()
+        .from(schema.pedidos)
+        .where(eq(schema.pedidos.id, id))
+        .limit(1);
 
-    const items = await db
-      .select()
-      .from(schema.pedidoItems)
-      .where(eq(schema.pedidoItems.pedido_id, id));
+      if (!pedido) {
+        throw new HttpError(404, "Pedido no encontrado");
+      }
 
-    const [proveedor] = await db
-      .select()
-      .from(schema.proveedores)
-      .where(eq(schema.proveedores.id, pedido.proveedor_id))
-      .limit(1);
+      const items = await tx
+        .select()
+        .from(schema.pedidoItems)
+        .where(eq(schema.pedidoItems.pedido_id, id));
 
-    res.json({ ...pedido, items, proveedor_name: proveedor?.name ?? "" });
+      // El cambio de estado a "received" / fuera de "received" ajusta stock
+      // server-side (scoped a la tienda del pedido), igual que la recepción
+      // por ítem. Solo se mueven las cantidades aún no recibidas.
+      const goingReceived = status === "received" && pedido.status !== "received";
+      const leavingReceived = pedido.status === "received" && status !== "received";
+
+      if (goingReceived || leavingReceived) {
+        for (const item of items) {
+          if (item.product_id == null) continue;
+          const remaining = item.quantity - item.received_qty;
+          if (remaining <= 0) continue;
+
+          const [product] = await tx
+            .select()
+            .from(schema.products)
+            .where(
+              and(
+                eq(schema.products.id, item.product_id),
+                eq(schema.products.store_id, pedido.store_id),
+              ),
+            )
+            .limit(1);
+
+          if (!product) {
+            throw new HttpError(
+              400,
+              `El producto '${item.product_name}' no pertenece a esta sucursal`,
+            );
+          }
+
+          const delta = goingReceived ? remaining : -remaining;
+
+          await tx
+            .update(schema.products)
+            .set({ stock: sql`GREATEST(0, ${schema.products.stock} + ${delta})`, updated_at: new Date() })
+            .where(and(eq(schema.products.id, product.id), eq(schema.products.store_id, pedido.store_id)));
+
+          await tx.insert(schema.stockMovements).values({
+            product_id: product.id,
+            type: goingReceived ? "purchase" : "adjustment",
+            quantity: Math.abs(delta),
+            delta,
+            reference_id: `pedido:${id}`,
+            user_id: (req as any).user?.userId ?? null,
+            store_id: pedido.store_id,
+          });
+        }
+      }
+
+      const [updated] = await tx
+        .update(schema.pedidos)
+        .set({ status, updated_at: new Date() })
+        .where(eq(schema.pedidos.id, id))
+        .returning();
+
+      const finalItems = await tx
+        .select()
+        .from(schema.pedidoItems)
+        .where(eq(schema.pedidoItems.pedido_id, id));
+
+      const [proveedor] = await tx
+        .select()
+        .from(schema.proveedores)
+        .where(eq(schema.proveedores.id, pedido.proveedor_id))
+        .limit(1);
+
+      return { ...updated, items: finalItems, proveedor_name: proveedor?.name ?? "" };
+    });
+
+    res.json(result);
   } catch (err) {
+    if (err instanceof HttpError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
     console.error("[pedidos] update status error:", err);
     res.status(500).json({ error: "Error interno" });
   }
@@ -233,66 +310,110 @@ router.put("/:id/items/:itemId/receive", async (req: Request, res: Response) => 
     }
 
     const db = getDb();
-    const [pedido] = await db
-      .select()
-      .from(schema.pedidos)
-      .where(eq(schema.pedidos.id, id))
-      .limit(1);
 
-    if (!pedido) { res.status(404).json({ error: "Pedido no encontrado" }); return; }
+    const result = await db.transaction(async (tx) => {
+      const [pedido] = await tx
+        .select()
+        .from(schema.pedidos)
+        .where(eq(schema.pedidos.id, id))
+        .limit(1);
 
-    const [item] = await db
-      .select()
-      .from(schema.pedidoItems)
-      .where(and(eq(schema.pedidoItems.id, itemId), eq(schema.pedidoItems.pedido_id, id)))
-      .limit(1);
+      if (!pedido) {
+        throw new HttpError(404, "Pedido no encontrado");
+      }
 
-    if (!item) { res.status(404).json({ error: "Item no encontrado" }); return; }
+      const [item] = await tx
+        .select()
+        .from(schema.pedidoItems)
+        .where(and(eq(schema.pedidoItems.id, itemId), eq(schema.pedidoItems.pedido_id, id)))
+        .limit(1);
 
-    const remaining = item.quantity - item.received_qty;
-    if (remaining <= 0) {
-      res.status(400).json({ error: "El item ya fue recibido por completo" });
+      if (!item) {
+        throw new HttpError(404, "Item no encontrado");
+      }
+
+      const remaining = item.quantity - item.received_qty;
+      if (remaining <= 0) {
+        throw new HttpError(400, "El item ya fue recibido por completo");
+      }
+
+      const qtyToReceive = Math.min(quantity, remaining);
+      const newReceived = item.received_qty + qtyToReceive;
+
+      await tx
+        .update(schema.pedidoItems)
+        .set({ received_qty: newReceived, updated_at: new Date() })
+        .where(eq(schema.pedidoItems.id, itemId));
+
+      // La recepción SUMA stock server-side, scoped a la tienda del pedido.
+      if (item.product_id != null && qtyToReceive > 0) {
+        const [product] = await tx
+          .select()
+          .from(schema.products)
+          .where(
+            and(
+              eq(schema.products.id, item.product_id),
+              eq(schema.products.store_id, pedido.store_id),
+            ),
+          )
+          .limit(1);
+
+        if (!product) {
+          throw new HttpError(
+            400,
+            `El producto '${item.product_name}' no pertenece a esta sucursal`,
+          );
+        }
+
+        await tx
+          .update(schema.products)
+          .set({ stock: sql`${schema.products.stock} + ${qtyToReceive}`, updated_at: new Date() })
+          .where(and(eq(schema.products.id, product.id), eq(schema.products.store_id, pedido.store_id)));
+
+        await tx.insert(schema.stockMovements).values({
+          product_id: product.id,
+          type: "purchase",
+          quantity: qtyToReceive,
+          delta: qtyToReceive,
+          reference_id: `pedido:${id}`,
+          user_id: (req as any).user?.userId ?? null,
+          store_id: pedido.store_id,
+        });
+      }
+
+      // Recompute status from all items
+      const allItems = await tx
+        .select()
+        .from(schema.pedidoItems)
+        .where(eq(schema.pedidoItems.pedido_id, id));
+
+      let newStatus: "pending" | "received" | "cancelled" | "partial" = pedido.status;
+      if (allItems.length > 0 && allItems.every((i) => i.received_qty >= i.quantity)) {
+        newStatus = "received";
+      } else if (allItems.some((i) => i.received_qty > 0)) {
+        newStatus = "partial";
+      }
+
+      await tx
+        .update(schema.pedidos)
+        .set({ status: newStatus, updated_at: new Date() })
+        .where(eq(schema.pedidos.id, id));
+
+      const [proveedor] = await tx
+        .select()
+        .from(schema.proveedores)
+        .where(eq(schema.proveedores.id, pedido.proveedor_id))
+        .limit(1);
+
+      return { ...pedido, status: newStatus, items: allItems, proveedor_name: proveedor?.name ?? "" };
+    });
+
+    res.json(result);
+  } catch (err) {
+    if (err instanceof HttpError) {
+      res.status(err.status).json({ error: err.message });
       return;
     }
-
-    const qtyToReceive = Math.min(quantity, remaining);
-    const newReceived = item.received_qty + qtyToReceive;
-
-    await db
-      .update(schema.pedidoItems)
-      .set({ received_qty: newReceived, updated_at: new Date() })
-      .where(eq(schema.pedidoItems.id, itemId));
-
-    // NOTE: stock is NOT adjusted here — the frontend `receiveItem` already
-    // persists it via adjustStock -> POST /products/stock-movement. Adjusting
-    // stock here too would double-count in the normal UI flow.
-
-    // Recompute status from all items
-    const allItems = await db
-      .select()
-      .from(schema.pedidoItems)
-      .where(eq(schema.pedidoItems.pedido_id, id));
-
-    let newStatus: "pending" | "received" | "cancelled" | "partial" = pedido.status;
-    if (allItems.length > 0 && allItems.every((i) => i.received_qty >= i.quantity)) {
-      newStatus = "received";
-    } else if (allItems.some((i) => i.received_qty > 0)) {
-      newStatus = "partial";
-    }
-
-    await db
-      .update(schema.pedidos)
-      .set({ status: newStatus, updated_at: new Date() })
-      .where(eq(schema.pedidos.id, id));
-
-    const [proveedor] = await db
-      .select()
-      .from(schema.proveedores)
-      .where(eq(schema.proveedores.id, pedido.proveedor_id))
-      .limit(1);
-
-    res.json({ ...pedido, status: newStatus, items: allItems, proveedor_name: proveedor?.name ?? "" });
-  } catch (err) {
     console.error("[pedidos] receive item error:", err);
     res.status(500).json({ error: "Error interno" });
   }

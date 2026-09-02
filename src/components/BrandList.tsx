@@ -14,10 +14,10 @@ export default function BrandList() {
   const deleteBrand = useBrandsStore((s) => s.deleteBrand);
   const loadBrands = useBrandsStore((s) => s.loadBrands);
 
-  const brandsLoadedRef = useRef(false);
+  const brandsLoadedStoreIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (brandsLoadedRef.current) return;
-    brandsLoadedRef.current = true;
+    if (brandsLoadedStoreIdRef.current === storeId) return;
+    brandsLoadedStoreIdRef.current = storeId;
     loadBrands(storeId).catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId]);
