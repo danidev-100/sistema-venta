@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>POS — Libro editable y pago dividido (dirección 03)</title>
+<style>
+  :root{
+    --primary:30 58 95; --secondary:74 144 217; --accent:245 166 35;
+    --danger:211 47 47; --success:56 142 60;
+    --bg:245 247 250; --surface:255 255 255; --text:26 26 46; --muted:107 114 128;
+    --sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    width:1440px;height:900px;overflow:hidden;display:grid;grid-template-rows:56px 1fr 78px;
+    font-family:var(--sans);font-size:14px;line-height:1.5;
+    background:rgb(var(--bg));color:rgb(var(--text));-webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit;font-size:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  input,textarea{font-family:inherit;font-size:inherit;color:inherit}
+  :focus-visible{outline:2px solid rgb(var(--secondary));outline-offset:2px}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  kbd{font-family:var(--mono);font-size:10px;padding:1px 5px;border-radius:4px;
+      background:rgb(var(--muted)/.12);border:1px solid rgb(var(--muted)/.18);color:rgb(var(--muted))}
+
+  /* ── barra superior ── */
+  .top{display:flex;align-items:center;gap:18px;padding:0 20px;background:rgb(var(--surface));
+       border-bottom:1px solid rgb(var(--muted)/.2)}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:14px}
+  .brand .mark{width:26px;height:26px;border-radius:7px;background:rgb(var(--primary));color:#fff;
+               display:grid;place-items:center;font-size:11px;font-weight:700}
+  .nav{display:flex;gap:2px}
+  .nav a{padding:7px 11px;border-radius:8px;font-size:13px;color:rgb(var(--muted));text-decoration:none;
+         transition:color .15s ease,background-color .15s ease}
+  .nav a:hover{color:rgb(var(--text));background:rgb(var(--bg))}
+  .nav a[aria-current="page"]{color:rgb(var(--secondary));background:rgb(var(--secondary)/.1);font-weight:600}
+  .top .right{margin-left:auto;display:flex;align-items:center;gap:12px}
+  .who{text-align:right;font-size:11px;line-height:1.25;color:rgb(var(--muted))}
+  .who b{display:block;font-size:12.5px;font-weight:600;color:rgb(var(--text))}
+  .clock{font-family:var(--mono);font-size:13px;font-weight:500;padding:5px 9px;border-radius:7px;
+         background:rgb(var(--bg))}
+
+  /* ── hoja ── */
+  main{padding:16px;min-height:0}
+  .sheet{position:relative;height:100%;display:flex;flex-direction:column;background:rgb(var(--surface));
+         border:1px solid rgb(var(--muted)/.2);border-radius:12px}
+  .sheet-head{display:flex;align-items:center;gap:12px;padding:11px 16px;
+              border-bottom:1px solid rgb(var(--muted)/.15)}
+  .sheet-head h1{margin:0;font-size:15px;font-weight:600;white-space:nowrap}
+  .doc{font-family:var(--mono);font-size:12px;color:rgb(var(--muted))}
+  .tag{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:999px;
+       background:rgb(var(--accent)/.22);color:#83540a;white-space:nowrap}
+  .cmd{position:relative;flex:1;max-width:420px;margin-left:12px}
+  .cmd .box{display:flex;align-items:center;gap:9px;height:38px;padding:0 12px;border-radius:10px;
+            background:rgb(var(--bg));border:1px solid rgb(var(--secondary)/.45);
+            box-shadow:0 0 0 3px rgb(var(--secondary)/.12)}
+  .cmd .box svg{color:rgb(var(--secondary))}
+  .cmd input{flex:1;border:0;outline:none;background:none;font-size:13px}
+  .results{position:absolute;top:44px;left:0;right:0;z-index:8;padding:5px;border-radius:11px;
+           background:rgb(var(--surface));border:1px solid rgb(var(--secondary)/.4);
+           box-shadow:0 22px 44px -16px rgb(var(--primary)/.4)}
+  .results button{display:grid;grid-template-columns:1fr 92px 66px;gap:10px;align-items:center;
+                  width:100%;padding:8px 10px;border-radius:8px;text-align:left;font-size:12.5px}
+  .results button:hover,.results button[aria-selected="true"]{background:rgb(var(--secondary)/.1)}
+  .results .p{font-family:var(--mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums}
+  .results .s{font-size:10.5px;text-align:right;color:rgb(var(--muted))}
+  .head-actions{margin-left:auto;display:flex;gap:8px}
+  .btn-sm{height:36px;padding:0 13px;border-radius:9px;font-size:12px;font-weight:500;
+          border:1px solid rgb(var(--muted)/.28);transition:background-color .15s ease}
+  .btn-sm:hover{background:rgb(var(--bg));border-color:rgb(var(--muted)/.45)}
+
+  .scroll{flex:1;overflow-y:auto;min-height:0}
+  .scroll::-webkit-scrollbar{width:8px}
+  .scroll::-webkit-scrollbar-thumb{background:rgb(var(--muted)/.22);border-radius:4px}
+  table{width:100%;border-collapse:collapse;table-layout:fixed}
+  thead th{position:sticky;top:0;z-index:2;background:rgb(var(--surface));text-align:left;
+           font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+           color:rgb(var(--muted));padding:9px 16px;border-bottom:1px solid rgb(var(--muted)/.18)}
+  thead th.r{text-align:right}
+  tbody tr{border-bottom:1px solid rgb(var(--muted)/.1);transition:background-color .15s ease}
+  tbody tr:hover{background:rgb(var(--secondary)/.04)}
+  tbody td{padding:13px 16px;font-size:13px;vertical-align:middle}
+  td.r{text-align:right}
+  .prod b{display:block;font-size:13px;font-weight:600;line-height:1.3}
+  .prod span{font-size:10.5px;color:rgb(var(--muted));font-family:var(--mono)}
+  .cell{width:100%;height:34px;padding:0 9px;border-radius:8px;font-family:var(--mono);font-size:13px;
+        text-align:right;font-variant-numeric:tabular-nums;background:transparent;
+        border:1px solid transparent;transition:background-color .15s ease,border-color .15s ease}
+  .cell:hover{border-color:rgb(var(--muted)/.25);background:rgb(var(--bg))}
+  .cell:focus{outline:none;border-color:rgb(var(--secondary));background:rgb(var(--surface));
+              box-shadow:0 0 0 3px rgb(var(--secondary)/.15)}
+  .qty{display:flex;align-items:center;gap:2px;justify-content:flex-end}
+  .qty button{width:30px;height:34px;border-radius:7px;display:grid;place-items:center;
+              color:rgb(var(--muted));transition:background-color .15s ease,color .15s ease}
+  .qty button:hover{background:rgb(var(--bg));color:rgb(var(--text))}
+  .qty .cell{width:46px;text-align:center;padding:0 2px}
+  .importe{font-family:var(--mono);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+  .del{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;
+       color:rgb(var(--muted)/.5);opacity:0;transition:opacity .15s ease,color .15s ease}
+  tbody tr:hover .del,tbody tr:focus-within .del{opacity:1}
+  .del:hover{color:rgb(var(--danger));background:rgb(var(--danger)/.08)}
+  .addrow{display:flex;align-items:center;gap:8px;width:100%;padding:11px 16px;font-size:12px;
+          font-weight:500;color:rgb(var(--secondary));border-top:1px dashed rgb(var(--muted)/.25);
+          transition:background-color .15s ease}
+  .addrow:hover{background:rgb(var(--secondary)/.05)}
+
+  .recent{padding:12px 16px 16px}
+  .recent .foot-title{margin-bottom:8px}
+  .recent ul{list-style:none;margin:0;padding:0;display:grid;gap:1px}
+  .recent li{display:grid;grid-template-columns:64px 1fr 110px 96px;gap:12px;align-items:center;
+             padding:7px 10px;border-radius:8px;font-size:12px;color:rgb(var(--muted));
+             transition:background-color .15s ease}
+  .recent li:hover{background:rgb(var(--bg))}
+  .recent .tk{font-family:var(--mono);font-size:11.5px}
+  .recent .who2{color:rgb(var(--text));font-weight:500}
+  .recent .amt{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;
+               color:rgb(var(--text));font-weight:600}
+  .recent .pay2{font-size:11px;text-align:right}
+
+  /* ── pie de la hoja ── */
+  .sheet-foot{display:grid;grid-template-columns:1fr 420px;gap:20px;padding:12px 16px;
+              border-top:1px solid rgb(var(--muted)/.15);background:rgb(var(--bg));
+              border-radius:0 0 12px 12px}
+  .foot-title{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+              color:rgb(var(--muted));margin-bottom:7px}
+  .freq{display:flex;gap:7px;flex-wrap:wrap}
+  .freq button{display:flex;align-items:center;gap:7px;height:32px;padding:0 11px;border-radius:999px;
+               background:rgb(var(--surface));border:1px solid rgb(var(--muted)/.22);font-size:11.5px;
+               font-weight:500;transition:border-color .15s ease,background-color .15s ease}
+  .freq button:hover{border-color:rgb(var(--secondary)/.55);background:rgb(var(--secondary)/.06)}
+  .freq b{font-family:var(--mono);font-weight:600;color:rgb(var(--muted))}
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .fields input,.fields select{height:32px;padding:0 10px;border-radius:8px;font-size:12px;
+                               background:rgb(var(--surface));border:1px solid rgb(var(--muted)/.22)}
+  .fields input:focus,.fields select:focus{outline:none;border-color:rgb(var(--secondary))}
+
+  /* ── barra de totales ── */
+  .footer{display:flex;align-items:center;gap:20px;padding:0 20px;background:rgb(var(--surface));
+          border-top:1px solid rgb(var(--muted)/.2);box-shadow:0 -10px 30px -24px rgb(var(--primary)/.6)}
+  .shortcuts{display:flex;gap:12px;font-size:11px;color:rgb(var(--muted));white-space:nowrap}
+  .shortcuts span{display:flex;align-items:center;gap:5px}
+  .pay-strip{margin-left:auto;display:flex;gap:7px}
+  .pay-chip{display:flex;flex-direction:column;gap:1px;padding:6px 13px;border-radius:10px;
+            border:1px solid rgb(var(--muted)/.25);font-size:10.5px;color:rgb(var(--muted));
+            line-height:1.3;transition:border-color .15s ease,background-color .15s ease}
+  .pay-chip b{font-size:11.5px;font-weight:600;color:rgb(var(--text))}
+  .pay-chip:hover{border-color:rgb(var(--muted)/.5)}
+  .pay-chip[aria-pressed="true"]{border-color:rgb(var(--secondary));background:rgb(var(--secondary)/.08)}
+  .pay-chip[aria-pressed="true"] b{color:rgb(var(--secondary))}
+  .amounts{display:flex;align-items:baseline;gap:16px}
+  .amounts .row{display:flex;flex-direction:column;gap:1px;align-items:flex-end}
+  .amounts .k{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+              color:rgb(var(--muted))}
+  .amounts .v{font-family:var(--mono);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+  .amounts .v.desc{color:rgb(var(--success))}
+  .amounts .total .v{font-size:23px;font-weight:700;letter-spacing:-.02em}
+  .cobrar{height:50px;padding:0 24px;border-radius:12px;background:rgb(var(--secondary));color:#fff;
+          font-size:14.5px;font-weight:600;display:flex;align-items:center;gap:9px;
+          transition:opacity .15s ease}
+  .cobrar:hover{opacity:.92}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><span class="mark" aria-hidden="true">SV</span>Sistema de Ventas</div>
+    <nav class="nav" aria-label="Navegación principal">
+      <a href="#">Inicio</a>
+      <a href="#" aria-current="page">Punto de venta</a>
+      <a href="#">Productos</a>
+      <a href="#">Pedidos</a>
+      <a href="#">Estadísticas</a>
+      <a href="#">Caja</a>
+    </nav>
+    <div class="right">
+      <div class="who"><b>Caja 2 · Martina Ríos</b>Sucursal Centro</div>
+      <span class="clock">14:32</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="sheet" aria-label="Venta en curso">
+      <div class="sheet-head">
+        <h1>Venta en curso</h1>
+        <span class="doc">#1284</span>
+        <span class="tag">Borrador</span>
+
+        <div class="cmd">
+          <div class="box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <label class="sr" for="cmd">Buscar y agregar producto</label>
+            <input id="cmd" type="text" value="leche" autocomplete="off">
+            <kbd>Ctrl K</kbd>
+          </div>
+          <div class="results" role="listbox" aria-label="Resultados de búsqueda">
+            <button role="option" aria-selected="true" data-add="leche"><span>Leche La Serenísima 1L</span><span class="p">$ 1.320,00</span><span class="s">Stock 30</span></button>
+            <button role="option" aria-selected="false" data-add="yogur"><span>Yogur Serenísimo 1L</span><span class="p">$ 2.150,00</span><span class="s">Stock 10</span></button>
+            <button role="option" aria-selected="false" data-add="manteca"><span>Manteca Tonadita 200g</span><span class="p">$ 2.480,00</span><span class="s">Stock 6</span></button>
+          </div>
+        </div>
+
+        <div class="head-actions">
+          <button class="btn-sm">Guardar pedido</button>
+          <button class="btn-sm">Imprimir ticket</button>
+        </div>
+      </div>
+
+      <div class="scroll">
+        <table>
+          <caption class="sr">Líneas de la venta. Cantidad y descuento por línea son editables.</caption>
+          <colgroup>
+            <col><col style="width:150px"><col style="width:126px"><col style="width:104px">
+            <col style="width:140px"><col style="width:52px">
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col">Producto</th>
+              <th scope="col" class="r">Cantidad</th>
+              <th scope="col" class="r">Unitario</th>
+              <th scope="col" class="r">Desc. %</th>
+              <th scope="col" class="r">Importe</th>
+              <th scope="col"><span class="sr">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+        <button class="addrow" id="addrow">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Agregar línea <kbd>A</kbd>
+          <span id="tally" style="margin-left:auto;font-family:var(--mono);font-size:11px;color:rgb(var(--muted));font-weight:400">5 líneas · 8 unidades</span>
+        </button>
+
+        <div class="recent">
+          <div class="foot-title">Últimas ventas de esta caja</div>
+          <ul>
+            <li><span class="tk">14:28</span><span class="who2">Ticket #1283 · Consumidor Final</span><span class="amt">$ 8.420,00</span><span class="pay2">Efectivo</span></li>
+            <li><span class="tk">14:19</span><span class="who2">Ticket #1282 · Consumidor Final</span><span class="amt">$ 3.190,00</span><span class="pay2">Débito</span></li>
+            <li><span class="tk">14:05</span><span class="who2">Ticket #1281 · Kiosco Sol SRL</span><span class="amt">$ 14.780,00</span><span class="pay2">QR / MP</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sheet-foot">
+        <div>
+          <div class="foot-title">Frecuentes en esta caja</div>
+          <div class="freq">
+            <button data-add="agua">Agua Villavicencio 1.5L <b>$ 1.090,00</b></button>
+            <button data-add="azucar">Azúcar Ledesma 1kg <b>$ 1.450,00</b></button>
+            <button data-add="fideos">Fideos Matarazzo 500g <b>$ 1.190,00</b></button>
+            <button data-add="oreo">Galletitas Oreo 117g <b>$ 1.650,00</b></button>
+            <button data-add="coca">Coca-Cola 2.25L <b>$ 3.250,00</b></button>
+          </div>
+        </div>
+        <div>
+          <div class="foot-title">Cliente y comprobante</div>
+          <div class="fields">
+            <input value="Consumidor Final" aria-label="Cliente">
+            <select aria-label="Comprobante"><option>Factura B</option><option>Factura A</option><option>Remito</option></select>
+            <input placeholder="Observaciones de la venta" aria-label="Observaciones" style="grid-column:1 / -1">
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shortcuts" aria-label="Atajos de teclado">
+      <span><kbd>F2</kbd> cobrar</span>
+      <span><kbd>F4</kbd> descuento</span>
+      <span><kbd>F8</kbd> pago dividido</span>
+      <span><kbd>Esc</kbd> cancelar</span>
+    </div>
+
+    <div class="pay-strip" role="group" aria-label="Medio de pago">
+      <button class="pay-chip" aria-pressed="true"><b>Efectivo</b>$ 25.000,00 · vuelto $ 3.368,50</button>
+      <button class="pay-chip" aria-pressed="false"><b>Débito</b>1 cuota</button>
+      <button class="pay-chip" aria-pressed="false"><b>Crédito</b>3 cuotas</button>
+      <button class="pay-chip" aria-pressed="false"><b>QR / MP</b>instantáneo</button>
+    </div>
+
+    <div class="amounts">
+      <div class="row"><span class="k">Subtotal</span><span class="v" id="subtotal">$ 22.770,00</span></div>
+      <div class="row"><span class="k">Desc. global 5%</span><span class="v desc" id="dscto">− $ 1.138,50</span></div>
+      <div class="row total"><span class="k">Total</span><span class="v" id="total">$ 21.631,50</span></div>
+    </div>
+
+    <button class="cobrar">Cobrar <kbd style="background:rgb(255 255 255/.2);color:#fff;border-color:transparent">F2</kbd></button>
+  </footer>
+
+<script>
+  const byId = {
+    coca:{ name:"Coca-Cola 2.25L", code:"7790895000997", price:3250 },
+    pan:{ name:"Pan lactal Fargo 500g", code:"7790070410011", price:1890 },
+    yerba:{ name:"Yerba Playadito 1kg", code:"7790387001234", price:4780 },
+    leche:{ name:"Leche La Serenísima 1L", code:"7790742000456", price:1320 },
+    queso:{ name:"Queso cremoso 500g", code:"7791234567890", price:5640 },
+    agua:{ name:"Agua Villavicencio 1.5L", code:"7790895012345", price:1090 },
+    azucar:{ name:"Azúcar Ledesma 1kg", code:"7790070123456", price:1450 },
+    fideos:{ name:"Fideos Matarazzo 500g", code:"7790070987654", price:1190 },
+    oreo:{ name:"Galletitas Oreo 117g", code:"7790040111222", price:1650 },
+    yogur:{ name:"Yogur Serenísimo 1L", code:"7790742000999", price:2150 },
+    manteca:{ name:"Manteca Tonadita 200g", code:"7790070333444", price:2480 }
+  };
+  let rows = [
+    { id:"coca", qty:2, disc:0 },
+    { id:"pan", qty:1, disc:0 },
+    { id:"yerba", qty:1, disc:0 },
+    { id:"leche", qty:3, disc:0 },
+    { id:"queso", qty:1, disc:0 }
+  ];
+
+  const ars = n => "$ " + n.toLocaleString("es-AR", { minimumFractionDigits:2, maximumFractionDigits:2 });
+
+  function render(){
+    const tbody = document.getElementById("rows");
+    if (!rows.length){
+      tbody.innerHTML = '<tr><td colspan="6"><p style="padding:28px;text-align:center;color:rgb(var(--muted));font-size:13px">Sin líneas. Buscá un producto con Ctrl K o escaneá un código.</p></td></tr>';
+    } else {
+      tbody.innerHTML = rows.map(r => {
+        const p = byId[r.id];
+        const importe = p.price * r.qty * (1 - r.disc / 100);
+        return `<tr data-id="${r.id}">
+          <td class="prod"><b>${p.name}</b><span>${p.code}</span></td>
+          <td class="r">
+            <div class="qty">
+              <button data-step="-1" aria-label="Restar una unidad de ${p.name}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>
+              </button>
+              <input class="cell" data-qty inputmode="numeric" value="${r.qty}" aria-label="Cantidad de ${p.name}">
+              <button data-step="1" aria-label="Sumar una unidad de ${p.name}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              </button>
+            </div>
+          </td>
+          <td class="r" style="font-family:var(--mono);color:rgb(var(--muted));font-size:12.5px">${ars(p.price)}</td>
+          <td class="r"><input class="cell" data-disc inputmode="decimal" value="${r.disc}" aria-label="Descuento de ${p.name} en porcentaje"></td>
+          <td class="r importe">${ars(importe)}</td>
+          <td><button class="del" data-del aria-label="Quitar ${p.name} de la venta">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
+          </button></td>
+        </tr>`;
+      }).join("");
+    }
+    totals();
+  }
+
+  function totals(){
+    const subtotal = rows.reduce((s,r) => s + byId[r.id].price * r.qty, 0);
+    const lineDiscount = rows.reduce((s,r) => s + byId[r.id].price * r.qty * (r.disc / 100), 0);
+    const globalDiscount = (subtotal - lineDiscount) * 0.05;
+    const discount = lineDiscount + globalDiscount;
+    document.getElementById("subtotal").textContent = ars(subtotal);
+    document.getElementById("dscto").textContent = "− " + ars(discount);
+    document.getElementById("total").textContent = ars(subtotal - discount);
+    const units = rows.reduce((s,r) => s + r.qty, 0);
+    document.getElementById("tally").textContent =
+      rows.length + (rows.length === 1 ? " línea" : " líneas") + " · " +
+      units + (units === 1 ? " unidad" : " unidades");
+  }
+
+  document.getElementById("rows").addEventListener("click", e => {
+    const tr = e.target.closest("tr");
+    if (!tr) return;
+    const row = rows.find(r => r.id === tr.dataset.id);
+    if (!row) return;
+    const step = e.target.closest("[data-step]");
+    if (step){
+      row.qty = Math.max(1, row.qty + Number(step.dataset.step));
+      render();
+      return;
+    }
+    if (e.target.closest("[data-del]")){
+      rows = rows.filter(r => r.id !== row.id);
+      render();
+    }
+  });
+
+  document.getElementById("rows").addEventListener("input", e => {
+    const tr = e.target.closest("tr");
+    const row = rows.find(r => r.id === tr.dataset.id);
+    if (!row) return;
+    if (e.target.matches("[data-qty]")) row.qty = Math.max(1, Number(e.target.value) || 1);
+    if (e.target.matches("[data-disc]")) row.disc = Math.min(100, Math.max(0, Number(e.target.value) || 0));
+    const p = byId[row.id];
+    tr.querySelector(".importe").textContent = ars(p.price * row.qty * (1 - row.disc / 100));
+    totals();
+  });
+
+  function add(id){
+    if (!byId[id]) return;
+    const row = rows.find(r => r.id === id);
+    if (row) row.qty += 1; else rows.push({ id, qty:1, disc:0 });
+    render();
+  }
+  document.querySelectorAll("[data-add]").forEach(b => b.addEventListener("click", () => add(b.dataset.add)));
+
+  document.querySelectorAll(".pay-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      document.querySelectorAll(".pay-chip").forEach(c => c.setAttribute("aria-pressed","false"));
+      chip.setAttribute("aria-pressed","true");
+    });
+  });
+
+  document.getElementById("addrow").addEventListener("click", () => document.getElementById("cmd").focus());
+
+  render();
+</script>
+</body>
+</html>

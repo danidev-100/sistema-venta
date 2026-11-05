@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>POS — Muro táctil y bandeja (dirección 02)</title>
+<style>
+  :root{
+    --primary:30 58 95; --secondary:74 144 217; --accent:245 166 35;
+    --danger:211 47 47; --success:56 142 60;
+    --bg:245 247 250; --surface:255 255 255; --text:26 26 46; --muted:107 114 128;
+    --sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    width:1440px;height:900px;overflow:hidden;display:grid;grid-template-rows:60px 1fr 204px;
+    font-family:var(--sans);font-size:14px;line-height:1.5;
+    background:rgb(var(--bg));color:rgb(var(--text));-webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit;font-size:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  input{font-family:inherit;font-size:inherit;color:inherit}
+  :focus-visible{outline:2px solid rgb(var(--secondary));outline-offset:3px}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+  /* ── barra superior ── */
+  .top{display:flex;align-items:center;gap:14px;padding:0 18px;background:rgb(var(--primary));color:#fff}
+  .top .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:14px}
+  .top .mark{width:26px;height:26px;border-radius:7px;background:rgb(255 255 255/.16);
+             display:grid;place-items:center;font-size:11px;font-weight:700}
+  .branch{display:flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:999px;
+          background:rgb(255 255 255/.12);font-size:12.5px;font-weight:500}
+  .top .right{margin-left:auto;display:flex;align-items:center;gap:12px}
+  .who{font-size:11px;text-align:right;line-height:1.25;opacity:.85}
+  .who b{display:block;font-size:12.5px;font-weight:600;opacity:1}
+  .top .clock{font-family:var(--mono);font-size:13px;font-weight:500;padding:5px 11px;border-radius:7px;
+              background:rgb(255 255 255/.12)}
+
+  /* ── riel + muro + teclado ── */
+  .stage{display:grid;grid-template-columns:76px 1fr 300px;min-height:0}
+  .rail{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0;
+        background:rgb(var(--surface));border-right:1px solid rgb(var(--muted)/.18)}
+  .rail button{width:56px;height:58px;border-radius:13px;display:flex;flex-direction:column;
+               align-items:center;justify-content:center;gap:3px;color:rgb(var(--muted));
+               transition:background-color .15s ease,color .15s ease}
+  .rail button small{font-size:9px;font-weight:600}
+  .rail button:hover{background:rgb(var(--bg));color:rgb(var(--text))}
+  .rail button[aria-current="page"]{background:rgb(var(--secondary)/.12);color:rgb(var(--secondary))}
+  .rail .sep{flex:1}
+
+  .wall{display:flex;flex-direction:column;min-height:0;padding:14px;gap:11px}
+  .wall-head{display:flex;align-items:center;gap:9px}
+  .search{flex:1;display:flex;align-items:center;gap:11px;height:48px;padding:0 16px;border-radius:13px;
+          background:rgb(var(--surface));border:1px solid rgb(var(--muted)/.2);color:rgb(var(--muted));
+          transition:border-color .15s ease,box-shadow .15s ease}
+  .search:focus-within{border-color:rgb(var(--secondary));box-shadow:0 0 0 3px rgb(var(--secondary)/.16)}
+  .search input{flex:1;border:0;outline:none;background:none;font-size:14px;color:rgb(var(--text))}
+  .search input::placeholder{color:rgb(var(--muted))}
+  .scan{display:flex;align-items:center;gap:8px;height:48px;padding:0 18px;border-radius:13px;
+        background:rgb(var(--surface));border:1px solid rgb(var(--muted)/.2);
+        font-size:13px;font-weight:500;transition:border-color .15s ease,background-color .15s ease}
+  .scan:hover{border-color:rgb(var(--secondary)/.55);background:rgb(var(--secondary)/.05)}
+
+  .cats{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px}
+  .cats::-webkit-scrollbar{height:0}
+  .cat{flex:0 0 auto;height:34px;padding:0 16px;border-radius:999px;font-size:12.5px;font-weight:500;
+       border:1px solid rgb(var(--muted)/.22);color:rgb(var(--muted));transition:all .15s ease}
+  .cat:hover{color:rgb(var(--text));border-color:rgb(var(--muted)/.5)}
+  .cat[aria-pressed="true"]{background:rgb(var(--primary));border-color:rgb(var(--primary));color:#fff}
+
+  .tiles{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;
+         align-content:start;padding-right:4px;margin-right:-4px;min-height:0}
+  .tiles::-webkit-scrollbar{width:6px}
+  .tiles::-webkit-scrollbar-thumb{background:rgb(var(--muted)/.2);border-radius:3px}
+  .tile{display:flex;flex-direction:column;text-align:left;min-height:114px;padding:12px;
+        border-radius:13px;background:rgb(var(--surface));border:1px solid rgb(var(--muted)/.18);
+        transition:border-color .15s ease,transform .15s ease,box-shadow .15s ease}
+  .tile:hover:not(:disabled){border-color:rgb(var(--secondary)/.6);transform:translateY(-2px);
+    box-shadow:0 8px 18px -8px rgb(var(--primary)/.28)}
+  .tile .ico{width:30px;height:30px;border-radius:9px;background:rgb(var(--secondary)/.1);
+             color:rgb(var(--secondary));display:grid;place-items:center;margin-bottom:6px}
+  .tile .name{font-size:12.5px;font-weight:600;line-height:1.28}
+  .tile .price{font-family:var(--mono);font-size:14px;font-weight:600;margin-top:auto;
+               font-variant-numeric:tabular-nums}
+  .tile .stock{align-self:flex-start;margin-top:4px;font-size:10px;font-weight:600;
+               padding:2px 8px;border-radius:999px;background:rgb(var(--success)/.14);
+               color:rgb(var(--success))}
+  .tile .stock.low{background:rgb(var(--accent)/.22);color:#83540a}
+  .tile .stock.out{background:rgb(var(--danger)/.12);color:rgb(var(--danger))}
+  .tile:disabled{opacity:.5;cursor:not-allowed;background:rgb(var(--bg))}
+
+  /* ── teclado acoplado ── */
+  .keypad{display:flex;flex-direction:column;gap:10px;padding:14px;min-height:0;
+          background:rgb(var(--surface));border-left:1px solid rgb(var(--muted)/.18)}
+  .kp-head{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+           color:rgb(var(--muted))}
+  .kp-prod{font-size:13px;font-weight:600;line-height:1.3;min-height:34px}
+  .display{height:56px;border-radius:12px;display:flex;align-items:center;justify-content:flex-end;
+           padding:0 16px;font-family:var(--mono);font-size:26px;font-weight:700;
+           background:rgb(var(--bg));border:1px solid rgb(var(--muted)/.25);
+           font-variant-numeric:tabular-nums}
+  .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+  .keys button{height:52px;border-radius:12px;background:rgb(var(--bg));font-family:var(--mono);
+               font-size:17px;font-weight:600;border:1px solid rgb(var(--muted)/.14);
+               transition:background-color .15s ease,transform .1s ease}
+  .keys button:hover{background:rgb(var(--secondary)/.13)}
+  .keys button:active{transform:scale(.97)}
+  .keys .ok{background:rgb(var(--secondary));color:#fff;border-color:transparent;
+            font-family:var(--sans);font-size:14px;font-weight:600}
+  .keys .ok:hover{opacity:.92;background:rgb(var(--secondary))}
+
+  .presets{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+  .presets button{height:40px;border-radius:10px;background:rgb(var(--secondary)/.08);
+                  color:rgb(var(--secondary));border:1px solid rgb(var(--secondary)/.28);
+                  font-size:13px;font-weight:600;font-family:var(--mono);
+                  transition:background-color .15s ease}
+  .presets button:hover{background:rgb(var(--secondary)/.16)}
+  .remove{height:44px;border-radius:11px;border:1px solid rgb(var(--danger)/.35);
+          color:rgb(var(--danger));font-size:13px;font-weight:600;display:flex;align-items:center;
+          justify-content:center;gap:8px;transition:background-color .15s ease}
+  .remove:hover{background:rgb(var(--danger)/.07)}
+
+  /* ── bandeja inferior ── */
+  .drawer{display:grid;grid-template-columns:1fr 392px;gap:18px;align-items:center;padding:14px 18px;
+          background:rgb(var(--surface));border-top:1px solid rgb(var(--muted)/.18);
+          box-shadow:0 -12px 32px -22px rgb(var(--primary)/.5)}
+  .drawer-head{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+  .drawer-head h2{margin:0;font-size:14.5px;font-weight:600}
+  .pill{font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;
+        background:rgb(var(--secondary)/.14);color:rgb(var(--secondary))}
+  .link{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;
+        color:rgb(var(--secondary));padding:7px 9px;border-radius:8px}
+  .link:hover{background:rgb(var(--secondary)/.08)}
+
+  .strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+  .strip::-webkit-scrollbar{height:0}
+  .mini{flex:0 0 auto;display:grid;grid-template-columns:1fr auto;gap:1px 10px;align-items:center;
+        min-width:178px;max-width:196px;padding:9px 11px;border-radius:11px;text-align:left;
+        background:rgb(var(--bg));border:1px solid rgb(var(--muted)/.18);
+        transition:border-color .15s ease,background-color .15s ease}
+  .mini:hover{border-color:rgb(var(--muted)/.4)}
+  .mini[aria-pressed="true"]{border-color:rgb(var(--secondary));background:rgb(var(--secondary)/.07)}
+  .mini .name{grid-column:1 / -1;font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;
+              text-overflow:ellipsis}
+  .mini .qty{font-family:var(--mono);font-size:10.5px;font-weight:600;color:#fff;
+             background:rgb(var(--secondary));padding:2px 6px;border-radius:999px;justify-self:start}
+  .mini .imp{font-family:var(--mono);font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums}
+
+  .checkout{display:grid;gap:10px}
+  .sum{display:grid;gap:3px}
+  .sum div{display:flex;justify-content:space-between;font-size:12px;color:rgb(var(--muted))}
+  .sum .money{font-family:var(--mono);font-variant-numeric:tabular-nums;color:rgb(var(--text))}
+  .sum .desc .money{color:rgb(var(--success));font-weight:600}
+  .sum .big{align-items:baseline;padding-top:6px;margin-top:1px;border-top:1px dashed rgb(var(--muted)/.3)}
+  .sum .big span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+                 color:rgb(var(--text))}
+  .sum .big .money{font-size:24px;font-weight:700;letter-spacing:-.02em}
+  .cobrar{height:54px;border-radius:13px;background:rgb(var(--secondary));color:#fff;font-size:15px;
+          font-weight:600;display:flex;align-items:center;justify-content:center;gap:9px;
+          transition:opacity .15s ease}
+  .cobrar:hover{opacity:.92}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><span class="mark" aria-hidden="true">SV</span>Sistema de Ventas</div>
+    <div class="branch">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>
+      Sucursal Centro
+    </div>
+    <div class="right">
+      <div class="who"><b>Caja 2</b>Martina Ríos</div>
+      <span class="clock">14:32</span>
+    </div>
+  </header>
+
+  <div class="stage">
+    <nav class="rail" aria-label="Navegación principal">
+      <button aria-label="Inicio"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/></svg><small>Inicio</small></button>
+      <button aria-current="page" aria-label="Punto de venta"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="10" rx="2"/><path d="M8 20h8M12 14v6"/></svg><small>Venta</small></button>
+      <button aria-label="Productos"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg><small>Prod.</small></button>
+      <button aria-label="Pedidos"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg><small>Pedidos</small></button>
+      <button aria-label="Estadísticas"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><small>Stats</small></button>
+      <button aria-label="Caja"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M8 6V4h8v2"/></svg><small>Caja</small></button>
+      <span class="sep"></span>
+      <button aria-label="Ajustes"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg><small>Ajustes</small></button>
+    </nav>
+
+    <section class="wall" aria-label="Catálogo de productos">
+      <div class="wall-head">
+        <div class="search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <label class="sr" for="q">Buscar producto</label>
+          <input id="q" type="search" placeholder="Buscar producto, marca o código…" autocomplete="off">
+        </div>
+        <button class="scan">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M11 8v8M15 8v8"/></svg>
+          Escanear
+        </button>
+      </div>
+
+      <div class="cats" role="group" aria-label="Categorías">
+        <button class="cat" aria-pressed="true">Todos</button>
+        <button class="cat" aria-pressed="false">Almacén</button>
+        <button class="cat" aria-pressed="false">Bebidas</button>
+        <button class="cat" aria-pressed="false">Lácteos</button>
+        <button class="cat" aria-pressed="false">Limpieza</button>
+        <button class="cat" aria-pressed="false">Perfumería</button>
+        <button class="cat" aria-pressed="false">Congelados</button>
+      </div>
+
+      <div class="tiles" id="tiles" role="list" aria-label="Productos disponibles"></div>
+    </section>
+
+    <aside class="keypad" aria-label="Teclado numérico de cantidad">
+      <div class="kp-head">Cantidad</div>
+      <div class="kp-prod" id="kp-name">Leche La Serenísima 1L</div>
+      <div class="display" id="kp-value" aria-live="polite">3</div>
+      <div class="presets" role="group" aria-label="Cantidades frecuentes">
+        <button data-set="1">×1</button>
+        <button data-set="2">×2</button>
+        <button data-set="3">×3</button>
+        <button data-set="6">×6</button>
+      </div>
+      <div class="keys">
+        <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+        <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+        <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+        <button data-k="clear">C</button><button data-k="0">0</button>
+        <button data-k="apply" class="ok">Aplicar</button>
+      </div>
+      <button class="remove" id="quitar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+        Quitar línea
+      </button>
+    </aside>
+  </div>
+
+  <section class="drawer" aria-label="Carrito de venta">
+    <div>
+      <div class="drawer-head">
+        <h2>Carrito</h2>
+        <span class="pill" id="count">5 productos</span>
+        <button class="link" id="ver">Ver carrito completo
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+        </button>
+      </div>
+      <div class="strip" id="strip" aria-label="Productos del carrito"></div>
+    </div>
+
+    <div class="checkout">
+      <div class="sum">
+        <div><span>Subtotal</span><span class="money" id="subtotal">$ 22.770,00</span></div>
+        <div class="desc"><span>Descuento 5%</span><span class="money" id="dscto">− $ 1.138,50</span></div>
+        <div class="big"><span>Total</span><span class="money" id="total">$ 21.631,50</span></div>
+      </div>
+      <button class="cobrar" id="cobrar">
+        <span id="cobrar-label">Cobrar $ 21.631,50</span>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+      </button>
+    </div>
+  </section>
+
+<script>
+  const PRODUCTS = [
+    { id:"coca",   name:"Coca-Cola 2.25L",             price:3250, stock:24 },
+    { id:"pan",    name:"Pan lactal Fargo 500g",       price:1890, stock:12 },
+    { id:"yerba",  name:"Yerba Playadito 1kg",         price:4780, stock:8 },
+    { id:"leche",  name:"Leche La Serenísima 1L",      price:1320, stock:30 },
+    { id:"queso",  name:"Queso cremoso 500g",          price:5640, stock:5 },
+    { id:"azucar", name:"Azúcar Ledesma 1kg",          price:1450, stock:18 },
+    { id:"aceite", name:"Aceite Natura 1.5L",          price:3890, stock:9 },
+    { id:"fideos", name:"Fideos Matarazzo 500g",       price:1190, stock:26 },
+    { id:"cafe",   name:"Café La Virginia 250g",       price:4250, stock:7 },
+    { id:"oreo",   name:"Galletitas Oreo 117g",        price:1650, stock:15 },
+    { id:"quilmes",name:"Cerveza Quilmes 1L",          price:2980, stock:11 },
+    { id:"agua",   name:"Agua Villavicencio 1.5L",     price:1090, stock:40 },
+    { id:"sedal",  name:"Shampoo Sedal 340ml",         price:3450, stock:6 },
+    { id:"ala",    name:"Detergente Ala 750ml",        price:2180, stock:14 },
+    { id:"hig",    name:"Papel higiénico Higienol x4", price:2740, stock:4 },
+    { id:"sal",    name:"Sal Dos Anclas 500g",         price:690,  stock:0 },
+    { id:"yogur",  name:"Yogur Serenísimo 1L",         price:2150, stock:10 },
+    { id:"manteca",name:"Manteca Tonadita 200g",       price:2480, stock:6 },
+    { id:"arroz",  name:"Arroz Gallo Oro 1kg",         price:2350, stock:20 },
+    { id:"atun",   name:"Atún La Campagnola 170g",     price:3120, stock:9 }
+  ];
+  const byId = Object.fromEntries(PRODUCTS.map(p => [p.id, p]));
+  let cart = [
+    { id:"coca", qty:2 }, { id:"pan", qty:1 }, { id:"yerba", qty:1 },
+    { id:"leche", qty:3 }, { id:"queso", qty:1 }
+  ];
+  let selected = "leche";
+  let buffer = null;
+
+  const ars = n => "$ " + n.toLocaleString("es-AR", { minimumFractionDigits:2, maximumFractionDigits:2 });
+  const ico = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg>`;
+
+  function renderTiles(){
+    document.getElementById("tiles").innerHTML = PRODUCTS.map(p => {
+      const cls = p.stock === 0 ? "out" : p.stock <= 5 ? "low" : "";
+      const label = p.stock === 0 ? "Sin stock" : p.stock <= 5 ? "Últimas " + p.stock : "Stock " + p.stock;
+      return `<button class="tile" role="listitem" data-add="${p.id}" ${p.stock === 0 ? "disabled" : ""}
+        aria-label="${p.name}, ${ars(p.price)}, ${label}">
+        <span class="ico">${ico}</span>
+        <span class="name">${p.name}</span>
+        <span class="price">${ars(p.price)}</span>
+        <span class="stock ${cls}">${label}</span>
+      </button>`;
+    }).join("");
+  }
+
+  function totals(){
+    const subtotal = cart.reduce((s,l) => s + byId[l.id].price * l.qty, 0);
+    const discount = Math.round(subtotal * 0.05 * 100) / 100;
+    return { subtotal, discount, total: subtotal - discount };
+  }
+
+  function renderCart(){
+    document.getElementById("strip").innerHTML = cart.map(l => {
+      const p = byId[l.id];
+      return `<button class="mini" data-sel="${l.id}" aria-pressed="${l.id === selected}">
+        <span class="name">${p.name}</span>
+        <span class="qty">×${l.qty}</span>
+        <span class="imp">${ars(p.price * l.qty)}</span>
+      </button>`;
+    }).join("") || `<p style="color:rgb(var(--muted));font-size:12.5px;padding:6px 0">Sin productos cargados.</p>`;
+
+    const t = totals();
+    document.getElementById("subtotal").textContent = ars(t.subtotal);
+    document.getElementById("dscto").textContent = "− " + ars(t.discount);
+    document.getElementById("total").textContent = ars(t.total);
+    document.getElementById("cobrar-label").textContent = "Cobrar " + ars(t.total);
+    document.getElementById("count").textContent =
+      cart.length + (cart.length === 1 ? " producto" : " productos");
+
+    if (!cart.some(l => l.id === selected)) selected = cart[0] ? cart[0].id : null;
+    syncKeypad();
+  }
+
+  function syncKeypad(){
+    const line = cart.find(l => l.id === selected);
+    document.getElementById("kp-name").textContent = line ? byId[line.id].name : "Sin selección";
+    document.getElementById("kp-value").textContent = buffer !== null ? buffer : (line ? line.qty : "0");
+  }
+
+  function add(id){
+    const line = cart.find(l => l.id === id);
+    if (line) line.qty += 1; else cart.push({ id, qty:1 });
+    selected = id;
+    buffer = null;
+    renderCart();
+  }
+
+  document.getElementById("tiles").addEventListener("click", e => {
+    const b = e.target.closest("[data-add]");
+    if (b) add(b.dataset.add);
+  });
+
+  document.getElementById("strip").addEventListener("click", e => {
+    const b = e.target.closest("[data-sel]");
+    if (b){ selected = b.dataset.sel; buffer = null; renderCart(); }
+  });
+
+  document.querySelector(".keys").addEventListener("click", e => {
+    const b = e.target.closest("[data-k]");
+    if (!b) return;
+    const k = b.dataset.k;
+    const line = cart.find(l => l.id === selected);
+    if (k === "clear"){ buffer = ""; syncKeypad(); return; }
+    if (k === "apply"){
+      if (line && buffer !== null && buffer !== ""){
+        const qty = Number(buffer);
+        if (qty <= 0) cart = cart.filter(l => l.id !== selected); else line.qty = qty;
+      }
+      buffer = null;
+      renderCart();
+      return;
+    }
+    buffer = (buffer === null ? "" : buffer) === "0" ? k : (buffer === null ? k : buffer + k);
+    syncKeypad();
+  });
+
+  document.querySelectorAll("[data-set]").forEach(b => {
+    b.addEventListener("click", () => {
+      const line = cart.find(l => l.id === selected);
+      if (!line) return;
+      line.qty = Number(b.dataset.set);
+      buffer = null;
+      renderCart();
+    });
+  });
+
+  document.getElementById("quitar").addEventListener("click", () => {
+    if (!selected) return;
+    cart = cart.filter(l => l.id !== selected);
+    buffer = null;
+    renderCart();
+  });
+
+  document.getElementById("ver").addEventListener("click", () => {
+    document.querySelector(".mini[aria-pressed='true']")?.focus();
+  });
+
+  renderTiles();
+  renderCart();
+</script>
+</body>
+</html>

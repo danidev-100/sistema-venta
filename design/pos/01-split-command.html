@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>POS — Dos paneles (dirección 01)</title>
+<style>
+  :root{
+    --primary:30 58 95; --secondary:74 144 217; --accent:245 166 35;
+    --danger:211 47 47; --success:56 142 60;
+    --bg:245 247 250; --surface:255 255 255; --text:26 26 46; --muted:107 114 128;
+    --sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    width:1440px;height:900px;overflow:hidden;display:grid;grid-template-rows:64px 1fr;
+    font-family:var(--sans);font-size:14px;line-height:1.5;
+    background:rgb(var(--bg));color:rgb(var(--text));-webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit;font-size:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  input{font-family:inherit;font-size:inherit;color:inherit}
+  :focus-visible{outline:2px solid rgb(var(--secondary));outline-offset:2px}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+  /* ── barra superior ── */
+  .topbar{display:flex;align-items:center;gap:22px;padding:0 20px;
+          background:rgb(var(--surface));border-bottom:1px solid rgb(var(--muted)/.2)}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:14px}
+  .brand .mark{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;
+               background:rgb(var(--primary));color:#fff;font-size:11px;font-weight:700}
+  .nav{display:flex;gap:2px}
+  .nav a{padding:7px 11px;border-radius:8px;font-size:13px;color:rgb(var(--muted));
+         text-decoration:none;transition:color .15s ease,background-color .15s ease}
+  .nav a:hover{color:rgb(var(--text));background:rgb(var(--bg))}
+  .nav a[aria-current="page"]{color:rgb(var(--secondary));background:rgb(var(--secondary)/.1);font-weight:600}
+  .topbar .right{margin-left:auto;display:flex;align-items:center;gap:12px}
+  .who{text-align:right;font-size:11px;line-height:1.3;color:rgb(var(--muted))}
+  .who b{display:block;font-size:12.5px;font-weight:600;color:rgb(var(--text))}
+  .clock{font-family:var(--mono);font-size:13px;font-weight:500;padding:5px 9px;border-radius:7px;
+         background:rgb(var(--bg))}
+  .icon-btn{width:44px;height:44px;border-radius:11px;display:grid;place-items:center;color:rgb(var(--muted));
+            transition:color .15s ease,background-color .15s ease}
+  .icon-btn:hover{color:rgb(var(--text));background:rgb(var(--bg))}
+
+  /* ── layout ── */
+  main{display:grid;grid-template-columns:1fr 528px;gap:16px;padding:16px;min-height:0}
+  .panel{background:rgb(var(--surface));border:1px solid rgb(var(--muted)/.2);border-radius:12px;
+         min-height:0;display:flex;flex-direction:column}
+
+  /* ── catálogo ── */
+  .catalog{padding:16px;gap:12px}
+  .search-row{display:flex;gap:8px}
+  .search{position:relative;flex:1}
+  .search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:rgb(var(--muted)/.65)}
+  .search input{width:100%;height:48px;padding:0 14px 0 42px;border-radius:12px;
+                background:rgb(var(--surface));border:1px solid rgb(var(--muted)/.22);
+                transition:border-color .15s ease,box-shadow .15s ease}
+  .search input::placeholder{color:rgb(var(--muted))}
+  .search input:focus{outline:none;border-color:rgb(var(--secondary));
+                      box-shadow:0 0 0 3px rgb(var(--secondary)/.18)}
+  .square{width:48px;height:48px;border-radius:12px;border:1px solid rgb(var(--muted)/.22);
+          display:grid;place-items:center;color:rgb(var(--muted));
+          transition:color .15s ease,border-color .15s ease,background-color .15s ease}
+  .square:hover{color:rgb(var(--secondary));border-color:rgb(var(--secondary)/.5);
+                background:rgb(var(--secondary)/.06)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{height:32px;padding:0 14px;border-radius:999px;font-size:12px;font-weight:500;
+        border:1px solid rgb(var(--muted)/.25);color:rgb(var(--muted));transition:all .15s ease}
+  .chip:hover{color:rgb(var(--text));border-color:rgb(var(--muted)/.5)}
+  .chip[aria-pressed="true"]{background:rgb(var(--primary));border-color:rgb(var(--primary));color:#fff}
+
+  .grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-content:start;
+        overflow-y:auto;padding-right:4px;margin-right:-4px;min-height:0}
+  .grid::-webkit-scrollbar{width:6px}
+  .grid::-webkit-scrollbar-thumb{background:rgb(var(--muted)/.2);border-radius:3px}
+  .tile{
+    display:flex;flex-direction:column;text-align:left;min-height:96px;padding:11px 12px 10px;
+    background:rgb(var(--surface));border:1px solid rgb(var(--muted)/.18);border-radius:12px;
+    transition:border-color .15s ease,transform .15s ease,box-shadow .15s ease;
+  }
+  .tile:hover:not(:disabled){border-color:rgb(var(--secondary)/.55);transform:translateY(-1px);
+    box-shadow:0 6px 16px -8px rgb(var(--primary)/.28)}
+  .tile .name{font-size:12.5px;font-weight:600;line-height:1.3}
+  .tile .price{font-family:var(--mono);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;
+               margin-top:2px}
+  .tile .stock{margin-top:auto;align-self:flex-start;font-size:10.5px;font-weight:600;
+               padding:2px 8px;border-radius:999px;background:rgb(var(--success)/.14);
+               color:rgb(var(--success))}
+  .tile .stock.low{background:rgb(var(--accent)/.22);color:#83540a}
+  .tile .stock.out{background:rgb(var(--danger)/.12);color:rgb(var(--danger))}
+  .tile:disabled{cursor:not-allowed;opacity:.55;background:rgb(var(--bg))}
+
+  /* ── carrito ── */
+  .cart-head{display:flex;align-items:center;gap:10px;padding:14px 16px;
+             border-bottom:1px solid rgb(var(--muted)/.15)}
+  .cart-head h2{margin:0;font-size:15px;font-weight:600}
+  .count{font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;
+         background:rgb(var(--secondary)/.14);color:rgb(var(--secondary))}
+  .ghost{margin-left:auto;font-size:12px;font-weight:500;color:rgb(var(--muted));
+         padding:7px 9px;border-radius:8px;transition:color .15s ease,background-color .15s ease}
+  .ghost:hover{color:rgb(var(--danger));background:rgb(var(--danger)/.08)}
+
+  .lines{flex:1;overflow-y:auto;padding:2px 16px;min-height:0}
+  .lines::-webkit-scrollbar{width:6px}
+  .lines::-webkit-scrollbar-thumb{background:rgb(var(--muted)/.2);border-radius:3px}
+  .line{display:grid;grid-template-columns:1fr auto 96px;gap:10px;align-items:center;
+        padding:11px 0;border-bottom:1px solid rgb(var(--muted)/.12)}
+  .line:last-child{border-bottom:0}
+  .line .name{font-size:13.5px;font-weight:600;line-height:1.3}
+  .line .unit{font-family:var(--mono);font-size:11px;color:rgb(var(--muted))}
+  .line .importe{font-family:var(--mono);font-size:13.5px;font-weight:600;
+                 font-variant-numeric:tabular-nums;text-align:right}
+  .stepper{display:flex;align-items:center;gap:2px}
+  .stepper button{width:32px;height:44px;border-radius:8px;display:grid;place-items:center;
+                  color:rgb(var(--muted));transition:background-color .15s ease,color .15s ease}
+  .stepper button:hover{background:rgb(var(--bg));color:rgb(var(--text))}
+  .stepper .qty{min-width:30px;text-align:center;font-family:var(--mono);font-size:13.5px;
+                font-weight:600;font-variant-numeric:tabular-nums}
+
+  .totals{padding:12px 16px;border-top:1px solid rgb(var(--muted)/.15);display:grid;gap:6px}
+  .row{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;
+       color:rgb(var(--muted))}
+  .row .num{font-size:12.5px;font-weight:500;color:rgb(var(--text))}
+  .row.discount .num{color:rgb(var(--success));font-weight:600}
+  .row.total{align-items:center;padding-top:8px;margin-top:2px;
+             border-top:1px dashed rgb(var(--muted)/.3)}
+  .row.total span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+                  color:rgb(var(--text))}
+  .row.total .num{font-size:26px;font-weight:700;letter-spacing:-.02em}
+
+  .pay{display:flex;align-items:center;gap:8px;margin:0 16px 10px;padding:8px 12px;border-radius:10px;
+       background:rgb(var(--bg));font-size:11.5px;color:rgb(var(--muted))}
+  .pay b{color:rgb(var(--text));font-family:var(--mono);font-weight:600}
+  .pay .vuelto{margin-left:auto;color:rgb(var(--success));font-weight:600;font-family:var(--mono)}
+
+  .cart-foot{padding:0 16px 16px}
+  .cobrar{width:100%;height:54px;border-radius:12px;font-size:15px;font-weight:600;
+          background:rgb(var(--secondary));color:#fff;display:flex;align-items:center;
+          justify-content:center;gap:10px;transition:opacity .15s ease}
+  .cobrar:hover{opacity:.92}
+  .cobrar kbd{font-family:var(--mono);font-size:11px;font-weight:500;padding:2px 7px;border-radius:6px;
+              background:rgb(255 255 255/.2)}
+  kbd{font-family:var(--mono);font-size:10px;padding:1px 5px;border-radius:4px;
+      background:rgb(var(--muted)/.12);border:1px solid rgb(var(--muted)/.18)}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="mark" aria-hidden="true">SV</span>Sistema de Ventas</div>
+    <nav class="nav" aria-label="Navegación principal">
+      <a href="#">Inicio</a>
+      <a href="#" aria-current="page">Punto de venta</a>
+      <a href="#">Productos</a>
+      <a href="#">Pedidos</a>
+      <a href="#">Estadísticas</a>
+      <a href="#">Caja</a>
+    </nav>
+    <div class="right">
+      <div class="who"><b>Caja 2 · Sucursal Centro</b>Martina Ríos · Cajera</div>
+      <span class="clock">14:32</span>
+      <button class="icon-btn" aria-label="Cambiar tema">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel catalog" aria-label="Catálogo de productos">
+      <div class="search-row">
+        <div class="search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <label class="sr" for="buscar">Buscar producto o escanear código</label>
+          <input id="buscar" type="search" placeholder="Buscar producto o escanear código de barras…" autocomplete="off">
+        </div>
+        <button class="square" aria-label="Escanear código de barras">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M11 8v8M15 8v8"/></svg>
+        </button>
+        <button class="square" aria-label="Abrir teclado numérico">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M10 13h.01M14 13h.01M18 13h.01M8 17h8"/></svg>
+        </button>
+      </div>
+
+      <div class="chips" role="group" aria-label="Filtrar por categoría">
+        <button class="chip" aria-pressed="true">Todos</button>
+        <button class="chip" aria-pressed="false">Almacén</button>
+        <button class="chip" aria-pressed="false">Bebidas</button>
+        <button class="chip" aria-pressed="false">Lácteos</button>
+        <button class="chip" aria-pressed="false">Limpieza</button>
+        <button class="chip" aria-pressed="false">Perfumería</button>
+        <button class="chip" aria-pressed="false">Congelados</button>
+      </div>
+
+      <div class="grid" id="grid" role="list" aria-label="Productos"></div>
+    </section>
+
+    <section class="panel" aria-label="Carrito de venta">
+      <div class="cart-head">
+        <h2>Carrito</h2>
+        <span class="count" id="count">5 productos</span>
+        <button class="ghost" id="vaciar">Vaciar</button>
+      </div>
+
+      <div class="lines" id="lines"></div>
+
+      <div class="totals">
+        <div class="row"><span>Subtotal</span><span class="num" id="subtotal">$ 22.770,00</span></div>
+        <div class="row discount"><span>Descuento 5%</span><span class="num" id="descuento">− $ 1.138,50</span></div>
+        <div class="row total"><span>Total</span><span class="num" id="total">$ 21.631,50</span></div>
+      </div>
+
+      <div class="pay">
+        <span>Efectivo</span><b>$ 25.000,00</b>
+        <span class="vuelto">Vuelto $ 3.368,50</span>
+      </div>
+
+      <div class="cart-foot">
+        <button class="cobrar">Cobrar <kbd>F2</kbd></button>
+      </div>
+    </section>
+  </main>
+
+<script>
+  const PRODUCTS = [
+    { id:"coca",   name:"Coca-Cola 2.25L",             price:3250, stock:24 },
+    { id:"pan",    name:"Pan lactal Fargo 500g",       price:1890, stock:12 },
+    { id:"yerba",  name:"Yerba Playadito 1kg",         price:4780, stock:8 },
+    { id:"leche",  name:"Leche La Serenísima 1L",      price:1320, stock:30 },
+    { id:"queso",  name:"Queso cremoso 500g",          price:5640, stock:5 },
+    { id:"azucar", name:"Azúcar Ledesma 1kg",          price:1450, stock:18 },
+    { id:"aceite", name:"Aceite Natura 1.5L",          price:3890, stock:9 },
+    { id:"fideos", name:"Fideos Matarazzo 500g",       price:1190, stock:26 },
+    { id:"cafe",   name:"Café La Virginia 250g",       price:4250, stock:7 },
+    { id:"oreo",   name:"Galletitas Oreo 117g",        price:1650, stock:15 },
+    { id:"quilmes",name:"Cerveza Quilmes 1L",          price:2980, stock:11 },
+    { id:"agua",   name:"Agua Villavicencio 1.5L",     price:1090, stock:40 },
+    { id:"sedal",  name:"Shampoo Sedal 340ml",         price:3450, stock:6 },
+    { id:"ala",    name:"Detergente Ala 750ml",        price:2180, stock:14 },
+    { id:"hig",    name:"Papel higiénico Higienol x4", price:2740, stock:4 },
+    { id:"sal",    name:"Sal Dos Anclas 500g",         price:690,  stock:0 },
+    { id:"yogur",  name:"Yogur Serenísimo 1L",         price:2150, stock:10 },
+    { id:"manteca",name:"Manteca Tonadita 200g",       price:2480, stock:6 },
+    { id:"arroz",  name:"Arroz Gallo Oro 1kg",         price:2350, stock:20 },
+    { id:"atun",   name:"Atún La Campagnola 170g",     price:3120, stock:9 },
+    { id:"lavan",  name:"Lavandina Ayudín 1L",         price:1290, stock:25 },
+    { id:"jabon",  name:"Jabón Dove 90g",              price:1780, stock:13 },
+    { id:"sprite", name:"Gaseosa Sprite 2.25L",        price:3150, stock:19 },
+    { id:"helado", name:"Helado Grido 1kg",            price:5900, stock:3 }
+  ];
+  const byId = Object.fromEntries(PRODUCTS.map(p => [p.id, p]));
+  let cart = [
+    { id:"coca", qty:2 }, { id:"pan", qty:1 }, { id:"yerba", qty:1 },
+    { id:"leche", qty:3 }, { id:"queso", qty:1 }
+  ];
+
+  const ars = n => "$ " + n.toLocaleString("es-AR", { minimumFractionDigits:2, maximumFractionDigits:2 });
+
+  function stockBadge(p){
+    if (p.stock === 0) return '<span class="stock out">Sin stock</span>';
+    if (p.stock <= 5)  return '<span class="stock low">Últimas ' + p.stock + '</span>';
+    return '<span class="stock">Stock ' + p.stock + '</span>';
+  }
+
+  function renderGrid(){
+    document.getElementById("grid").innerHTML = PRODUCTS.map(p => `
+      <button class="tile" role="listitem" data-add="${p.id}" ${p.stock === 0 ? "disabled" : ""}
+              aria-label="${p.name}, ${ars(p.price)}${p.stock === 0 ? ", sin stock" : ""}">
+        <span class="name">${p.name}</span>
+        <span class="price">${ars(p.price)}</span>
+        ${stockBadge(p)}
+      </button>`).join("");
+  }
+
+  function totals(){
+    const subtotal = cart.reduce((s,l) => s + byId[l.id].price * l.qty, 0);
+    const discount = Math.round(subtotal * 0.05 * 100) / 100;
+    return { subtotal, discount, total: subtotal - discount };
+  }
+
+  function renderCart(){
+    document.getElementById("lines").innerHTML = cart.length ? cart.map(l => {
+      const p = byId[l.id];
+      return `
+        <div class="line">
+          <div>
+            <div class="name">${p.name}</div>
+            <div class="unit">${ars(p.price)} c/u</div>
+          </div>
+          <div class="stepper">
+            <button data-step="-1" data-id="${l.id}" aria-label="Quitar una unidad de ${p.name}">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>
+            </button>
+            <span class="qty" aria-label="Cantidad">${l.qty}</span>
+            <button data-step="1" data-id="${l.id}" aria-label="Agregar una unidad de ${p.name}">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </div>
+          <div class="importe">${ars(p.price * l.qty)}</div>
+        </div>`;
+    }).join("") : '<p style="padding:24px 0;color:rgb(var(--muted));font-size:13px">El carrito está vacío. Escaneá o tocá un producto.</p>';
+
+    const t = totals();
+    document.getElementById("subtotal").textContent = ars(t.subtotal);
+    document.getElementById("descuento").textContent = "− " + ars(t.discount);
+    document.getElementById("total").textContent = ars(t.total);
+    document.getElementById("count").textContent =
+      cart.length + (cart.length === 1 ? " producto" : " productos");
+  }
+
+  function add(id){
+    const line = cart.find(l => l.id === id);
+    if (line) line.qty += 1; else cart.push({ id, qty:1 });
+    renderCart();
+  }
+
+  document.getElementById("grid").addEventListener("click", e => {
+    const btn = e.target.closest("[data-add]");
+    if (btn) add(btn.dataset.add);
+  });
+
+  document.getElementById("lines").addEventListener("click", e => {
+    const btn = e.target.closest("[data-step]");
+    if (!btn) return;
+    const line = cart.find(l => l.id === btn.dataset.id);
+    if (!line) return;
+    line.qty += Number(btn.dataset.step);
+    if (line.qty <= 0) cart = cart.filter(l => l.id !== btn.dataset.id);
+    renderCart();
+  });
+
+  document.getElementById("vaciar").addEventListener("click", () => { cart = []; renderCart(); });
+
+  renderGrid();
+  renderCart();
+</script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Sistema de Ventas — Design system</title>
+<style>
+  :root{
+    --primary:30 58 95; --secondary:74 144 217; --accent:245 166 35;
+    --danger:211 47 47; --success:56 142 60;
+    --bg:245 247 250; --surface:255 255 255; --text:26 26 46; --muted:107 114 128;
+    --sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  .dk{
+    --primary:15 31 51; --secondary:91 160 232; --accent:212 146 30;
+    --danger:239 83 80; --success:76 175 80;
+    --bg:17 24 39; --surface:31 41 55; --text:243 244 246; --muted:156 163 175;
+    color:rgb(var(--text));
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    width:1440px;min-height:900px;padding:28px 32px 24px;
+    font-family:var(--sans);font-size:14px;line-height:1.5;
+    background:rgb(var(--bg));color:rgb(var(--text));-webkit-font-smoothing:antialiased;
+  }
+  h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.02em}
+  h2{margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+     color:rgb(var(--muted))}
+  .sub{margin:4px 0 22px;font-size:12px;color:rgb(var(--muted))}
+  code{font-family:var(--mono);font-size:11.5px;background:rgb(var(--muted)/.12);
+       padding:1px 5px;border-radius:4px}
+  .dk code{background:rgb(255 255 255/.1)}
+  section{margin-bottom:22px}
+  .card{background:rgb(var(--surface));border:1px solid rgb(var(--muted)/.2);border-radius:12px;padding:16px 18px}
+
+  /* swatches */
+  .sw{display:grid;grid-template-columns:repeat(10,1fr);gap:8px}
+  .swatch{border-radius:10px;overflow:hidden;border:1px solid rgb(var(--muted)/.18);
+          background:rgb(var(--surface))}
+  .swatch .chip{height:42px}
+  .swatch .meta{padding:6px 8px 7px;line-height:1.25}
+  .swatch .n{font-size:11px;font-weight:600}
+  .swatch .v{font-family:var(--mono);font-size:9.5px;color:rgb(var(--muted));margin-top:1px}
+
+  .darkstrip{background:rgb(17 24 39);border-radius:12px;padding:14px 16px}
+  .darkstrip h2{color:rgb(156 163 175)}
+
+  /* typography */
+  .cols{display:grid;grid-template-columns:1.15fr 1fr 1.15fr;gap:14px;align-items:start}
+  .trow{display:flex;align-items:baseline;gap:12px;padding:7px 0;
+        border-bottom:1px solid rgb(var(--muted)/.14)}
+  .trow:last-child{border-bottom:0}
+  .trow .m{font-family:var(--mono);font-size:10px;color:rgb(var(--muted));min-width:104px;flex:0 0 104px}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+
+  .bar{height:12px;background:rgb(var(--secondary)/.4);border-radius:3px}
+  .spacing{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+  .spacing .lbl{font-family:var(--mono);font-size:10px;color:rgb(var(--muted));margin-top:4px}
+  .radii{display:flex;gap:8px;margin-bottom:14px}
+  .radii div{flex:1;height:46px;display:grid;place-items:center;font-family:var(--mono);font-size:10px;
+             background:rgb(var(--secondary)/.12);border:1px solid rgb(var(--secondary)/.45);
+             color:rgb(var(--secondary))}
+  .shadows{display:flex;gap:10px;align-items:center;justify-content:center;height:56px;
+           background:rgb(var(--bg));border-radius:10px;font-family:var(--mono);font-size:10px;
+           color:rgb(var(--muted))}
+  .shadows div{background:rgb(var(--surface));border-radius:10px;padding:8px 14px;
+               box-shadow:0 18px 36px -12px rgb(0 0 0/.28)}
+
+  /* components */
+  .btn{border:0;border-radius:12px;font-family:var(--sans);font-size:13px;font-weight:500;
+       min-height:44px;padding:0 18px;cursor:pointer;transition:opacity .15s ease,background-color .15s ease}
+  .btn:focus-visible{outline:2px solid rgb(var(--secondary));outline-offset:2px}
+  .primary{background:rgb(var(--secondary));color:#fff}
+  .primary:hover{opacity:.9}
+  .ghost{background:transparent;color:rgb(var(--text));border:1px solid rgb(var(--muted)/.3)}
+  .ghost:hover{background:rgb(var(--bg))}
+  .danger{background:rgb(var(--danger));color:#fff}
+  .btn[disabled]{opacity:.4;cursor:not-allowed}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .field{width:100%;font-family:var(--sans);font-size:13px;color:rgb(var(--text));
+         background:rgb(var(--surface));border:1px solid rgb(var(--muted)/.22);
+         border-radius:12px;padding:12px 14px;min-height:44px}
+  .field:focus{outline:none;border-color:rgb(var(--secondary));box-shadow:0 0 0 3px rgb(var(--secondary)/.18)}
+  .badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;display:inline-block}
+  .b-ok{background:rgb(var(--success)/.15);color:rgb(var(--success))}
+  .b-warn{background:rgb(var(--accent)/.22);color:#83540a}
+  .b-bad{background:rgb(var(--danger)/.13);color:rgb(var(--danger))}
+  .b-info{background:rgb(var(--secondary)/.14);color:rgb(var(--secondary))}
+
+  .demo-modal{background:rgb(var(--surface));border:1px solid rgb(var(--muted)/.2);border-radius:16px;
+              padding:16px;box-shadow:0 24px 48px -18px rgb(var(--primary)/.35)}
+  .demo-card{background:rgb(var(--surface));border:1px solid rgb(var(--muted)/.2);border-radius:12px;padding:12px}
+  .micro{font-size:11px;color:rgb(var(--muted));margin-top:10px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+  <header>
+    <h1>Sistema de Ventas — Design system</h1>
+    <p class="sub">Sincronizado de <code>src/styles.css</code> y <code>tailwind.config.js</code>. Cada color es un triplete RGB que se consume como <code>rgb(var(--token) / alpha)</code> y se expone en Tailwind como <code>pos-*</code>. Modo oscuro por clase <code>.dark</code>.</p>
+  </header>
+
+  <section>
+    <h2>Color · claro</h2>
+    <div class="sw">
+      <div class="swatch"><div class="chip" style="background:rgb(30 58 95)"></div><div class="meta"><div class="n">primary</div><div class="v">30 58 95</div></div></div>
+      <div class="swatch"><div class="chip" style="background:rgb(74 144 217)"></div><div class="meta"><div class="n">secondary</div><div class="v">74 144 217</div></div></div>
+      <div class="swatch"><div class="chip" style="background:rgb(245 166 35)"></div><div class="meta"><div class="n">accent</div><div class="v">245 166 35</div></div></div>
+      <div class="swatch"><div class="chip" style="background:rgb(56 142 60)"></div><div class="meta"><div class="n">success</div><div class="v">56 142 60</div></div></div>
+      <div class="swatch"><div class="chip" style="background:rgb(211 47 47)"></div><div class="meta"><div class="n">danger</div><div class="v">211 47 47</div></div></div>
+      <div class="swatch"><div class="chip" style="background:rgb(245 247 250);box-shadow:inset 0 0 0 1px rgb(107 114 128/.25)"></div><div class="meta"><div class="n">background</div><div class="v">245 247 250</div></div></div>
+      <div class="swatch"><div class="chip" style="background:rgb(255 255 255);box-shadow:inset 0 0 0 1px rgb(107 114 128/.25)"></div><div class="meta"><div class="n">surface</div><div class="v">255 255 255</div></div></div>
+      <div class="swatch"><div class="chip" style="background:rgb(26 26 46)"></div><div class="meta"><div class="n">text</div><div class="v">26 26 46</div></div></div>
+      <div class="swatch"><div class="chip" style="background:rgb(107 114 128)"></div><div class="meta"><div class="n">muted</div><div class="v">107 114 128</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#4a90d9"></div><div class="meta"><div class="n">chart-bar</div><div class="v">#4a90d9</div></div></div>
+    </div>
+  </section>
+
+  <section class="darkstrip">
+    <h2>Color · oscuro</h2>
+    <div class="sw dk">
+      <div class="swatch"><div class="chip" style="background:rgb(15 31 51)"></div><div class="meta"><div class="n">primary</div><div class="v">15 31 51</div></div></div>
+      <div class="swatch"><div class="chip" style="background:rgb(91 160 232)"></div><div class="meta"><div class="n">secondary</div><div class="v">91 160 232</div></div></div>
+      <div class="swatch"><div class="chip" style="background:rgb(212 146 30)"></div><div class="meta"><div class="n">accent</div><div class="v">212 146 30</div></div></div>
+      <div class="swatch"><div class="chip" style="background:rgb(76 175 80)"></div><div class="meta"><div class="n">success</div><div class="v">76 175 80</div></div></div>
+      <div class="swatch"><div class="chip" style="background:rgb(239 83 80)"></div><div class="meta"><div class="n">danger</div><div class="v">239 83 80</div></div></div>
+      <div class="swatch"><div class="chip" style="background:rgb(17 24 39);box-shadow:inset 0 0 0 1px rgb(255 255 255/.14)"></div><div class="meta"><div class="n">background</div><div class="v">17 24 39</div></div></div>
+      <div class="swatch"><div class="chip" style="background:rgb(31 41 55);box-shadow:inset 0 0 0 1px rgb(255 255 255/.14)"></div><div class="meta"><div class="n">surface</div><div class="v">31 41 55</div></div></div>
+      <div class="swatch"><div class="chip" style="background:rgb(243 244 246)"></div><div class="meta"><div class="n">text</div><div class="v">243 244 246</div></div></div>
+      <div class="swatch"><div class="chip" style="background:rgb(156 163 175)"></div><div class="meta"><div class="n">muted</div><div class="v">156 163 175</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#60a5fa"></div><div class="meta"><div class="n">chart-bar</div><div class="v">#60a5fa</div></div></div>
+    </div>
+  </section>
+
+  <section class="cols">
+    <div class="card">
+      <h2>Tipografía</h2>
+      <div class="trow"><span class="m">display 22/700</span><span style="font-size:22px;font-weight:700;letter-spacing:-.02em">Punto de venta</span></div>
+      <div class="trow"><span class="m">heading 16/600</span><span style="font-size:16px;font-weight:600">Carrito actual</span></div>
+      <div class="trow"><span class="m">body 14/400</span><span style="font-size:14px">Agregá productos con el lector o la búsqueda.</span></div>
+      <div class="trow"><span class="m">label 11/700</span><span style="font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgb(var(--muted))">Subtotal</span></div>
+      <div class="trow"><span class="m">mono 14/600</span><span class="num" style="font-size:14px;font-weight:600;width:112px">$ 12.450,00</span></div>
+      <div class="trow"><span class="m">total 26/700</span><span class="num" style="font-size:26px;font-weight:700;letter-spacing:-.02em;width:180px">$ 48.720,00</span></div>
+      <p class="micro">Sans <code>DM Sans → system-ui</code> · Mono <code>JetBrains Mono → ui-monospace</code>, siempre <code>tabular-nums</code> y alineado a la derecha.</p>
+    </div>
+
+    <div class="card">
+      <h2>Espaciado · radio · sombra</h2>
+      <div class="spacing">
+        <div><div class="bar" style="width:24px"></div><div class="lbl">8 px</div></div>
+        <div><div class="bar" style="width:36px"></div><div class="lbl">12 px</div></div>
+        <div><div class="bar" style="width:48px"></div><div class="lbl">16 px</div></div>
+        <div><div class="bar" style="width:72px"></div><div class="lbl">24 px</div></div>
+      </div>
+      <div class="radii">
+        <div style="border-radius:8px">8</div>
+        <div style="border-radius:12px">12</div>
+        <div style="border-radius:16px">16</div>
+        <div style="border-radius:999px">pill</div>
+      </div>
+      <div class="shadows"><div>shadow-2xl</div></div>
+      <p class="micro">Objetivo táctil mínimo <code>44 × 44</code> · entrada de tarjeta 8px / 0.35s · destello de escaneo 0.5s.</p>
+    </div>
+
+    <div class="card">
+      <h2>Componentes</h2>
+      <div class="row" style="margin-bottom:12px">
+        <button class="btn primary">Cobrar</button>
+        <button class="btn ghost">Cancelar</button>
+        <button class="btn danger">Eliminar</button>
+        <button class="btn primary" disabled>Cobrar</button>
+      </div>
+      <div style="display:grid;gap:10px;margin-bottom:12px">
+        <input class="field" placeholder="Buscar producto o escanear" aria-label="Buscar producto">
+        <input class="field num" value="12.450,00" aria-label="Precio" style="text-align:right">
+      </div>
+      <div class="row">
+        <span class="badge b-ok">Stock 24</span>
+        <span class="badge b-warn">Últimas 4</span>
+        <span class="badge b-bad">Sin stock</span>
+        <span class="badge b-info">Oferta</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="cols">
+    <div class="demo-modal">
+      <h2 style="margin-bottom:6px">Modal de cobro</h2>
+      <div style="font-size:11px;color:rgb(var(--muted))">Total a cobrar</div>
+      <div class="num" style="font-size:26px;font-weight:700;margin:2px 0 14px">$ 21.631,50</div>
+      <div class="row" style="margin-bottom:12px">
+        <button class="btn ghost" style="flex:1">Efectivo</button>
+        <button class="btn ghost" style="flex:1">Débito</button>
+        <button class="btn ghost" style="flex:1">QR</button>
+      </div>
+      <div class="row">
+        <button class="btn primary" style="flex:1">Confirmar</button>
+        <button class="btn ghost" style="flex:1">Volver</button>
+      </div>
+    </div>
+
+    <div class="demo-card">
+      <h2 style="margin-bottom:8px">Línea de carrito</h2>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">Leche La Serenísima 1L</div>
+          <div style="font-family:var(--mono);font-size:11px;color:rgb(var(--muted))">$ 1.320,00 c/u</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button class="btn ghost" style="min-height:44px;width:44px;padding:0">−</button>
+          <span class="num" style="min-width:28px;font-weight:600">3</span>
+          <button class="btn ghost" style="min-height:44px;width:44px;padding:0">+</button>
+        </div>
+        <div class="num" style="font-weight:600;min-width:88px">$ 3.960,00</div>
+      </div>
+      <p class="micro">Separador <code>muted / .12</code> · precio unitario en mono 11px · importe alineado a la derecha.</p>
+    </div>
+
+    <div class="demo-card">
+      <h2 style="margin-bottom:8px">Tile de producto</h2>
+      <div style="border:1px solid rgb(var(--muted)/.2);border-radius:12px;padding:12px">
+        <div style="font-size:13px;font-weight:600">Yerba Playadito 1kg</div>
+        <div class="num" style="font-size:15px;font-weight:600;text-align:left;margin:2px 0 8px">$ 4.780,00</div>
+        <span class="badge b-ok">Stock 8</span>
+      </div>
+      <p class="micro">Alto mínimo 96px · borde <code>muted / .18</code> · hover eleva 1px y tiñe el borde de <code>secondary</code>.</p>
+    </div>
+  </section>
+</body>
+</html>

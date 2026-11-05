@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "chosen": "03-bloques.html",
+  "handoffs": {
+    "03-bloques.html": {
+      "status": "sent",
+      "queued": false,
+      "sentAt": "2026-11-05T01:36:57.642Z",
+      "startedAt": null,
+      "implementedAt": null
+    }
+  }
+}

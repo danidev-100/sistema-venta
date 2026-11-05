@@ -1,0 +1,27 @@
+{
+  "title": "Punto de venta — direcciones",
+  "brief": "Tres direcciones visuales para la pantalla de Punto de Venta del Sistema de Ventas (POS multi-sucursal, Argentina): mismo carrito y mismos totales, tres estrategias de interacción distintas.",
+  "artboards": [
+    {
+      "file": "01-split-command.html",
+      "title": "Dos paneles: catálogo + carrito",
+      "tradeoff": "Densidad y familiaridad máximas para un cajero con mouse y teclado; el panel derecho fijo se lleva el 38% del ancho y reduce el catálogo visible.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-touch-tiles-drawer.html",
+      "title": "Muro táctil + bandeja inferior",
+      "tradeoff": "Objetivos grandes y teclado numérico siempre a mano, ideal para kiosco o tablet; el carrito completo queda a un toque de distancia en vez de a la vista.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "03-ledger-palette.html",
+      "title": "Libro editable + paleta de comandos",
+      "tradeoff": "Control total por línea (cantidad y descuento editables en tabla) y pago dividido visible; exige manejo de teclado y es la dirección más difícil de aprender para un cajero nuevo.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}

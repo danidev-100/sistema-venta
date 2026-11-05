@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tres modelos de sistema — vista estática</title>
+<style>
+  :root{--s:0.70}
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:#14161b;color:#e8eaed;padding:40px 32px 56px;
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  header{max-width:1008px;margin:0 auto 32px}
+  h1{margin:0 0 6px;font-size:22px;font-weight:650;letter-spacing:-.02em}
+  p{margin:0;color:#9aa1ab;font-size:13px;max-width:74ch}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;
+       background:#22262e;padding:1px 5px;border-radius:4px;color:#cfd4da}
+  .model{max-width:1008px;margin:0 auto 44px}
+  .head{display:flex;align-items:baseline;gap:12px;padding:0 2px 10px;
+        border-bottom:1px solid #2a2f38}
+  .num{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#6f7681}
+  .head h2{margin:0;font-size:16px;font-weight:600;letter-spacing:-.01em}
+  .head .tag{font-size:11px;color:#8b929c;border:1px solid #2f343d;border-radius:999px;padding:2px 9px}
+  .head .open{margin-left:auto;font-size:12px;color:#8ab4f8;text-decoration:none}
+  .head .open:hover{text-decoration:underline}
+  .note{margin:10px 0 14px;font-size:12.5px;color:#9aa1ab;max-width:88ch}
+  .stage{width:calc(1440px * var(--s));height:calc(900px * var(--s));overflow:hidden;
+         border:1px solid #2a2f38;border-radius:10px;background:#fff;
+         box-shadow:0 30px 60px -40px #000}
+  .stage iframe{width:1440px;height:900px;border:0;display:block;
+                transform:scale(var(--s));transform-origin:top left}
+  footer{max-width:1008px;margin:0 auto;color:#6f7681;font-size:12px}
+</style>
+</head>
+<body>
+  <header>
+    <h1>Tres modelos de sistema — vista estática</h1>
+    <p>Página sin JavaScript: cada modelo se muestra en un <code>iframe</code> a escala 70%. Si el canvas de Gentle Design no carga, esta vista funciona igual. Abrí cualquier modelo a tamaño real con el link “Abrir a 100%”.</p>
+  </header>
+
+  <section class="model">
+    <div class="head">
+      <span class="num">01</span>
+      <h2>Mostrador</h2>
+      <span class="tag">editorial · cálido</span>
+      <a class="open" href="01-mostrador.html" target="_blank" rel="noopener">Abrir a 100% →</a>
+    </div>
+    <p class="note">Serif, papel cálido y ticket vertical. Riel de 224 px con etiquetas de texto, catálogo como lista con hairlines, radios 3 px. Tradeoff: se lee como una libreta de mostrador, pero entra menos por pantalla y las filas son más altas.</p>
+    <div class="stage"><iframe src="01-mostrador.html" title="Modelo 01 Mostrador" loading="lazy"></iframe></div>
+  </section>
+
+  <section class="model">
+    <div class="head">
+      <span class="num">02</span>
+      <h2>Terminal</h2>
+      <span class="tag">oscuro · alta densidad</span>
+      <a class="open" href="02-terminal.html" target="_blank" rel="noopener">Abrir a 100% →</a>
+    </div>
+    <p class="note">Monoespaciada, filas de 30 px, tabs y barra de estado con atajos. Catálogo como tabla con índice numérico. Tradeoff: el cajero experto vuela con teclado, pero es la más hostil para alguien nuevo.</p>
+    <div class="stage"><iframe src="02-terminal.html" title="Modelo 02 Terminal" loading="lazy"></iframe></div>
+  </section>
+
+  <section class="model">
+    <div class="head">
+      <span class="num">03</span>
+      <h2>Bloques</h2>
+      <span class="tag">SaaS · claro</span>
+      <a class="open" href="03-bloques.html" target="_blank" rel="noopener">Abrir a 100% →</a>
+    </div>
+    <p class="note">Sidebar con workspace switcher, tarjetas de 18 px de radio, índigo suave y panel de venta flotante. Tradeoff: la más amable en tablet, pero entra menos información y el cobro queda lejos del catálogo.</p>
+    <div class="stage"><iframe src="03-bloques.html" title="Modelo 03 Bloques" loading="lazy"></iframe></div>
+  </section>
+
+  <footer>Mismo carrito y mismos totales en los tres: $ 22.770,00 · −$ 1.138,50 · $ 21.631,50. Decisiones completas por modelo en <code>modelos.md</code>.</footer>
+</body>
+</html>

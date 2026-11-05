@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Propuesta 01 · Mostrador (editorial)</title>
+<style>
+  :root{
+    --paper:250 247 242; --card:255 253 250; --ink:31 27 22; --muted:122 110 96;
+    --clay:181 83 58; --olive:79 107 74; --rule:31 27 22;
+    --serif:ui-serif,Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    width:1440px;height:900px;overflow:hidden;display:grid;grid-template-columns:224px 1fr;
+    font-family:var(--sans);font-size:14px;line-height:1.5;
+    background:rgb(var(--paper));color:rgb(var(--ink));-webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit;font-size:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  input{font-family:inherit;font-size:inherit;color:inherit}
+  :focus-visible{outline:2px solid rgb(var(--clay));outline-offset:2px}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .tnum{font-variant-numeric:tabular-nums}
+
+  /* ── navegación editorial ── */
+  .rail{display:flex;flex-direction:column;padding:26px 22px 20px;border-right:1px solid rgb(var(--rule)/.14)}
+  .word{font-family:var(--serif);font-size:19px;line-height:1.15;letter-spacing:-.01em}
+  .word span{display:block;font-family:var(--sans);font-size:10px;letter-spacing:.16em;
+             text-transform:uppercase;color:rgb(var(--muted));margin-top:6px}
+  .links{list-style:none;margin:34px 0 0;padding:0;display:grid;gap:2px}
+  .links a{display:block;padding:7px 0;font-size:13.5px;color:rgb(var(--muted));text-decoration:none;
+           border-bottom:1px solid transparent;transition:color .15s ease}
+  .links a:hover{color:rgb(var(--ink))}
+  .links a[aria-current="page"]{color:rgb(var(--ink));font-weight:600;border-bottom-color:rgb(var(--clay))}
+  .rail .spacer{flex:1}
+  .who{border-top:1px solid rgb(var(--rule)/.14);padding-top:14px;font-size:12px;color:rgb(var(--muted))}
+  .who b{display:block;color:rgb(var(--ink));font-weight:600;font-size:13px}
+
+  /* ── cabecera ── */
+  .main{display:flex;flex-direction:column;min-height:0;padding:26px 28px 24px}
+  .head{display:flex;align-items:flex-end;gap:24px;padding-bottom:16px;
+        border-bottom:1px solid rgb(var(--rule)/.14)}
+  .eyebrow{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgb(var(--muted))}
+  h1{margin:4px 0 0;font-family:var(--serif);font-size:31px;font-weight:400;letter-spacing:-.01em;
+     line-height:1.1}
+  .head .right{margin-left:auto;display:flex;align-items:center;gap:18px}
+  .clock{font-family:var(--mono);font-size:13px;color:rgb(var(--muted))}
+  .search{display:flex;align-items:center;gap:8px;border-bottom:1px solid rgb(var(--rule)/.3);
+          padding:4px 2px 6px;width:290px}
+  .search svg{color:rgb(var(--muted))}
+  .search input{flex:1;border:0;outline:none;background:none;font-size:13.5px}
+  .search input::placeholder{color:rgb(var(--muted))}
+  .search:focus-within{border-bottom-color:rgb(var(--clay))}
+
+  /* ── cuerpo ── */
+  .body{flex:1;display:grid;grid-template-columns:1fr 384px;gap:32px;min-height:0;padding-top:18px}
+  .catalog{display:flex;flex-direction:column;min-height:0}
+  .filters{display:flex;gap:16px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+           color:rgb(var(--muted));padding-bottom:10px}
+  .filters button{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgb(var(--muted));
+                  padding:0 0 2px;border-bottom:1px solid transparent;transition:color .15s ease}
+  .filters button:hover{color:rgb(var(--ink))}
+  .filters button[aria-pressed="true"]{color:rgb(var(--clay));border-bottom-color:rgb(var(--clay))}
+  .list{flex:1;overflow-y:auto;min-height:0;margin-right:-8px;padding-right:8px;
+        -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent)}
+  .list::-webkit-scrollbar{width:5px}
+  .list::-webkit-scrollbar-thumb{background:rgb(var(--rule)/.18);border-radius:3px}
+  .item{display:grid;grid-template-columns:1fr auto auto;gap:16px;align-items:baseline;width:100%;
+        text-align:left;padding:11px 0;border-bottom:1px solid rgb(var(--rule)/.1);
+        transition:padding-left .15s ease,background-color .15s ease}
+  .item:hover{padding-left:8px;background:rgb(var(--clay)/.04)}
+  .item .n{font-size:14px}
+  .item .m{display:block;font-size:11px;color:rgb(var(--muted));margin-top:1px}
+  .item .s{font-size:11px;color:rgb(var(--muted));letter-spacing:.04em;text-transform:uppercase}
+  .item .p{font-family:var(--serif);font-size:16px;min-width:104px;text-align:right}
+  .item[disabled]{opacity:.45;cursor:not-allowed}
+  .item[disabled] .p{text-decoration:line-through}
+
+  /* ── ticket ── */
+  .ticket{display:flex;flex-direction:column;background:rgb(var(--card));
+          border:1px solid rgb(var(--rule)/.16);border-radius:3px;
+          box-shadow:0 18px 40px -28px rgb(var(--ink)/.55);min-height:0}
+  .ticket-head{padding:16px 20px 12px;border-bottom:1px dashed rgb(var(--rule)/.28)}
+  .ticket-head .k{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;
+                  letter-spacing:.08em;color:rgb(var(--muted));text-transform:uppercase}
+  .ticket-head h2{margin:6px 0 0;font-family:var(--serif);font-size:17px;font-weight:400}
+  .lines{flex:1;overflow-y:auto;padding:6px 20px;min-height:0}
+  .lines::-webkit-scrollbar{width:5px}
+  .lines::-webkit-scrollbar-thumb{background:rgb(var(--rule)/.18);border-radius:3px}
+  .ln{display:grid;grid-template-columns:26px 1fr auto;gap:10px;padding:9px 0;
+      border-bottom:1px dotted rgb(var(--rule)/.18);align-items:baseline}
+  .ln:last-child{border-bottom:0}
+  .ln .q{font-family:var(--mono);font-size:11px;color:rgb(var(--muted))}
+  .ln .d{font-size:13px}
+  .ln .d small{display:block;font-size:10.5px;color:rgb(var(--muted));font-family:var(--mono)}
+  .ln .a{font-family:var(--mono);font-size:12.5px}
+  .sums{padding:12px 20px 14px;border-top:1px dashed rgb(var(--rule)/.28);display:grid;gap:5px}
+  .sums div{display:flex;justify-content:space-between;font-size:12.5px;color:rgb(var(--muted))}
+  .sums .v{font-family:var(--mono);color:rgb(var(--ink))}
+  .sums .disc .v{color:rgb(var(--olive))}
+  .sums .total{align-items:baseline;margin-top:6px;padding-top:10px;border-top:1px solid rgb(var(--rule)/.25)}
+  .sums .total span{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:rgb(var(--ink))}
+  .sums .total .v{font-family:var(--serif);font-size:29px;letter-spacing:-.01em}
+  .payline{display:flex;justify-content:space-between;padding:0 20px 12px;font-size:11.5px;
+           color:rgb(var(--muted))}
+  .payline b{font-family:var(--mono);color:rgb(var(--ink));font-weight:500}
+  .payline .back{color:rgb(var(--olive));font-family:var(--mono)}
+  .cta{margin:0 20px 18px;height:52px;border-radius:3px;background:rgb(var(--clay));color:#fff;
+       font-size:14px;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;
+       justify-content:center;gap:10px;transition:opacity .15s ease}
+  .cta:hover{opacity:.92}
+  .cta kbd{font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:2px;
+           background:rgb(255 255 255/.22)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+  <nav class="rail" aria-label="Navegación principal">
+    <div class="word">Sistema<span>de ventas</span></div>
+    <ul class="links">
+      <li><a href="#">Inicio</a></li>
+      <li><a href="#" aria-current="page">Punto de venta</a></li>
+      <li><a href="#">Productos</a></li>
+      <li><a href="#">Pedidos</a></li>
+      <li><a href="#">Estadísticas</a></li>
+      <li><a href="#">Caja</a></li>
+      <li><a href="#">Ajustes</a></li>
+    </ul>
+    <div class="spacer"></div>
+    <div class="who"><b>Martina Ríos</b>Sucursal Centro · Caja 2</div>
+  </nav>
+
+  <div class="main">
+    <header class="head">
+      <div>
+        <div class="eyebrow">Caja 2 · Turno mañana</div>
+        <h1>Punto de venta</h1>
+      </div>
+      <div class="right">
+        <div class="search">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <label class="sr" for="q">Buscar producto</label>
+          <input id="q" type="search" placeholder="Buscar o escanear…" autocomplete="off">
+        </div>
+        <span class="clock">14:32</span>
+      </div>
+    </header>
+
+    <div class="body">
+      <section class="catalog" aria-label="Catálogo">
+        <div class="filters" role="group" aria-label="Filtrar por categoría">
+          <button aria-pressed="true">Todos</button>
+          <button aria-pressed="false">Almacén</button>
+          <button aria-pressed="false">Bebidas</button>
+          <button aria-pressed="false">Lácteos</button>
+          <button aria-pressed="false">Limpieza</button>
+          <button aria-pressed="false">Perfumería</button>
+        </div>
+        <div class="list" id="list"></div>
+      </section>
+
+      <section class="ticket" aria-label="Ticket de venta">
+        <div class="ticket-head">
+          <div class="k"><span>Ticket</span><span>#1284</span></div>
+          <h2 id="tcount">5 artículos</h2>
+        </div>
+        <div class="lines" id="lines"></div>
+        <div class="sums">
+          <div><span>Subtotal</span><span class="v" id="sub">$ 22.770,00</span></div>
+          <div class="disc"><span>Descuento 5%</span><span class="v" id="off">− $ 1.138,50</span></div>
+          <div class="total"><span>Total</span><span class="v" id="tot">$ 21.631,50</span></div>
+        </div>
+        <div class="payline">
+          <span>Efectivo <b>$ 25.000,00</b></span>
+          <span class="back">Vuelto $ 3.368,50</span>
+        </div>
+        <button class="cta">Cobrar <kbd>F2</kbd></button>
+      </section>
+    </div>
+  </div>
+
+<script>
+  const P = [
+    { id:"coca", n:"Coca-Cola 2.25L", c:"Bebidas", p:3250, s:24 },
+    { id:"pan", n:"Pan lactal Fargo 500g", c:"Almacén", p:1890, s:12 },
+    { id:"yerba", n:"Yerba Playadito 1kg", c:"Almacén", p:4780, s:8 },
+    { id:"leche", n:"Leche La Serenísima 1L", c:"Lácteos", p:1320, s:30 },
+    { id:"queso", n:"Queso cremoso 500g", c:"Lácteos", p:5640, s:5 },
+    { id:"azucar", n:"Azúcar Ledesma 1kg", c:"Almacén", p:1450, s:18 },
+    { id:"aceite", n:"Aceite Natura 1.5L", c:"Almacén", p:3890, s:9 },
+    { id:"fideos", n:"Fideos Matarazzo 500g", c:"Almacén", p:1190, s:26 },
+    { id:"cafe", n:"Café La Virginia 250g", c:"Almacén", p:4250, s:7 },
+    { id:"oreo", n:"Galletitas Oreo 117g", c:"Almacén", p:1650, s:15 },
+    { id:"quilmes", n:"Cerveza Quilmes 1L", c:"Bebidas", p:2980, s:11 },
+    { id:"agua", n:"Agua Villavicencio 1.5L", c:"Bebidas", p:1090, s:40 },
+    { id:"sedal", n:"Shampoo Sedal 340ml", c:"Perfumería", p:3450, s:6 },
+    { id:"ala", n:"Detergente Ala 750ml", c:"Limpieza", p:2180, s:14 },
+    { id:"hig", n:"Papel higiénico Higienol x4", c:"Limpieza", p:2740, s:4 },
+    { id:"sal", n:"Sal Dos Anclas 500g", c:"Almacén", p:690, s:0 }
+  ];
+  const byId = Object.fromEntries(P.map(x => [x.id, x]));
+  let cart = [
+    { id:"coca", qty:2 }, { id:"pan", qty:1 }, { id:"yerba", qty:1 },
+    { id:"leche", qty:3 }, { id:"queso", qty:1 }
+  ];
+  const ars = n => "$ " + n.toLocaleString("es-AR", { minimumFractionDigits:2, maximumFractionDigits:2 });
+
+  document.getElementById("list").innerHTML = P.map(x => `
+    <button class="item" data-add="${x.id}" ${x.s === 0 ? "disabled" : ""}>
+      <span><span class="n">${x.n}</span><span class="m">${x.c} · ${x.s === 0 ? "sin stock" : x.s + " disponibles"}</span></span>
+      <span class="s">${x.s <= 5 && x.s > 0 ? "últimas" : ""}</span>
+      <span class="p">${ars(x.p)}</span>
+    </button>`).join("");
+
+  function render(){
+    document.getElementById("lines").innerHTML = cart.map(l => {
+      const x = byId[l.id];
+      return `<div class="ln">
+        <span class="q">${l.qty}×</span>
+        <span class="d">${x.n}<small>${ars(x.p)} c/u</small></span>
+        <span class="a">${ars(x.p * l.qty)}</span>
+      </div>`;
+    }).join("");
+    const sub = cart.reduce((s,l) => s + byId[l.id].p * l.qty, 0);
+    const off = Math.round(sub * 5) / 100;
+    document.getElementById("sub").textContent = ars(sub);
+    document.getElementById("off").textContent = "− " + ars(off);
+    document.getElementById("tot").textContent = ars(sub - off);
+    const units = cart.reduce((s,l) => s + l.qty, 0);
+    document.getElementById("tcount").textContent =
+      units + (units === 1 ? " unidad" : " unidades");
+  }
+
+  document.getElementById("list").addEventListener("click", e => {
+    const b = e.target.closest("[data-add]");
+    if (!b) return;
+    const l = cart.find(x => x.id === b.dataset.add);
+    if (l) l.qty += 1; else cart.push({ id: b.dataset.add, qty:1 });
+    render();
+  });
+  render();
+</script>
+</body>
+</html>

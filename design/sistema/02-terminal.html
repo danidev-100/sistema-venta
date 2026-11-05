@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Propuesta 02 · Terminal (alta densidad)</title>
+<style>
+  :root{
+    --bg:13 15 18; --panel:20 23 27; --panel2:26 30 35;
+    --line:255 255 255; --text:232 234 237; --muted:134 141 150;
+    --lime:200 244 92; --amber:245 185 66; --red:255 107 107;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    width:1440px;height:900px;overflow:hidden;display:grid;grid-template-rows:38px 1fr 32px;
+    font-family:var(--sans);font-size:13px;line-height:1.45;
+    background:rgb(var(--bg));color:rgb(var(--text));-webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit;font-size:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  input{font-family:inherit;font-size:inherit;color:inherit}
+  :focus-visible{outline:1px solid rgb(var(--lime));outline-offset:1px}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+  /* ── barra de tabs ── */
+  .topbar{display:flex;align-items:center;gap:0;background:rgb(var(--panel));
+          border-bottom:1px solid rgb(var(--line)/.08)}
+  .logo{font-family:var(--mono);font-size:12px;font-weight:600;color:rgb(var(--lime));
+        padding:0 14px;border-right:1px solid rgb(var(--line)/.08);height:100%;
+        display:flex;align-items:center;letter-spacing:.02em}
+  .tabs{display:flex;height:100%}
+  .tabs button{padding:0 15px;font-size:12px;color:rgb(var(--muted));border-right:1px solid rgb(var(--line)/.06);
+               height:100%;display:flex;align-items:center;gap:6px;transition:color .12s ease,background-color .12s ease}
+  .tabs button:hover{color:rgb(var(--text));background:rgb(var(--line)/.04)}
+  .tabs button[aria-current="page"]{color:rgb(var(--text));background:rgb(var(--bg));
+                                    box-shadow:inset 0 -2px 0 rgb(var(--lime))}
+  .topbar .right{margin-left:auto;display:flex;align-items:center;gap:14px;padding-right:14px;
+                 font-family:var(--mono);font-size:11px;color:rgb(var(--muted))}
+  .dot{width:6px;height:6px;border-radius:50%;background:rgb(var(--lime));display:inline-block;
+       margin-right:5px}
+  kbd{font-family:var(--mono);font-size:10px;padding:1px 4px;border-radius:2px;
+      background:rgb(var(--line)/.08);border:1px solid rgb(var(--line)/.12);color:rgb(var(--muted))}
+
+  /* ── cuerpo ── */
+  main{display:grid;grid-template-columns:1fr 366px;min-height:0}
+  .left{display:flex;flex-direction:column;min-height:0}
+  .toolbar{display:flex;align-items:center;gap:10px;padding:9px 14px;
+           border-bottom:1px solid rgb(var(--line)/.07)}
+  .field{display:flex;align-items:center;gap:7px;flex:1;height:28px;padding:0 9px;
+         background:rgb(var(--panel));border:1px solid rgb(var(--line)/.1);border-radius:2px;
+         font-family:var(--mono);font-size:12px;color:rgb(var(--muted))}
+  .field:focus-within{border-color:rgb(var(--lime)/.6)}
+  .field input{flex:1;border:0;outline:none;background:none;font-family:var(--mono);font-size:12px;
+               color:rgb(var(--text))}
+  .fchip{height:28px;padding:0 10px;border:1px solid rgb(var(--line)/.1);border-radius:2px;
+         font-family:var(--mono);font-size:11px;color:rgb(var(--muted));text-transform:lowercase}
+  .fchip[aria-pressed="true"]{color:rgb(var(--lime));border-color:rgb(var(--lime)/.45);
+                              background:rgb(var(--lime)/.08)}
+
+  .table{flex:1;overflow-y:auto;min-height:0;
+         -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 20px),transparent)}
+  .table::-webkit-scrollbar{width:8px}
+  .table::-webkit-scrollbar-thumb{background:rgb(var(--line)/.12)}
+  table{width:100%;border-collapse:collapse;table-layout:fixed}
+  thead th{position:sticky;top:0;z-index:2;background:rgb(var(--panel));text-align:left;
+           font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.1em;
+           text-transform:uppercase;color:rgb(var(--muted));padding:6px 14px;
+           border-bottom:1px solid rgb(var(--line)/.1)}
+  thead th.r{text-align:right}
+  tbody tr{border-bottom:1px solid rgb(var(--line)/.05);cursor:pointer;
+           transition:background-color .1s ease}
+  tbody tr:hover{background:rgb(var(--lime)/.06)}
+  tbody td{padding:6px 14px;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  tbody td.n{font-family:var(--mono);font-size:11px;color:rgb(var(--muted))}
+  tbody td.p{text-align:right;font-family:var(--mono);font-size:12.5px}
+  tbody td.s{text-align:right;font-family:var(--mono);font-size:11.5px;color:rgb(var(--muted))}
+  tbody tr[data-out] td{opacity:.45;text-decoration:line-through;cursor:not-allowed}
+  tbody tr[data-low] td.s{color:rgb(var(--amber))}
+
+  /* ── venta actual ── */
+  .sale{display:flex;flex-direction:column;background:rgb(var(--panel));min-height:0;
+        border-left:1px solid rgb(var(--line)/.08)}
+  .sale-head{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;
+             border-bottom:1px solid rgb(var(--line)/.08);font-family:var(--mono);font-size:10.5px;
+             letter-spacing:.1em;text-transform:uppercase;color:rgb(var(--muted))}
+  .sale-head b{color:rgb(var(--text));font-weight:500}
+  .lines{flex:1;overflow-y:auto;min-height:0;padding:4px 0}
+  .lines::-webkit-scrollbar{width:6px}
+  .lines::-webkit-scrollbar-thumb{background:rgb(var(--line)/.12)}
+  .ln{display:grid;grid-template-columns:20px 1fr auto;gap:9px;align-items:baseline;
+      padding:9px 14px;border-bottom:1px solid rgb(var(--line)/.05);font-size:12.5px;
+      transition:background-color .1s ease}
+  .ln:hover{background:rgb(var(--line)/.04)}
+  .ln .q{font-family:var(--mono);font-size:11px;color:rgb(var(--lime))}
+  .ln .d small{display:block;font-family:var(--mono);font-size:10px;color:rgb(var(--muted))}
+  .ln .a{font-family:var(--mono);font-size:12px}
+
+  .hint{padding:10px 14px;font-family:var(--mono);font-size:10.5px;color:rgb(var(--line)/.28);
+        letter-spacing:.02em}
+  .party{margin:8px 14px 12px;padding:9px 11px;border:1px dashed rgb(var(--line)/.14);border-radius:2px;
+         display:grid;gap:4px;font-family:var(--mono);font-size:11px;color:rgb(var(--muted))}
+  .party div{display:flex;justify-content:space-between}
+  .party b{color:rgb(var(--text));font-weight:500}
+
+  .sums{padding:10px 14px;border-top:1px solid rgb(var(--line)/.1);display:grid;gap:3px;
+        font-family:var(--mono);font-size:11.5px;color:rgb(var(--muted))}
+  .sums div{display:flex;justify-content:space-between}
+  .sums .v{color:rgb(var(--text))}
+  .sums .disc .v{color:rgb(var(--lime))}
+  .sums .total{margin-top:5px;padding-top:8px;border-top:1px dashed rgb(var(--line)/.2);
+               align-items:baseline;color:rgb(var(--text))}
+  .sums .total span{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgb(var(--muted))}
+  .sums .total .v{font-size:25px;font-weight:600;letter-spacing:-.01em}
+
+  .pay{padding:10px 14px;border-top:1px solid rgb(var(--line)/.08);display:grid;gap:5px}
+  .pay button{display:flex;justify-content:space-between;align-items:center;height:30px;
+              padding:0 10px;border:1px solid rgb(var(--line)/.1);border-radius:2px;
+              font-size:11.5px;color:rgb(var(--muted));transition:border-color .12s ease,color .12s ease}
+  .pay button:hover{border-color:rgb(var(--line)/.25);color:rgb(var(--text))}
+  .pay button[aria-pressed="true"]{border-color:rgb(var(--lime)/.55);color:rgb(var(--lime));
+                                   background:rgb(var(--lime)/.07)}
+  .pay button span{font-family:var(--mono);font-size:11px}
+  .cta{margin:10px 14px 14px;height:40px;border-radius:2px;background:rgb(var(--lime));color:#0C0F12;
+       font-family:var(--mono);font-size:12.5px;font-weight:600;letter-spacing:.06em;
+       display:flex;align-items:center;justify-content:center;gap:10px;transition:filter .12s ease}
+  .cta:hover{filter:brightness(1.06)}
+
+  /* ── barra de estado ── */
+  .status{display:flex;align-items:center;gap:16px;padding:0 14px;background:rgb(var(--panel2));
+          border-top:1px solid rgb(var(--line)/.08);font-family:var(--mono);font-size:10.5px;
+          color:rgb(var(--muted));white-space:nowrap}
+  .status span{display:flex;align-items:center;gap:5px}
+  .status .right{margin-left:auto;display:flex;gap:16px}
+  .status b{color:rgb(var(--text));font-weight:500}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo">sv/</div>
+    <nav class="tabs" aria-label="Navegación principal">
+      <button>inicio</button>
+      <button aria-current="page">venta</button>
+      <button>productos</button>
+      <button>pedidos</button>
+      <button>estadísticas</button>
+      <button>caja</button>
+    </nav>
+    <div class="right">
+      <span><span class="dot"></span>sucursal-centro</span>
+      <span>caja-2 · martina</span>
+      <span>14:32</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="left" aria-label="Catálogo">
+      <div class="toolbar">
+        <div class="field">
+          <span aria-hidden="true">/</span>
+          <label class="sr" for="q">Buscar producto</label>
+          <input id="q" type="search" placeholder="buscar o escanear…" autocomplete="off">
+          <kbd>enter</kbd>
+        </div>
+        <button class="fchip" aria-pressed="true">todos</button>
+        <button class="fchip" aria-pressed="false">almacén</button>
+        <button class="fchip" aria-pressed="false">bebidas</button>
+        <button class="fchip" aria-pressed="false">lácteos</button>
+        <button class="fchip" aria-pressed="false">limpieza</button>
+      </div>
+
+      <div class="table">
+        <table>
+          <caption class="sr">Catálogo. Enter agrega el producto seleccionado a la venta.</caption>
+          <colgroup><col style="width:46px"><col><col style="width:110px"><col style="width:112px"></colgroup>
+          <thead>
+            <tr><th scope="col">#</th><th scope="col">producto</th><th scope="col" class="r">stock</th><th scope="col" class="r">precio</th></tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <aside class="sale" aria-label="Venta actual">
+      <div class="sale-head"><span>venta_actual</span><b id="cnt">5 items</b></div>
+      <div class="lines" id="lines"></div>
+      <div class="hint" id="hint">// 5 líneas · 8 unidades</div>
+      <div class="party">
+        <div><span>cliente</span><b>Consumidor Final</b></div>
+        <div><span>comprobante</span><b>Factura B</b></div>
+      </div>
+      <div class="sums">
+        <div><span>subtotal</span><span class="v" id="sub">$ 22.770,00</span></div>
+        <div class="disc"><span>desc 5%</span><span class="v" id="off">− $ 1.138,50</span></div>
+        <div class="total"><span>total</span><span class="v" id="tot">$ 21.631,50</span></div>
+      </div>
+      <div class="pay" role="group" aria-label="Medio de pago">
+        <button aria-pressed="true"><span>efectivo</span><span>$ 25.000,00 → vuelto $ 3.368,50</span></button>
+        <button aria-pressed="false"><span>débito</span><span>1 cuota</span></button>
+        <button aria-pressed="false"><span>crédito</span><span>3 cuotas</span></button>
+        <button aria-pressed="false"><span>qr / mp</span><span>instantáneo</span></button>
+      </div>
+      <button class="cta">COBRAR <kbd style="background:rgb(12 15 18/.14);border-color:rgb(12 15 18/.2);color:#0C0F12">F2</kbd></button>
+    </aside>
+  </main>
+
+  <footer class="status">
+    <span><kbd>J</kbd><kbd>K</kbd> mover</span>
+    <span><kbd>ENTER</kbd> agregar</span>
+    <span><kbd>F2</kbd> cobrar</span>
+    <span><kbd>F4</kbd> descuento</span>
+    <span><kbd>F8</kbd> pago dividido</span>
+    <span class="right">
+      <span>items <b id="s-items">8</b></span>
+      <span>total <b id="s-total">$ 21.631,50</b></span>
+      <span>stock bajo <b>3</b></span>
+    </span>
+  </footer>
+
+<script>
+  const P = [
+    { id:"coca", n:"Coca-Cola 2.25L", p:3250, s:24 },
+    { id:"pan", n:"Pan lactal Fargo 500g", p:1890, s:12 },
+    { id:"yerba", n:"Yerba Playadito 1kg", p:4780, s:8 },
+    { id:"leche", n:"Leche La Serenísima 1L", p:1320, s:30 },
+    { id:"queso", n:"Queso cremoso 500g", p:5640, s:5 },
+    { id:"azucar", n:"Azúcar Ledesma 1kg", p:1450, s:18 },
+    { id:"aceite", n:"Aceite Natura 1.5L", p:3890, s:9 },
+    { id:"fideos", n:"Fideos Matarazzo 500g", p:1190, s:26 },
+    { id:"cafe", n:"Café La Virginia 250g", p:4250, s:7 },
+    { id:"oreo", n:"Galletitas Oreo 117g", p:1650, s:15 },
+    { id:"quilmes", n:"Cerveza Quilmes 1L", p:2980, s:11 },
+    { id:"agua", n:"Agua Villavicencio 1.5L", p:1090, s:40 },
+    { id:"sedal", n:"Shampoo Sedal 340ml", p:3450, s:6 },
+    { id:"ala", n:"Detergente Ala 750ml", p:2180, s:14 },
+    { id:"hig", n:"Papel higiénico Higienol x4", p:2740, s:4 },
+    { id:"sal", n:"Sal Dos Anclas 500g", p:690, s:0 },
+    { id:"yogur", n:"Yogur Serenísimo 1L", p:2150, s:10 },
+    { id:"manteca", n:"Manteca Tonadita 200g", p:2480, s:6 },
+    { id:"arroz", n:"Arroz Gallo Oro 1kg", p:2350, s:20 },
+    { id:"atun", n:"Atún La Campagnola 170g", p:3120, s:9 },
+    { id:"lavan", n:"Lavandina Ayudín 1L", p:1290, s:25 },
+    { id:"jabon", n:"Jabón Dove 90g", p:1780, s:13 },
+    { id:"sprite", n:"Gaseosa Sprite 2.25L", p:3150, s:19 },
+    { id:"helado", n:"Helado Grido 1kg", p:5900, s:3 },
+    { id:"gel", n:"Gelatina Godet 40g", p:590, s:22 }
+  ];
+  const byId = Object.fromEntries(P.map(x => [x.id, x]));
+  let cart = [
+    { id:"coca", qty:2 }, { id:"pan", qty:1 }, { id:"yerba", qty:1 },
+    { id:"leche", qty:3 }, { id:"queso", qty:1 }
+  ];
+  const ars = n => "$ " + n.toLocaleString("es-AR", { minimumFractionDigits:2, maximumFractionDigits:2 });
+
+  document.getElementById("rows").innerHTML = P.map((x, i) => `
+    <tr data-add="${x.id}" ${x.s === 0 ? "data-out" : ""} ${x.s > 0 && x.s <= 5 ? "data-low" : ""}>
+      <td class="n">${String(i + 1).padStart(2, "0")}</td>
+      <td>${x.n}</td>
+      <td class="s">${x.s === 0 ? "—" : x.s}</td>
+      <td class="p">${ars(x.p)}</td>
+    </tr>`).join("");
+
+  function render(){
+    document.getElementById("lines").innerHTML = cart.map(l => {
+      const x = byId[l.id];
+      return `<div class="ln">
+        <span class="q">${l.qty}×</span>
+        <span class="d">${x.n}<small>${ars(x.p)} c/u</small></span>
+        <span class="a">${ars(x.p * l.qty)}</span>
+      </div>`;
+    }).join("");
+    const sub = cart.reduce((s,l) => s + byId[l.id].p * l.qty, 0);
+    const off = Math.round(sub * 5) / 100;
+    document.getElementById("sub").textContent = ars(sub);
+    document.getElementById("off").textContent = "− " + ars(off);
+    document.getElementById("tot").textContent = ars(sub - off);
+    document.getElementById("s-total").textContent = ars(sub - off);
+    const units = cart.reduce((s,l) => s + l.qty, 0);
+    document.getElementById("cnt").textContent = cart.length + " items";
+    document.getElementById("s-items").textContent = units;
+    document.getElementById("hint").textContent =
+      "// " + cart.length + " líneas · " + units + " unidades";
+  }
+
+  document.getElementById("rows").addEventListener("click", e => {
+    const tr = e.target.closest("[data-add]");
+    if (!tr || tr.hasAttribute("data-out")) return;
+    const l = cart.find(x => x.id === tr.dataset.add);
+    if (l) l.qty += 1; else cart.push({ id: tr.dataset.add, qty:1 });
+    render();
+  });
+
+  document.querySelectorAll(".pay button").forEach(b => {
+    b.addEventListener("click", () => {
+      document.querySelectorAll(".pay button").forEach(o => o.setAttribute("aria-pressed","false"));
+      b.setAttribute("aria-pressed","true");
+    });
+  });
+
+  render();
+</script>
+</body>
+</html>

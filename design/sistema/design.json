@@ -1,0 +1,27 @@
+{
+  "title": "Sistema de Ventas — 3 modelos de sistema",
+  "brief": "Tres propuestas completas de sistema para el Sistema de Ventas: cada una define su propio shell (navegación + layout), su identidad visual (tipografía, color, radio, densidad) y una pantalla de Punto de Venta que la demuestra con el mismo carrito y los mismos totales en las tres.",
+  "artboards": [
+    {
+      "file": "01-mostrador.html",
+      "title": "01 · Mostrador — editorial y cálido",
+      "tradeoff": "Jerarquía tipográfica serif, papel cálido y ticket vertical: se lee como una libreta de mostrador y baja el ruido del catálogo. A cambio usa más alto por fila y menos productos visibles a la vez.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-terminal.html",
+      "title": "02 · Terminal — oscuro y de alta densidad",
+      "tradeoff": "Todo en monoespaciada, filas de 30 px, atajos en la barra de estado: el cajero experto vuela con teclado. A cambio es la propuesta más hostil para alguien nuevo y la que peor se ve en una pantalla con sol directo.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "03-bloques.html",
+      "title": "03 · Bloques — SaaS claro y espacioso",
+      "tradeoff": "Tarjetas de 18 px de radio, índigo suave y espacio en blanco abundante: es la más amable y la que mejor se ve en tablet. A cambio entra menos información por pantalla y las decisiones de cobro quedan más lejos del catálogo.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}
