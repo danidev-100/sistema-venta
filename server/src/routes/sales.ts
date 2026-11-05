@@ -177,6 +177,7 @@ router.post("/", async (req: Request, res: Response) => {
       change,
       customerName,
       createdBy,
+      shiftId,
     } = req.body;
 
     if (!storeId || !items?.length || !paymentMethod) {
@@ -206,6 +207,8 @@ router.post("/", async (req: Request, res: Response) => {
           change: change != null ? safe(change) : null,
           customer_name: customerName || null,
           created_by: createdBy || (req as any).user?.username || "—",
+          // Links the sale to its cash register shift; null for older clients.
+          shift_id: shiftId != null ? safe(shiftId) : null,
         })
         .returning();
 

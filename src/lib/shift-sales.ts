@@ -9,6 +9,7 @@ import type { CompletedSale } from "@/store";
  */
 
 export interface ShiftWindow {
+  id?: number;
   openTime: string;
   closeTime?: string | null;
 }
@@ -31,8 +32,16 @@ function cents(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-/** Sales whose timestamp falls inside the shift window (edges included). */
-export function salesInShift<T extends { date: string }>(
+/**
+ * Sales that belong to a shift.
+ *
+ * An explicit `shiftId` on the sale is authoritative: it decides inclusion even
+ * when the timestamps say otherwise (overlapping shifts, a sale synced late, a
+ * clock skew). Sales without a shift id — rows written before the field was
+ * persisted, or by an older client — fall back to the time window, edges
+ * included.
+ */
+export function salesInShift<T extends { date: string; shiftId?: number | null }>(
   sales: T[],
   shift: ShiftWindow,
   referenceTime: number = Date.now(),
@@ -41,6 +50,7 @@ export function salesInShift<T extends { date: string }>(
   const close = shift.closeTime ? new Date(shift.closeTime).getTime() : referenceTime;
 
   return sales.filter((sale) => {
+    if (sale.shiftId != null && shift.id != null) return sale.shiftId === shift.id;
     const t = new Date(sale.date).getTime();
     return t >= open && t <= close;
   });

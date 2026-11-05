@@ -6,6 +6,7 @@ import { useComprobantesStore, type ComprobanteTipo } from "./comprobantes";
 import { useCombosStore } from "./combos";
 import { useBultosStore } from "./bultos";
 import { useCompanyStore } from "./company";
+import { useCashClosingStore } from "./cash-closing";
 import { computeIva } from "@/lib/iva";
 import { detectActiveCombos, type ComboMatch } from "@/lib/combos";
 import { detectActiveBultos, type BultoMatch } from "@/lib/bultos";
@@ -69,6 +70,10 @@ export type CompletedSale = {
   createdBy: string;
   status: "completed" | "refunded";
   priceListId: number | null;
+  /** Cash register shift that produced the sale. Rows written before this
+   *  field existed (or by an older client) have null and are linked to a shift
+   *  by time window instead — see lib/shift-sales. */
+  shiftId?: number | null;
 };
 
 // ──────────────────────────────────────────────
@@ -266,6 +271,7 @@ function normalizeLoadedSale(row: any, fallbackStoreId: string): CompletedSale {
     discountAmount: row.discount_amount ?? 0,
     change: row.change ?? null,
     priceListId: null,
+    shiftId: row.shift_id ?? null,
   };
 }
 
@@ -480,6 +486,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
     }
 
     const currentUserName = useAuthStore.getState().currentUser?.name ?? "—";
+    // Link the sale to the open shift at the moment of checkout, so the shift
+    // detail does not have to guess by timestamp.
+    const openShift = useCashClosingStore.getState().getOpenShift(resolvedStoreId);
     const resolvedPayment = paymentMethod;
     const paidAmount = paymentMethod === "mixed" ? (cashAmount ?? 0) + (cardAmount ?? 0) + (mercadopagoAmount ?? 0) : paymentMethod === "mercadopago" ? total : (amountPaid ?? null);
 
@@ -501,6 +510,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       storeId: resolvedStoreId,
       customerName: customerName ?? null,
       priceListId: get().selectedPriceListId,
+      shiftId: openShift?.id ?? null,
     });
 
     // ── Normalize snake_case API response to the frontend CompletedSale shape ──
@@ -524,6 +534,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       createdBy: currentUserName,
       status: "completed",
       priceListId: get().selectedPriceListId,
+      shiftId: openShift?.id ?? null,
     };
 
     // ── Sync local product stock in memory ──

@@ -34,6 +34,24 @@ describe("salesInShift", () => {
     expect(result.map((s) => s.id)).toEqual([1, 2, 3]);
   });
 
+  it("trusts the sale shift id over the clock, in both directions", () => {
+    const shift = {
+      id: 7,
+      openTime: "2026-01-10T10:00:00.000Z",
+      closeTime: "2026-01-10T14:00:00.000Z",
+    };
+    // Inside the window but belongs to another shift -> excluded
+    const otherShift = sale({ id: 1, shiftId: 8, date: "2026-01-10T12:00:00.000Z" });
+    // Outside the window but explicitly linked to this shift -> included
+    const lateLinked = sale({ id: 2, shiftId: 7, date: "2026-01-10T16:00:00.000Z" });
+    // No shift id -> falls back to the window
+    const legacy = sale({ id: 3, shiftId: null, date: "2026-01-10T12:30:00.000Z" });
+
+    const result = salesInShift([otherShift, lateLinked, legacy], shift);
+
+    expect(result.map((s) => s.id)).toEqual([2, 3]);
+  });
+
   it("uses the reference time as the end of an open shift", () => {
     const shift = { openTime: "2026-01-10T10:00:00.000Z", closeTime: null };
     const inside = sale({ id: 1, date: "2026-01-10T11:00:00.000Z" });
