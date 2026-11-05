@@ -80,6 +80,7 @@ No other custom shadow tokens exist in the sources.
 - **Filters and search**: `rounded-pill`; the active chip flips to `bg-pos-primary text-white` (ink), inactive stays on `bg-pos-surface` with `text-pos-muted`.
 - **Sale panel**: `rounded-panel`, 440px wide (`lg:w-[440px]`), `bg-pos-surface` with a soft shadow; totals read primary text on surface, muted labels for subtotal and discount.
 - **Product grid**: 2 columns on small screens, `sm:grid-cols-3`, `lg:grid-cols-4`, `2xl:grid-cols-5`, `gap-3`, card `min-h-[132px]` — narrow cards keep the sale panel as the widest, calmest block.
+- **Cart row**: `grid-cols-[1.25rem_1.75rem_minmax(0,1fr)_auto_1.5rem]` — index, thumbnail, name, quantity stepper, remove on line 1 (the stepper sits beside the name, not below it); unit price left and line subtotal right on line 2. Weight products (`saleUnit !== "unit"`) keep their six gram buttons on their own full-width line below, because they do not fit beside the name.
 - **Status copy**: OK = `text-pos-success`, last units = `text-pos-warn`, destructive/negative = `text-pos-danger`.
 - **Scan feedback**: `.scan-flash` green pulse (0.5s) confirms a barcode add.
 - **POS mode**: `.no-select` on chrome; never text-selectable UI.

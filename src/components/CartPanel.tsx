@@ -234,7 +234,7 @@ export default function CartPanel({
             <div
               key={item.productId}
               onClick={() => selectCartItem(item.productId)}
-              className={`grid grid-cols-[1.25rem_1.75rem_minmax(0,1fr)_auto_auto] items-center gap-x-1.5 gap-y-1.5 rounded-control border px-2.5 py-2 cursor-pointer transition-colors ${
+              className={`grid grid-cols-[1.25rem_1.75rem_minmax(0,1fr)_auto_1.5rem] items-center gap-x-1.5 gap-y-1 rounded-control border px-2.5 py-2 cursor-pointer transition-colors ${
                 selectedCartItemId === item.productId
                   ? "border-pos-secondary ring-1 ring-pos-secondary/30"
                   : "border-pos-muted/10 hover:border-pos-muted/25"
@@ -260,23 +260,22 @@ export default function CartPanel({
                 {item.productName}
               </span>
 
-              {/* Unit price — only when it adds information over the line subtotal */}
-              {(item.saleUnit !== "unit" || item.quantity !== 1) && (
-                <span className="col-start-4 row-start-2 whitespace-nowrap text-right text-[11px] font-mono text-pos-muted tabular-nums">
-                  {item.saleUnit === "unit" ? `${item.quantity} × ` : ""}
-                  {formatCurrency(item.unitPrice)}{item.saleUnit !== "unit" ? "/kg" : ""}
+              {/* Second line: unit price on the left, line subtotal on the right */}
+              <div className="col-span-full row-start-2 flex items-baseline justify-between gap-2">
+                {/* Unit price — only when it adds information over the line subtotal */}
+                <span className="min-w-0 truncate text-[11px] font-mono text-pos-muted tabular-nums">
+                  {(item.saleUnit !== "unit" || item.quantity !== 1) &&
+                    `${item.saleUnit === "unit" ? `${item.quantity} × ` : ""}${formatCurrency(item.unitPrice)}${item.saleUnit !== "unit" ? "/kg" : ""}`}
                 </span>
-              )}
-
-              {/* Subtotal */}
-              <span className="col-start-5 row-start-2 whitespace-nowrap text-right text-sm font-bold font-mono text-pos-text tabular-nums">
-                {formatCurrency(item.subtotal)}
-              </span>
+                <span className="shrink-0 whitespace-nowrap text-sm font-bold font-mono text-pos-text tabular-nums">
+                  {formatCurrency(item.subtotal)}
+                </span>
+              </div>
 
               {/* Quantity / Weight controls */}
               {item.saleUnit === "unit" ? (
-                /* ── Unit controls (current) ── */
-                <div className="col-span-3 col-start-1 row-start-2 flex flex-wrap items-center gap-1">
+                /* ── Unit controls: inline, beside the product name ── */
+                <div className="col-start-4 row-start-1 flex shrink-0 items-center justify-self-end gap-1">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -380,8 +379,8 @@ export default function CartPanel({
                   </button>
                 </div>
               ) : (
-                /* ── Weight controls (gramos) ── */
-                <div className="col-span-3 col-start-1 row-start-2 flex flex-wrap items-center gap-1">
+                /* ── Weight controls (gramos): six buttons do not fit beside the name ── */
+                <div className="col-span-full col-start-1 row-start-3 flex flex-wrap items-center gap-1">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -525,7 +524,11 @@ export default function CartPanel({
 
               {/* Stock warning */}
               {stockError === item.productId && (
-                <span className="col-span-full row-start-3 text-[10px] text-pos-danger font-medium">
+                <span
+                  className={`col-span-full text-[10px] text-pos-danger font-medium ${
+                    item.saleUnit === "unit" ? "row-start-3" : "row-start-4"
+                  }`}
+                >
                   Stock insuf.
                 </span>
               )}
