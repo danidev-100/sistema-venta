@@ -33,7 +33,7 @@ S10. Dark mode y `design/system.md` siguen siendo fuente de verdad: la regla res
 - T4 · Proveedores, Pedidos, Gastos: tabla→tarjetas y toolbars. Las tablas de resumen/edición (detalle de pedido, totales por categoría, ítems de factura) siguen siendo tablas con scroll propio. `S3 S4` — commit `70c3bbe`.
 - T5 · Caja, Comprobantes, Usuarios, Admin: tabla→tarjetas; `UserManagementPage` migra su vista duplicada a `.table-cards` (una sola copia, -105 líneas). `S3 S4` — commit `f0037e4`.
 - T6 · POS, Dashboard, Estadísticas, Login: grillas y gráficos apilan, carrito usable a 375 px, sin desborde en recharts. `S5 S7` — commit `8ca1cc8`.
-- T7 · Verificación: `pnpm test` 417/417 (32 archivos), `tsc --noEmit` limpio, `vite build` OK y chequeo estructural (13 tablas `table-cards`, cada `td` con `data-label`/`data-plain`/`data-head`). `S9 S10` — commit `pendiente (docs)`.
+- T7 · Verificación: `pnpm test` 417/417 (32 archivos), `tsc --noEmit` limpio, `vite build` OK y chequeo estructural (13 tablas `table-cards`, cada `td` con `data-label`/`data-plain`/`data-head`). `S9 S10` — commit `2d78432`.
 
 ## Log
 
@@ -46,3 +46,5 @@ L6. Reparto por superficies disjuntas: tres workers en paralelo (Productos+Clien
 L7. Hallazgo de T5: `InvoiceDetail` y `ReconciliationForm` no son overlays (son panel lateral y sección inline); aplicarles `sheet` los habría vuelto pantalla completa sin forma de cerrar. Quedan sin `sheet` a propósito.
 L8. Verificación (T7): `tsc --noEmit` limpio; `vitest run` 417/417 en 32 archivos; `vite build` OK; 13 tablas con `table-cards` y cobertura completa de `data-label`/`data-plain`/`data-head`. El único dato sin `data-head` estaba en `ProductSearchRow` (celda de componente fuera del bloque JSX de la tabla) y se corrigió con `data-plain data-head`.
 L9. Contrato reforzado: `UserManagementPage.test.tsx` ahora consulta `getByLabelText` (singular) en vez de `getAllByLabelText(...)[0]`, así el test falla si alguien vuelve a duplicar el DOM.
+L10. Release: merge fast-forward `feature/bloques-ui` → `master` (`66d1aaa..2d78432`, 0 conflictos) y push a `origin/master`. Deploy a producción con `vercel --prod`: deployment `dpl_DNfGKxiN8r2tkx4gyVKvkRjfgKVb`, `READY`, alias de producción `https://sistema-venta-one.vercel.app`.
+L11. Smoke test post-deploy sobre `https://sistema-venta-one.vercel.app`: `/` → 200; `/api/company` y `/api/products` → 401 (la función responde y exige auth, ya no 500 por esquema); asset `/assets/index-Ggv-f-zP.css` → 200, 53.851 bytes, contiene `table-cards` y `100dvh`, o sea que las primitivas responsive sí están en producción. La verificación con sesión autenticada queda del lado del usuario (no invento credenciales).
