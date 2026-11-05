@@ -3,11 +3,12 @@
   "chosen": "03-bloques.html",
   "handoffs": {
     "03-bloques.html": {
-      "status": "sent",
+      "status": "implemented",
       "queued": false,
       "sentAt": "2026-11-05T01:36:57.642Z",
       "startedAt": null,
-      "implementedAt": null
+      "implementedAt": "2026-11-05T01:54:36.633Z",
+      "note": "Implementado en feature/bloques-ui: tokens (1227ecf), shell (ffd224c), POS (a253460). 32 archivos de tests verdes, build limpio. Desviación: sin fila de medios de pago en el panel; se elige en CheckoutModal."
     }
   }
 }
