@@ -234,19 +234,19 @@ export default function CartPanel({
             <div
               key={item.productId}
               onClick={() => selectCartItem(item.productId)}
-              className={`flex flex-wrap items-center gap-x-2 gap-y-1.5 rounded-control border px-2.5 py-2 cursor-pointer transition-colors lg:flex-nowrap lg:gap-2 ${
+              className={`grid grid-cols-[1.25rem_1.75rem_minmax(0,1fr)_auto_auto] items-center gap-x-1.5 gap-y-1.5 rounded-control border px-2.5 py-2 cursor-pointer transition-colors ${
                 selectedCartItemId === item.productId
                   ? "border-pos-secondary ring-1 ring-pos-secondary/30"
                   : "border-pos-muted/10 hover:border-pos-muted/25"
               }`}
             >
               {/* Item index */}
-              <span className="order-1 shrink-0 w-5 text-center text-xs font-mono font-bold text-pos-muted/50">
+              <span className="col-start-1 row-start-1 w-5 text-center text-xs font-mono font-bold text-pos-muted/50">
                 {idx + 1}
               </span>
 
               {/* Thumbnail */}
-              <div className="order-2 shrink-0 w-7 h-7 rounded-control overflow-hidden bg-pos-muted/10">
+              <div className="col-start-2 row-start-1 w-7 h-7 rounded-control overflow-hidden bg-pos-muted/10">
                 <ProductImage
                   src={products.find((p) => p.id === item.productId)?.image}
                   imgClassName="w-full h-full object-cover"
@@ -256,24 +256,27 @@ export default function CartPanel({
               </div>
 
               {/* Product name */}
-              <span className="order-3 flex-1 min-w-0 text-sm font-medium text-pos-text truncate">
+              <span className="col-start-3 row-start-1 min-w-0 text-sm font-medium text-pos-text truncate">
                 {item.productName}
               </span>
 
-              {/* Price */}
-              <span className="order-5 lg:order-4 shrink-0 text-xs font-mono text-pos-muted tabular-nums min-w-[72px] text-right">
-                {formatCurrency(item.unitPrice)}{item.saleUnit !== "unit" ? "/kg" : ""}
-              </span>
+              {/* Unit price — only when it adds information over the line subtotal */}
+              {(item.saleUnit !== "unit" || item.quantity !== 1) && (
+                <span className="col-start-4 row-start-2 whitespace-nowrap text-right text-[11px] font-mono text-pos-muted tabular-nums">
+                  {item.saleUnit === "unit" ? `${item.quantity} × ` : ""}
+                  {formatCurrency(item.unitPrice)}{item.saleUnit !== "unit" ? "/kg" : ""}
+                </span>
+              )}
 
               {/* Subtotal */}
-              <span className="order-6 lg:order-5 shrink-0 text-sm font-bold font-mono text-pos-text tabular-nums min-w-[70px] text-right">
+              <span className="col-start-5 row-start-2 whitespace-nowrap text-right text-sm font-bold font-mono text-pos-text tabular-nums">
                 {formatCurrency(item.subtotal)}
               </span>
 
               {/* Quantity / Weight controls */}
               {item.saleUnit === "unit" ? (
                 /* ── Unit controls (current) ── */
-                <div className="order-7 lg:order-6 shrink-0 flex flex-wrap lg:flex-nowrap items-center gap-0.5">
+                <div className="col-span-3 col-start-1 row-start-2 flex flex-wrap items-center gap-1">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -378,7 +381,7 @@ export default function CartPanel({
                 </div>
               ) : (
                 /* ── Weight controls (gramos) ── */
-                <div className="order-7 lg:order-6 shrink-0 flex flex-wrap lg:flex-nowrap items-center gap-0.5">
+                <div className="col-span-3 col-start-1 row-start-2 flex flex-wrap items-center gap-1">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -522,7 +525,7 @@ export default function CartPanel({
 
               {/* Stock warning */}
               {stockError === item.productId && (
-                <span className="order-8 lg:order-7 shrink-0 text-[10px] text-pos-danger font-medium">
+                <span className="col-span-full row-start-3 text-[10px] text-pos-danger font-medium">
                   Stock insuf.
                 </span>
               )}
@@ -533,7 +536,7 @@ export default function CartPanel({
                   e.stopPropagation();
                   removeItem(item.productId);
                 }}
-                className="order-4 lg:order-8 shrink-0 w-6 h-6 flex items-center justify-center text-pos-muted/40 hover:text-pos-danger touch-target rounded-control hover:bg-pos-danger/10 transition-colors"
+                className="col-start-5 row-start-1 justify-self-end w-6 h-6 flex items-center justify-center text-pos-muted/60 hover:text-pos-danger touch-target rounded-control hover:bg-pos-danger/10 transition-colors"
                 aria-label={`Eliminar ${item.productName} del carrito`}
               >
                 ✕
@@ -609,7 +612,7 @@ export default function CartPanel({
           {/* Checkout button */}
           <button
             onClick={onCheckout}
-            className="mt-2 w-full rounded-[15px] bg-gradient-to-br from-pos-accent to-pos-accent-2 py-3 text-base font-bold text-white touch-target transition hover:brightness-105 active:scale-[0.995]"
+            className="mt-2 w-full rounded-[15px] bg-gradient-to-br from-pos-accent to-pos-accent-2 py-3 text-base font-bold text-pos-on-solid touch-target transition hover:brightness-105 active:scale-[0.995]"
           >
             Cobrar — {formatCurrency(total)}
           </button>
@@ -643,7 +646,7 @@ export default function CartPanel({
               </button>
               <button
                 onClick={confirmCloseShift}
-                className="px-5 py-2.5 text-sm bg-pos-danger text-white rounded-control font-medium touch-target hover:opacity-90"
+                className="px-5 py-2.5 text-sm bg-pos-danger text-pos-on-solid rounded-control font-medium touch-target hover:opacity-90"
               >
                 Cerrar Turno
               </button>
