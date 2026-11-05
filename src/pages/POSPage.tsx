@@ -10,6 +10,7 @@ import { exportInvoicePdf, printComprobante } from "@/lib/pdf-export";
 import ProductSearchModal from "@/components/ProductSearchModal";
 import BarcodeScannerModal from "@/components/BarcodeScannerModal";
 import CartPanel from "@/components/CartPanel";
+import ProductImage from "@/components/ProductImage";
 import CheckoutModal from "@/components/CheckoutModal";
 import CustomerSelectModal from "@/components/CustomerSelectModal";
 import OpenShiftModal from "@/components/OpenShiftModal";
@@ -406,7 +407,7 @@ export default function POSPage() {
             <div className="flex flex-col gap-3">
               <button
                 onClick={handleOpenShift}
-                className="rounded-control bg-gradient-to-br from-pos-accent to-pos-accent-2 px-6 py-3 text-sm font-semibold text-white touch-target transition hover:brightness-105"
+                className="rounded-control bg-gradient-to-br from-pos-accent to-pos-accent-2 px-6 py-3 text-sm font-semibold text-pos-on-solid touch-target transition hover:brightness-105"
               >
                 Abrir Turno como {currentUser?.name ?? "Cajero"}
               </button>
@@ -456,7 +457,7 @@ export default function POSPage() {
                 </button>
               </div>
 
-              <p className="shrink-0 text-center text-[11px] text-pos-muted/50">
+              <p className="shrink-0 text-[11px] text-pos-muted">
                 O escaneá el código de barras directamente
               </p>
 
@@ -508,7 +509,7 @@ export default function POSPage() {
                   </p>
                 </div>
               ) : (
-                <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-3 overflow-y-auto pb-1 pr-1 lg:grid-cols-3">
+                <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-3 overflow-y-auto pb-1 pr-1 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
                   {visibleCatalog.map((product) => {
                     const categoryName =
                       product.category_id != null
@@ -541,6 +542,14 @@ export default function POSPage() {
                         }
                         className="flex min-h-[132px] flex-col rounded-card border border-pos-muted/10 bg-pos-surface p-3.5 text-left transition-all hover:-translate-y-0.5 hover:border-pos-secondary/35 hover:shadow-lg hover:shadow-pos-secondary/20 disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:translate-y-0 disabled:hover:border-pos-muted/10 disabled:hover:shadow-none"
                       >
+                        <div className="-mx-3.5 -mt-3.5 mb-2.5 aspect-[4/3] overflow-hidden rounded-t-card bg-pos-muted/10">
+                          <ProductImage
+                            src={product.image}
+                            imgClassName="h-full w-full object-cover"
+                            boxClassName="h-full w-full"
+                            iconClassName="w-6 h-6 text-pos-muted/25"
+                          />
+                        </div>
                         {categoryName && (
                           <span className="mb-2 self-start rounded-pill bg-pos-background px-2 py-0.5 text-[10.5px] font-semibold text-pos-muted">
                             {categoryName}
@@ -570,7 +579,7 @@ export default function POSPage() {
             {/* ── Sale panel ── */}
             <aside
               aria-label="Venta actual"
-              className={`flex min-h-0 flex-col overflow-hidden rounded-panel border border-pos-muted/10 bg-pos-surface shadow-[0_24px_48px_-34px_rgba(20,22,31,0.45)] max-lg:min-h-[46vh] lg:w-[396px] lg:shrink-0 ${
+              className={`flex min-h-0 flex-col overflow-hidden rounded-panel border border-pos-muted/10 bg-pos-surface shadow-[0_24px_48px_-34px_rgba(20,22,31,0.45)] max-lg:min-h-[46vh] lg:w-[440px] lg:shrink-0 ${
                 scanFlash ? "scan-flash" : ""
               }`}
             >
@@ -749,7 +758,7 @@ function WeightInputModal({
               onClick={() => setKg(w)}
               className={`px-3 py-1.5 rounded-lg text-sm font-mono font-medium touch-target transition-colors ${
                 kg === w
-                  ? "bg-pos-secondary text-white"
+                  ? "bg-pos-secondary text-pos-on-solid"
                   : "bg-pos-background border border-pos-muted/20 text-pos-muted hover:border-pos-secondary/40"
               }`}
             >
@@ -779,7 +788,7 @@ function WeightInputModal({
           <button
             onClick={handleSubmit}
             disabled={grams < 10}
-            className="flex-1 px-4 py-2.5 bg-pos-secondary text-white rounded-xl font-medium text-sm touch-target hover:opacity-90 disabled:opacity-40 transition-opacity"
+            className="flex-1 px-4 py-2.5 bg-pos-secondary text-pos-on-solid rounded-xl font-medium text-sm touch-target hover:opacity-90 disabled:opacity-40 transition-opacity"
           >
             Agregar
           </button>
@@ -832,7 +841,7 @@ function PriceListStrip() {
               }}
               className={`text-[11px] px-2.5 py-1 rounded-pill font-medium touch-target transition-all ${
                 active
-                  ? "bg-pos-secondary text-white shadow-sm"
+                  ? "bg-pos-secondary text-pos-on-solid shadow-sm"
                   : "border border-pos-muted/20 text-pos-muted hover:border-pos-secondary hover:text-pos-secondary"
               }`}
             >
