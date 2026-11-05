@@ -157,7 +157,7 @@ export default function PurchaseInvoicesSection() {
       <h3 className="text-base font-semibold text-pos-text mb-4">Facturas de Compra</h3>
       <div className="max-w-2xl space-y-6">
         {/* ── Form ── */}
-        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4 dark:border-gray-600/30 dark:bg-gray-800">
+        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4">
           <h4 className="text-sm font-semibold text-pos-text mb-3">Nueva Factura de Compra</h4>
           <div className="space-y-3">
             {/* Proveedor */}
@@ -312,7 +312,7 @@ export default function PurchaseInvoicesSection() {
             <button
               onClick={handleCargar}
               disabled={!proveedorId || items.length === 0 || creating}
-              className="px-4 py-2 bg-pos-secondary text-white rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40"
+              className="px-4 py-2 bg-pos-secondary text-pos-on-solid rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40"
             >
               {creating ? "Cargando…" : "Cargar"}
             </button>
@@ -332,7 +332,7 @@ export default function PurchaseInvoicesSection() {
             {purchaseInvoices.map((inv) => (
               <div
                 key={inv.id}
-                className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4 dark:border-gray-600/30 dark:bg-gray-800"
+                className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
@@ -462,7 +462,7 @@ function SuccessModal({
         </div>
         <button
           onClick={closeWithAnim}
-          className="w-full px-4 py-3 bg-pos-secondary text-white rounded-xl font-medium text-sm touch-target hover:opacity-90 transition-opacity"
+          className="w-full px-4 py-3 bg-pos-secondary text-pos-on-solid rounded-xl font-medium text-sm touch-target hover:opacity-90 transition-opacity"
         >
           Listo
         </button>

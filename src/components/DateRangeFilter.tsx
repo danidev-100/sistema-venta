@@ -113,7 +113,7 @@ export default function DateRangeFilter({ value, onChange }: DateRangeFilterProp
             onClick={() => handlePresetClick(p.id)}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors touch-target ${
               activePreset === p.id
-                ? "bg-pos-secondary text-white shadow-sm"
+                ? "bg-pos-secondary text-pos-on-solid shadow-sm"
                 : "bg-pos-background text-pos-muted hover:bg-pos-secondary/10 hover:text-pos-secondary"
             }`}
           >
@@ -143,7 +143,7 @@ export default function DateRangeFilter({ value, onChange }: DateRangeFilterProp
         <button
           onClick={handleCustomApply}
           disabled={!customFrom}
-          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-pos-secondary text-white hover:bg-pos-secondary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed touch-target"
+          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-pos-secondary text-pos-on-solid hover:bg-pos-secondary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed touch-target"
         >
           Aplicar
         </button>

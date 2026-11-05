@@ -215,7 +215,7 @@ export default function AfipSection() {
       {/* Actions */}
       <div className="flex flex-wrap items-center gap-3 pt-2">
         <button onClick={handleSave} disabled={saving}
-          className="px-6 py-2.5 bg-pos-secondary text-white rounded-lg font-medium text-sm touch-target hover:opacity-90 transition-opacity disabled:opacity-50">
+          className="px-6 py-2.5 bg-pos-secondary text-pos-on-solid rounded-lg font-medium text-sm touch-target hover:opacity-90 transition-opacity disabled:opacity-50">
           {saving ? "Guardando…" : "Guardar"}
         </button>
         <button onClick={handleTest} disabled={testing}

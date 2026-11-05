@@ -14,7 +14,7 @@ export default function NoStockModal({ productName, onClose }: NoStockModalProps
         </p>
         <button
           onClick={onClose}
-          className="w-full px-4 py-3 bg-pos-secondary text-white rounded-xl font-medium text-sm touch-target hover:opacity-90 transition-opacity"
+          className="w-full px-4 py-3 bg-pos-secondary text-pos-on-solid rounded-xl font-medium text-sm touch-target hover:opacity-90 transition-opacity"
         >
           Cerrar
         </button>

@@ -149,7 +149,7 @@ export default function CompanySettings() {
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); handleRemoveLogo(); }}
-                className="absolute -top-2 -right-2 w-6 h-6 bg-pos-danger text-white rounded-full text-xs flex items-center justify-center shadow hover:scale-110 transition-transform"
+                className="absolute -top-2 -right-2 w-6 h-6 bg-pos-danger text-pos-on-solid rounded-full text-xs flex items-center justify-center shadow hover:scale-110 transition-transform"
                 title="Eliminar logo"
               >
                 ✕
@@ -227,7 +227,7 @@ export default function CompanySettings() {
                 onClick={() => setIvaAlicuota(String(alicuota))}
                 className={`px-4 py-2 rounded-lg text-sm font-medium touch-target transition-all ${
                   parseFloat(ivaAlicuota) === alicuota
-                    ? "bg-pos-secondary text-white"
+                    ? "bg-pos-secondary text-pos-on-solid"
                     : "border border-pos-muted/20 text-pos-text hover:border-pos-secondary hover:text-pos-secondary"
                 }`}
               >
@@ -258,7 +258,7 @@ export default function CompanySettings() {
       {/* Actions */}
       <div className="flex items-center gap-3 pt-2">
         <button onClick={handleSave} disabled={saving}
-          className="px-6 py-2.5 bg-pos-secondary text-white rounded-lg font-medium text-sm touch-target hover:opacity-90 transition-opacity disabled:opacity-50">
+          className="px-6 py-2.5 bg-pos-secondary text-pos-on-solid rounded-lg font-medium text-sm touch-target hover:opacity-90 transition-opacity disabled:opacity-50">
           {saving ? "Guardando…" : "Guardar"}
         </button>
         {saved && (

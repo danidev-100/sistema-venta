@@ -104,7 +104,7 @@ export default function CollectPaymentModal({
           <button
             onClick={handleSubmit}
             disabled={busy || parsedAmount <= 0}
-            className="flex-1 px-4 py-3 bg-pos-success text-white rounded-xl font-bold text-sm touch-target hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="flex-1 px-4 py-3 bg-pos-success text-pos-on-solid rounded-xl font-bold text-sm touch-target hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {busy ? "Guardando…" : `Cobrar ${formatCurrency(parsedAmount)}`}
           </button>

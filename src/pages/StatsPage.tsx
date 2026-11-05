@@ -251,7 +251,7 @@ export default function StatsPage() {
               onClick={() => setGranularity(g)}
               className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors touch-target ${
                 granularity === g
-                  ? "bg-pos-secondary text-white"
+                  ? "bg-pos-secondary text-pos-on-solid"
                   : "bg-pos-background text-pos-muted hover:text-pos-secondary"
               }`}
             >
@@ -304,7 +304,7 @@ export default function StatsPage() {
       {/* ── Charts Grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Ingresos en el Tiempo */}
-        <section className="bg-pos-surface rounded-xl border border-pos-muted/10 p-4 dark:bg-gray-800 dark:border-gray-600/30">
+        <section className="bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
           <h2 className="text-sm font-semibold text-pos-text uppercase tracking-wide mb-3">
             Ingresos en el Tiempo
           </h2>
@@ -312,7 +312,7 @@ export default function StatsPage() {
         </section>
 
         {/* Desglose por Pago */}
-        <section className="bg-pos-surface rounded-xl border border-pos-muted/10 p-4 dark:bg-gray-800 dark:border-gray-600/30">
+        <section className="bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
           <h2 className="text-sm font-semibold text-pos-text uppercase tracking-wide mb-3">
             Desglose por Método de Pago
           </h2>
@@ -320,7 +320,7 @@ export default function StatsPage() {
         </section>
 
         {/* Ventas por Hora */}
-        <section className="bg-pos-surface rounded-xl border border-pos-muted/10 p-4 dark:bg-gray-800 dark:border-gray-600/30">
+        <section className="bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
           <h2 className="text-sm font-semibold text-pos-text uppercase tracking-wide mb-3">
             Ventas por Hora
           </h2>
@@ -328,7 +328,7 @@ export default function StatsPage() {
         </section>
 
         {/* Más Vendidos */}
-        <section className="bg-pos-surface rounded-xl border border-pos-muted/10 p-4 dark:bg-gray-800 dark:border-gray-600/30">
+        <section className="bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-pos-text uppercase tracking-wide">
               Más Vendidos
@@ -354,7 +354,7 @@ export default function StatsPage() {
         </section>
 
         {/* Por Categoría */}
-        <section className="bg-pos-surface rounded-xl border border-pos-muted/10 p-4 dark:bg-gray-800 dark:border-gray-600/30">
+        <section className="bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
           <h2 className="text-sm font-semibold text-pos-text uppercase tracking-wide mb-3">
             Ventas por Categoría
           </h2>
@@ -362,7 +362,7 @@ export default function StatsPage() {
         </section>
 
         {/* Por Cajero */}
-        <section className="bg-pos-surface rounded-xl border border-pos-muted/10 p-4 dark:bg-gray-800 dark:border-gray-600/30">
+        <section className="bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
           <h2 className="text-sm font-semibold text-pos-text uppercase tracking-wide mb-3">
             Ventas por Cajero
           </h2>
@@ -409,7 +409,7 @@ function SummaryCard({
   negative?: boolean;
 }) {
   return (
-    <div className="bg-pos-surface rounded-xl border border-pos-muted/10 p-3 dark:bg-gray-800 dark:border-gray-600/30">
+    <div className="bg-pos-surface rounded-xl border border-pos-muted/10 p-3">
       <p className="text-xs text-pos-muted uppercase tracking-wide mb-1 flex items-center gap-1">
         {label}
         {delta}

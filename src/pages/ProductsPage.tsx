@@ -308,7 +308,7 @@ export default function ProductsPage() {
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-full">
       {/* ── Product list / form ── */}
-      <section ref={sectionRef} className="flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-3 overflow-y-auto dark:bg-gray-800 dark:border-gray-600/30">
+      <section ref={sectionRef} className="flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-3 overflow-y-auto">
         {centerView.kind === "list" && (
           <>
             {/* Header */}
@@ -349,7 +349,7 @@ export default function ProductsPage() {
                 </button>
                 <button
                   onClick={() => setCenterView({ kind: "create" })}
-                  className="text-xs px-3 py-1.5 bg-pos-secondary text-white rounded-lg touch-target hover:opacity-90"
+                  className="text-xs px-3 py-1.5 bg-pos-secondary text-pos-on-solid rounded-lg touch-target hover:opacity-90"
                 >
                   + Agregar Producto
                 </button>
@@ -384,7 +384,7 @@ export default function ProductsPage() {
                   className="w-full border border-pos-muted/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pos-secondary touch-target"
                 />
                 {search.trim() && (
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-white bg-pos-secondary px-2 py-0.5 rounded-full pointer-events-none">
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-pos-on-solid bg-pos-secondary px-2 py-0.5 rounded-full pointer-events-none">
                     {filteredProducts.length}
                   </span>
                 )}
@@ -400,7 +400,7 @@ export default function ProductsPage() {
                     ? "bg-pos-danger/10 border-pos-danger/40 text-pos-danger ring-1 ring-pos-danger/20 dark:bg-red-900/20 dark:border-red-500/40 dark:text-red-400"
                     : stockFilter === "medium"
                       ? "bg-amber-500/10 border-amber-500/40 text-amber-600 ring-1 ring-amber-500/20 dark:bg-amber-900/20 dark:border-amber-500/40 dark:text-amber-400"
-                      : "border-pos-muted/20 text-pos-muted hover:border-pos-muted/40 hover:text-pos-text dark:border-gray-600/30 dark:text-gray-400 dark:hover:text-gray-200"
+                      : "border-pos-muted/20 text-pos-muted hover:border-pos-muted/40 hover:text-pos-text"
                 }`}
               >
                 <span className={`inline-block w-2 h-2 rounded-full mr-1.5 align-middle ${
@@ -427,21 +427,21 @@ export default function ProductsPage() {
 
                 <button
                   onClick={() => setShowBulkPrice(true)}
-                  className="text-xs px-2.5 py-1.5 bg-pos-accent text-white rounded-lg touch-target hover:opacity-90"
+                  className="text-xs px-2.5 py-1.5 bg-pos-accent text-pos-on-solid rounded-lg touch-target hover:opacity-90"
                 >
                   +% Precio
                 </button>
 
                 <button
                   onClick={() => setShowBulkCategory(true)}
-                  className="text-xs px-2.5 py-1.5 bg-pos-secondary text-white rounded-lg touch-target hover:opacity-90"
+                  className="text-xs px-2.5 py-1.5 bg-pos-secondary text-pos-on-solid rounded-lg touch-target hover:opacity-90"
                 >
                   Categoría
                 </button>
 
                 <button
                   onClick={() => setShowBulkDelete(true)}
-                  className="text-xs px-2.5 py-1.5 bg-pos-danger text-white rounded-lg touch-target hover:opacity-90"
+                  className="text-xs px-2.5 py-1.5 bg-pos-danger text-pos-on-solid rounded-lg touch-target hover:opacity-90"
                 >
                   Eliminar
                 </button>
@@ -468,7 +468,7 @@ export default function ProductsPage() {
                 <div className="overflow-x-auto">
                 <table className="w-full text-xm">
                     <thead>
-                    <tr className="text-pos-muted border-b border-pos-muted/20 dark:text-gray-400 dark:border-gray-700">
+                    <tr className="text-pos-muted border-b border-pos-muted/20">
                       <th className="w-8 py-2 pr-1">
                         <input
                           type="checkbox"
@@ -537,10 +537,10 @@ export default function ProductsPage() {
                           key={p.id}
                           onClick={() => handleProductSelect(p.id)}
                           onMouseEnter={() => setSelectedIndex(idx)}
-                          className={`border-b border-pos-muted/10 cursor-pointer transition-colors dark:border-gray-700 ${
+                          className={`border-b border-pos-muted/10 cursor-pointer transition-colors ${
                             isSelected
                               ? "bg-pos-secondary/10 dark:bg-pos-secondary/15 ring-1 ring-pos-secondary/30"
-                              : "hover:bg-pos-background/50 dark:hover:bg-gray-700/50"
+                              : "hover:bg-pos-background/50"
                           } ${
                             selectedProductId === p.id
                               ? "bg-pos-secondary/10 dark:bg-pos-secondary/15"
@@ -638,7 +638,7 @@ export default function ProductsPage() {
                                     setEditingStockId(null);
                                   }
                                 }}
-                                className="w-16 text-right text-xs font-bold font-mono bg-pos-background border border-pos-secondary rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-pos-secondary [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none dark:bg-gray-700 dark:text-white"
+                                className="w-16 text-right text-xs font-bold font-mono bg-pos-background border border-pos-secondary rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-pos-secondary [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                               />
                             ) : (
                               <button
@@ -737,7 +737,7 @@ export default function ProductsPage() {
       </section>
 
       {/* ── Right panel: Stock movement log ── */}
-      <aside className="w-full lg:w-80 flex-shrink-0 bg-pos-surface rounded-xl border border-pos-muted/10 p-3 overflow-y-auto max-h-48 lg:max-h-full dark:bg-gray-800 dark:border-gray-600/30">
+      <aside className="w-full lg:w-80 flex-shrink-0 bg-pos-surface rounded-xl border border-pos-muted/10 p-3 overflow-y-auto max-h-48 lg:max-h-full">
         <StockMovementLog
           product={selectedProduct}
           emptyState={
@@ -798,7 +798,7 @@ export default function ProductsPage() {
           onClick={() => setShowBulkDelete(false)}
         >
           <div
-            className="w-full max-w-sm bg-pos-surface rounded-2xl shadow-2xl border border-pos-muted/10 mx-4 p-5 dark:bg-gray-800 dark:border-gray-600/30"
+            className="w-full max-w-sm bg-pos-surface rounded-2xl shadow-2xl border border-pos-muted/10 mx-4 p-5"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
@@ -834,7 +834,7 @@ export default function ProductsPage() {
                   setSelectedProductIds([]);
                   setShowBulkDelete(false);
                 }}
-                className="flex-1 px-4 py-2.5 bg-pos-danger text-white rounded-xl text-sm font-bold touch-target transition-all hover:bg-pos-danger/90"
+                className="flex-1 px-4 py-2.5 bg-pos-danger text-pos-on-solid rounded-xl text-sm font-bold touch-target transition-all hover:bg-pos-danger/90"
               >
                 Eliminar
               </button>
@@ -914,7 +914,7 @@ function EditCategoryForm({
       <div className="flex items-center gap-2">
         <button
           type="submit"
-          className="flex-1 px-4 py-2 bg-pos-secondary text-white rounded-lg font-medium text-sm touch-target hover:opacity-90"
+          className="flex-1 px-4 py-2 bg-pos-secondary text-pos-on-solid rounded-lg font-medium text-sm touch-target hover:opacity-90"
         >
           Guardar
         </button>

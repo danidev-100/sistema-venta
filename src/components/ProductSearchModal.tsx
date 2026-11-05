@@ -258,7 +258,7 @@ export default function ProductSearchModal({
                   </p>
                   <button
                     onClick={() => onQuickAdd(search)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-pos-secondary text-white rounded-xl font-medium text-sm touch-target hover:opacity-90 transition-opacity"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-pos-secondary text-pos-on-solid rounded-xl font-medium text-sm touch-target hover:opacity-90 transition-opacity"
                   >
                     <svg
                       viewBox="0 0 24 24"

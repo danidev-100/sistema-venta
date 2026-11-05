@@ -110,7 +110,7 @@ export default function CategoryTree({
         <div
           className={`flex items-center gap-1 py-1.5 px-2 rounded-lg cursor-pointer transition-colors touch-target select-none ${
             isSelected
-              ? "bg-pos-secondary text-white"
+              ? "bg-pos-secondary text-pos-on-solid"
               : "hover:bg-pos-background text-pos-text"
           }`}
           style={{ paddingLeft: `${12 + node.depth * 20}px` }}
@@ -172,14 +172,14 @@ export default function CategoryTree({
             />
             <button
               type="submit"
-              className="text-xs px-2 py-1 bg-pos-success text-white rounded touch-target"
+              className="text-xs px-2 py-1 bg-pos-success text-pos-on-solid rounded touch-target"
             >
               ✓
             </button>
             <button
               type="button"
               onClick={() => setAddingParent(null)}
-              className="text-xs px-2 py-1 bg-pos-danger text-white rounded touch-target"
+              className="text-xs px-2 py-1 bg-pos-danger text-pos-on-solid rounded touch-target"
             >
               ✕
             </button>
@@ -203,7 +203,7 @@ export default function CategoryTree({
         </h2>
         <button
           onClick={() => handleStartAdd(null)}
-          className="text-xs px-2 py-1 bg-pos-secondary text-white rounded-lg touch-target hover:opacity-90"
+          className="text-xs px-2 py-1 bg-pos-secondary text-pos-on-solid rounded-lg touch-target hover:opacity-90"
         >
           + Nueva
         </button>
@@ -227,7 +227,7 @@ export default function CategoryTree({
           />
           <button
             type="submit"
-            className="text-xs px-2 py-1 bg-pos-success text-white rounded touch-target"
+            className="text-xs px-2 py-1 bg-pos-success text-pos-on-solid rounded touch-target"
           >
             ✓
           </button>

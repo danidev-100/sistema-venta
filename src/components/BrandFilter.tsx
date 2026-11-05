@@ -61,7 +61,7 @@ export default function BrandFilter({
         </h3>
         <button
           onClick={() => setAdding(true)}
-          className="text-xs px-2 py-1 bg-pos-secondary text-white rounded-lg touch-target hover:opacity-90"
+          className="text-xs px-2 py-1 bg-pos-secondary text-pos-on-solid rounded-lg touch-target hover:opacity-90"
         >
           + Nueva
         </button>
@@ -85,7 +85,7 @@ export default function BrandFilter({
           />
           <button
             type="submit"
-            className="text-xs px-2 py-1 bg-pos-success text-white rounded touch-target"
+            className="text-xs px-2 py-1 bg-pos-success text-pos-on-solid rounded touch-target"
           >
             ✓
           </button>
@@ -127,7 +127,7 @@ export default function BrandFilter({
                   onClick={() => onSelect(isSelected ? null : brand.id)}
                   className={`w-full flex items-center gap-2 py-1.5 px-2 rounded-lg text-sm transition-colors touch-target ${
                     isSelected
-                      ? "bg-pos-secondary text-white font-medium"
+                      ? "bg-pos-secondary text-pos-on-solid font-medium"
                       : "text-pos-text hover:bg-pos-background"
                   }`}
                 >

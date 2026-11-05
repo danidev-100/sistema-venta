@@ -149,7 +149,7 @@ export default function CustomersPage() {
             )}
             <button
               onClick={() => setView({ kind: "create" })}
-              className="text-xs px-3 py-1.5 bg-pos-secondary text-white rounded-lg touch-target hover:opacity-90 whitespace-nowrap"
+              className="text-xs px-3 py-1.5 bg-pos-secondary text-pos-on-solid rounded-lg touch-target hover:opacity-90 whitespace-nowrap"
             >
               + Nuevo Cliente
             </button>
@@ -353,7 +353,7 @@ function CustomerDetail({ customer, onBack }: { customer: Customer; onBack: () =
       </button>
 
       {/* Customer info card */}
-      <div className="bg-pos-surface rounded-xl border border-pos-muted/10 p-4 dark:border-gray-600/30 dark:bg-gray-800">
+      <div className="bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-lg font-bold text-pos-text">{customer.name}</h2>
@@ -372,7 +372,7 @@ function CustomerDetail({ customer, onBack }: { customer: Customer; onBack: () =
             {displayCustomer.creditBalance > 0 && (
               <button
                 onClick={() => setCollectOpen(true)}
-                className="mt-2 px-4 py-1.5 bg-pos-success text-white text-sm font-medium rounded-lg touch-target hover:opacity-90"
+                className="mt-2 px-4 py-1.5 bg-pos-success text-pos-on-solid text-sm font-medium rounded-lg touch-target hover:opacity-90"
               >
                 Cobrar
               </button>
@@ -382,7 +382,7 @@ function CustomerDetail({ customer, onBack }: { customer: Customer; onBack: () =
       </div>
 
       {/* History */}
-      <div className="flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-3 overflow-y-auto dark:border-gray-600/30 dark:bg-gray-800">
+      <div className="flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-3 overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-xs font-semibold text-pos-muted uppercase tracking-wider">Movimientos</h3>
           {rows.length > 0 && (

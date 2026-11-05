@@ -123,7 +123,7 @@ export default function CategoryList() {
           {!isCreating && !editingCat && (
             <button
               onClick={handleCreate}
-              className="text-xs px-3 py-1.5 bg-pos-secondary text-white rounded-lg touch-target hover:opacity-90"
+              className="text-xs px-3 py-1.5 bg-pos-secondary text-pos-on-solid rounded-lg touch-target hover:opacity-90"
             >
               + Agregar Categoría
             </button>
@@ -151,7 +151,7 @@ export default function CategoryList() {
             <button
               type="submit"
               disabled={!newName.trim()}
-              className="text-xs px-3 py-2 bg-pos-success text-white rounded-lg touch-target hover:opacity-90 disabled:opacity-40"
+              className="text-xs px-3 py-2 bg-pos-success text-pos-on-solid rounded-lg touch-target hover:opacity-90 disabled:opacity-40"
             >
               Guardar
             </button>
@@ -186,7 +186,7 @@ export default function CategoryList() {
             <button
               type="submit"
               disabled={!editName.trim()}
-              className="text-xs px-3 py-2 bg-pos-secondary text-white rounded-lg touch-target hover:opacity-90 disabled:opacity-40"
+              className="text-xs px-3 py-2 bg-pos-secondary text-pos-on-solid rounded-lg touch-target hover:opacity-90 disabled:opacity-40"
             >
               Guardar
             </button>

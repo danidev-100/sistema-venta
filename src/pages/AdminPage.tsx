@@ -313,7 +313,7 @@ export default function AdminPage() {
               <button
                 key={sec.id}
                 onClick={() => setActiveSection(sec.id)}
-                className="card-enter relative flex items-start gap-4 rounded-xl border border-pos-muted/10 bg-pos-surface p-4 md:p-5 shadow-sm active:scale-[0.98] transition-all duration-200 text-left cursor-pointer group overflow-hidden dark:border-gray-600/30 dark:bg-gray-800"
+                className="card-enter relative flex items-start gap-4 rounded-xl border border-pos-muted/10 bg-pos-surface p-4 md:p-5 shadow-sm active:scale-[0.98] transition-all duration-200 text-left cursor-pointer group overflow-hidden"
                 style={{ animationDelay: `${i * 0.06}s` }}
               >
                 {/* Accent bar */}
@@ -500,7 +500,7 @@ function BultosSection() {
           {storeBultos.map((bulto) => (
             <div
               key={bulto.id}
-              className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4 dark:border-gray-600/30 dark:bg-gray-800"
+              className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4"
             >
               {(() => {
                 const prod = products.find((p) => p.id === bulto.productId);
@@ -547,7 +547,7 @@ function BultosSection() {
         </div>
 
         {/* Create/Edit form */}
-        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4 dark:border-gray-600/30 dark:bg-gray-800">
+        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4">
           <h4 className="text-sm font-semibold text-pos-text mb-3">
             {editingId != null ? "Editar Bulto" : "Nuevo Bulto"}
           </h4>
@@ -655,7 +655,7 @@ function BultosSection() {
               <button
                 onClick={handleSave}
                 disabled={selectedProductId == null}
-                className="px-4 py-2 bg-pos-secondary text-white rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40"
+                className="px-4 py-2 bg-pos-secondary text-pos-on-solid rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40"
               >
                 {editingId != null ? "Guardar Cambios" : "Crear Bulto"}
               </button>
@@ -690,7 +690,7 @@ function BulkPriceSection() {
   const [showModal, setShowModal] = useState(false);
 
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center dark:text-gray-100">
+    <div className="flex flex-col items-center justify-center py-12 text-center">
       <svg
         className="w-16 h-16 text-pos-muted/40 mb-4"
         fill="none"
@@ -713,7 +713,7 @@ function BulkPriceSection() {
       </p>
       <button
         onClick={() => setShowModal(true)}
-        className="px-6 py-2.5 bg-pos-secondary text-white rounded-lg font-medium text-sm touch-target hover:opacity-90 transition-opacity"
+        className="px-6 py-2.5 bg-pos-secondary text-pos-on-solid rounded-lg font-medium text-sm touch-target hover:opacity-90 transition-opacity"
       >
         Iniciar Aumento Masivo
       </button>
@@ -774,7 +774,7 @@ function BackupSection() {
         Exportá una copia de seguridad o restaurá datos desde un archivo .json.
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-5 dark:border-gray-600/30 dark:bg-gray-800">
+        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-5">
           <h4 className="text-sm font-semibold text-pos-text mb-1">Exportar</h4>
           <p className="text-xs text-pos-muted mb-4">
             Descargá un .json con todos los datos.
@@ -782,13 +782,13 @@ function BackupSection() {
           <button
             onClick={handleExport}
             disabled={exporting}
-            className="w-full px-4 py-2 bg-pos-secondary text-white rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="w-full px-4 py-2 bg-pos-secondary text-pos-on-solid rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {exporting ? "Exportando…" : "Descargar Respaldo"}
           </button>
         </div>
 
-        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-5 dark:border-gray-600/30 dark:bg-gray-800">
+        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-5">
           <h4 className="text-sm font-semibold text-pos-text mb-1">Restaurar</h4>
           <p className="text-xs text-pos-muted mb-4">
             Reemplazá todos los datos actuales.
@@ -803,7 +803,7 @@ function BackupSection() {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={restoring}
-            className="w-full px-4 py-2 bg-pos-danger text-white rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="w-full px-4 py-2 bg-pos-danger text-pos-on-solid rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {restoring ? "Restaurando…" : "Restaurar Respaldo"}
           </button>
@@ -843,7 +843,7 @@ function SettingsSection() {
       <h3 className="text-base font-semibold text-pos-text mb-4">Configuración</h3>
       <div className="max-w-md space-y-4">
         {/* User info */}
-        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4 dark:border-gray-600/30 dark:bg-gray-800">
+        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4">
           <h4 className="text-xs font-semibold text-pos-muted uppercase tracking-wider mb-3">
             Usuario
           </h4>
@@ -863,7 +863,7 @@ function SettingsSection() {
             </div>
             <button
               onClick={() => setPage("user-management")}
-              className="text-xs px-3 py-1.5 bg-pos-secondary text-white rounded-lg font-medium touch-target hover:opacity-90 transition-opacity"
+              className="text-xs px-3 py-1.5 bg-pos-secondary text-pos-on-solid rounded-lg font-medium touch-target hover:opacity-90 transition-opacity"
             >
               Gestionar
             </button>
@@ -871,7 +871,7 @@ function SettingsSection() {
         </div>
 
         {/* Theme */}
-        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4 dark:border-gray-600/30 dark:bg-gray-800">
+        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4">
           <h4 className="text-xs font-semibold text-pos-muted uppercase tracking-wider mb-3">
             Tema
           </h4>
@@ -913,7 +913,7 @@ function ReleaseInfo() {
   });
 
   return (
-    <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4 dark:border-gray-600/30 dark:bg-gray-800">
+    <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4">
       <h4 className="text-xs font-semibold text-pos-muted uppercase tracking-wider mb-3">
         Release
       </h4>
@@ -1056,7 +1056,7 @@ function CombosSection() {
           {storeCombos.map((combo) => (
             <div
               key={combo.id}
-              className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4 dark:border-gray-600/30 dark:bg-gray-800"
+              className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4"
             >
               {(() => {
                 const regularTotal = combo.items.reduce((sum, item) => {
@@ -1128,7 +1128,7 @@ function CombosSection() {
         </div>
 
         {/* Create/Edit form */}
-        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4 dark:border-gray-600/30 dark:bg-gray-800">
+        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4">
           <h4 className="text-sm font-semibold text-pos-text mb-3">
             {editingId != null ? "Editar Combo" : "Nuevo Combo"}
           </h4>
@@ -1249,7 +1249,7 @@ function CombosSection() {
               <button
                 onClick={handleSave}
                 disabled={selectedItems.length === 0}
-                className="px-4 py-2 bg-pos-secondary text-white rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40"
+                className="px-4 py-2 bg-pos-secondary text-pos-on-solid rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40"
               >
                 {editingId != null ? "Guardar Cambios" : "Crear Combo"}
               </button>
@@ -1449,7 +1449,7 @@ function PriceListsSection() {
             <p className="text-sm text-pos-danger font-medium mb-3">Error al cargar las listas</p>
             <button
               onClick={() => { setLoadError(false); loadPriceLists(storeId).catch(() => setLoadError(true)); }}
-              className="px-4 py-2 bg-pos-secondary text-white rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity"
+              className="px-4 py-2 bg-pos-secondary text-pos-on-solid rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity"
             >
               Reintentar
             </button>
@@ -1468,7 +1468,7 @@ function PriceListsSection() {
             <p className="text-xs text-pos-muted/60 mb-4">Cargá las listas predeterminadas o creá una nueva</p>
             <button
               onClick={() => { setLoadError(false); loadPriceLists(storeId).catch(() => setLoadError(true)); }}
-              className="px-4 py-2 bg-pos-secondary text-white rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity"
+              className="px-4 py-2 bg-pos-secondary text-pos-on-solid rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity"
             >
               Cargar listas
             </button>
@@ -1495,7 +1495,7 @@ function PriceListsSection() {
         </button>
 
         {/* List name + actions */}
-        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4 mb-4 dark:border-gray-600/30 dark:bg-gray-800">
+        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4 mb-4">
           <div className="flex items-center gap-3 mb-3">
             <div className={`w-10 h-10 rounded-xl ${ACCENT.bg} flex items-center justify-center shrink-0`}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={`w-5 h-5 ${ACCENT.text}`}>
@@ -1516,7 +1516,7 @@ function PriceListsSection() {
             <button
               onClick={handleRename}
               disabled={!listNameDraft.trim() || listNameDraft.trim() === editingList?.name}
-              className="px-3 py-1.5 bg-pos-secondary text-white rounded-lg text-xs font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40"
+              className="px-3 py-1.5 bg-pos-secondary text-pos-on-solid rounded-lg text-xs font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40"
             >
               Renombrar
             </button>
@@ -1542,7 +1542,7 @@ function PriceListsSection() {
               <button
                 onClick={handleBulkPercentage}
                 disabled={isLoadingItems}
-                className="px-3 py-1.5 bg-pos-secondary text-white rounded-lg text-xs font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40"
+                className="px-3 py-1.5 bg-pos-secondary text-pos-on-solid rounded-lg text-xs font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40"
               >
                 Aplicar % a todos
               </button>
@@ -1590,12 +1590,12 @@ function PriceListsSection() {
                 className="w-full border border-pos-muted/25 rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pos-secondary bg-pos-surface"
               />
               {productSearch && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-white bg-pos-secondary px-1.5 py-0.5 rounded-full pointer-events-none">
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-pos-on-solid bg-pos-secondary px-1.5 py-0.5 rounded-full pointer-events-none">
                   {filteredProducts.length}
                 </span>
               )}
             </div>
-            <div className="overflow-x-auto rounded-xl border border-pos-muted/10 dark:border-gray-600/30">
+            <div className="overflow-x-auto rounded-xl border border-pos-muted/10">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-pos-background/50 text-pos-muted text-xs uppercase tracking-wider">
@@ -1767,7 +1767,7 @@ function PriceListsSection() {
                     showNotification(`Porcentaje ${pct > 0 ? "+" : ""}${pct}% aplicado a todos los productos`);
                   }}
                   disabled={!bulkPctDraft || isNaN(parseFloat(bulkPctDraft))}
-                  className="flex-1 px-4 py-3 bg-pos-secondary text-white rounded-xl font-bold text-sm touch-target hover:bg-pos-secondary/90 active:scale-[0.98] transition-all disabled:opacity-40"
+                  className="flex-1 px-4 py-3 bg-pos-secondary text-pos-on-solid rounded-xl font-bold text-sm touch-target hover:bg-pos-secondary/90 active:scale-[0.98] transition-all disabled:opacity-40"
                 >
                   Aplicar
                 </button>
@@ -1811,7 +1811,7 @@ function PriceListsSection() {
                 </button>
                 <button
                   onClick={confirmAction.onConfirm}
-                  className="flex-1 px-4 py-3 bg-pos-danger text-white rounded-xl font-bold text-sm touch-target hover:bg-pos-danger/90 active:scale-[0.98] transition-all"
+                  className="flex-1 px-4 py-3 bg-pos-danger text-pos-on-solid rounded-xl font-bold text-sm touch-target hover:bg-pos-danger/90 active:scale-[0.98] transition-all"
                 >
                   Confirmar
                 </button>
@@ -1831,7 +1831,7 @@ function PriceListsSection() {
         <button
           onClick={handleNewList}
           disabled={storeLists.length >= 10}
-          className="px-4 py-2 bg-pos-secondary text-white rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center gap-1.5"
+          className="px-4 py-2 bg-pos-secondary text-pos-on-solid rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center gap-1.5"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
             <line x1="12" y1="5" x2="12" y2="19" />
@@ -1849,7 +1849,7 @@ function PriceListsSection() {
           <button
             key={list.id}
             onClick={() => setEditingListId(list.id)}
-            className="card-enter relative rounded-xl border border-pos-muted/10 bg-pos-surface p-4 text-left active:scale-[0.98] transition-all duration-200 dark:border-gray-600/30 dark:bg-gray-800 group cursor-pointer overflow-hidden"
+            className="card-enter relative rounded-xl border border-pos-muted/10 bg-pos-surface p-4 text-left active:scale-[0.98] transition-all duration-200 group cursor-pointer overflow-hidden"
             style={{ animationDelay: `${i * 0.06}s` }}
           >
             {/* Accent bar */}
@@ -1989,7 +1989,7 @@ function StoresSection() {
 
       <div className="max-w-2xl space-y-6">
         {/* Create form */}
-        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4 dark:border-gray-600/30 dark:bg-gray-800">
+        <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4">
           <h4 className="text-sm font-semibold text-pos-text mb-3">Nueva Tienda</h4>
           <div className="flex items-center gap-2">
             <input
@@ -2003,7 +2003,7 @@ function StoresSection() {
             <button
               onClick={handleCreate}
               disabled={busy || !newName.trim()}
-              className="px-4 py-2 bg-pos-secondary text-white rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40"
+              className="px-4 py-2 bg-pos-secondary text-pos-on-solid rounded-lg text-sm font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40"
             >
               Crear
             </button>
@@ -2028,7 +2028,7 @@ function StoresSection() {
           {allStores.map((store) => (
             <div
               key={store.id}
-              className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4 dark:border-gray-600/30 dark:bg-gray-800"
+              className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4"
             >
               {editingId === store.id ? (
                 <div className="flex items-center gap-2">
@@ -2043,7 +2043,7 @@ function StoresSection() {
                   <button
                     onClick={handleRename}
                     disabled={busy}
-                    className="px-3 py-1.5 bg-pos-secondary text-white rounded-lg text-xs font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40"
+                    className="px-3 py-1.5 bg-pos-secondary text-pos-on-solid rounded-lg text-xs font-medium touch-target hover:opacity-90 transition-opacity disabled:opacity-40"
                   >
                     Guardar
                   </button>

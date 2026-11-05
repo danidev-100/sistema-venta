@@ -166,7 +166,7 @@ export default function PedidosPage() {
             )}
             <button
               onClick={() => setView({ kind: "create" })}
-              className="text-xs px-3 py-1.5 bg-pos-secondary text-white rounded-lg touch-target hover:opacity-90 whitespace-nowrap"
+              className="text-xs px-3 py-1.5 bg-pos-secondary text-pos-on-solid rounded-lg touch-target hover:opacity-90 whitespace-nowrap"
             >
               + Nuevo Pedido
             </button>
@@ -200,7 +200,7 @@ export default function PedidosPage() {
                   onClick={() => setStatusFilter(s)}
                   className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors touch-target ${
                     statusFilter === s
-                      ? "bg-pos-secondary text-white"
+                      ? "bg-pos-secondary text-pos-on-solid"
                       : "bg-pos-background text-pos-muted hover:text-pos-secondary"
                   }`}
                 >
@@ -432,7 +432,7 @@ function DetailView({ pedido: initialPedido, onBack, onEdit }: { pedido: Pedido;
           {!isLocked && (
             <button
               onClick={() => onEdit(pedido)}
-              className="text-xs px-3 py-1.5 bg-pos-secondary text-white rounded-lg touch-target hover:opacity-90"
+              className="text-xs px-3 py-1.5 bg-pos-secondary text-pos-on-solid rounded-lg touch-target hover:opacity-90"
             >
               Editar
             </button>
@@ -526,7 +526,7 @@ function DetailView({ pedido: initialPedido, onBack, onEdit }: { pedido: Pedido;
                         <button
                           onClick={() => handleReceive(item.id)}
                           disabled={!receiveQtys[item.id] || receiveQtys[item.id] <= 0}
-                          className="text-xs px-2 py-1 bg-pos-secondary text-white rounded touch-target hover:opacity-90 disabled:opacity-40"
+                          className="text-xs px-2 py-1 bg-pos-secondary text-pos-on-solid rounded touch-target hover:opacity-90 disabled:opacity-40"
                         >
                           OK
                         </button>

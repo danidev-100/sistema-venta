@@ -249,7 +249,7 @@ export default function ProductForm({
             <button
               type="button"
               onClick={() => setForm({ ...form, image: "" })}
-              className="absolute -top-2 -right-2 w-5 h-5 bg-pos-danger text-white rounded-full text-xs flex items-center justify-center hover:opacity-90"
+              className="absolute -top-2 -right-2 w-5 h-5 bg-pos-danger text-pos-on-solid rounded-full text-xs flex items-center justify-center hover:opacity-90"
             >
               ×
             </button>
@@ -304,7 +304,7 @@ export default function ProductForm({
             onClick={() => setShowScanner(true)}
             title="Escanear con la cámara"
             aria-label="Escanear código con la cámara"
-            className="shrink-0 flex items-center gap-1.5 px-3 py-2 border border-pos-muted/30 rounded-lg text-sm text-pos-text hover:border-pos-secondary hover:text-pos-secondary transition-colors touch-target dark:border-gray-600/40"
+            className="shrink-0 flex items-center gap-1.5 px-3 py-2 border border-pos-muted/30 rounded-lg text-sm text-pos-text hover:border-pos-secondary hover:text-pos-secondary transition-colors touch-target"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
               <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
@@ -480,7 +480,7 @@ export default function ProductForm({
         <button
           type="submit"
           disabled={saving}
-          className="flex-1 px-4 py-2 bg-pos-secondary text-white rounded-lg font-medium text-sm touch-target hover:opacity-90 disabled:opacity-50"
+          className="flex-1 px-4 py-2 bg-pos-secondary text-pos-on-solid rounded-lg font-medium text-sm touch-target hover:opacity-90 disabled:opacity-50"
         >
           {saving ? "Guardando..." : editProduct ? "Actualizar Producto" : "Crear Producto"}
         </button>

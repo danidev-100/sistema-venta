@@ -200,7 +200,7 @@ export default function ComprobantesPage() {
                 <button onClick={exportPdf} className="text-xs px-3 py-1.5 border border-pos-muted/30 text-pos-text rounded-lg touch-target hover:bg-pos-background/50 whitespace-nowrap">PDF</button>
               </>
             )}
-            <button onClick={() => setView({ kind: "create" })} className="text-xs px-3 py-1.5 bg-pos-secondary text-white rounded-lg touch-target hover:opacity-90 whitespace-nowrap">+ Nuevo Comprobante</button>
+            <button onClick={() => setView({ kind: "create" })} className="text-xs px-3 py-1.5 bg-pos-secondary text-pos-on-solid rounded-lg touch-target hover:opacity-90 whitespace-nowrap">+ Nuevo Comprobante</button>
           </div>
         )}
       </div>
@@ -238,7 +238,7 @@ export default function ComprobantesPage() {
                     onClick={() => toggleTipo(t)}
                     className={`text-xs px-2.5 py-1 rounded-full border touch-target transition-all ${
                       active
-                        ? "bg-pos-secondary text-white border-pos-secondary"
+                        ? "bg-pos-secondary text-pos-on-solid border-pos-secondary"
                         : "border-pos-muted/20 text-pos-muted hover:border-pos-secondary/40 hover:text-pos-text"
                     }`}
                   >
@@ -581,7 +581,7 @@ function ComprobanteForm({ onSaved, onCancel }: { onSaved: () => void; onCancel:
       <div className="bg-pos-background/30 rounded-lg p-3">
         <div className="flex items-center justify-between mb-2">
           <label className="text-sm font-medium text-pos-text">Productos</label>
-          <button type="button" onClick={addRow} className="text-xs px-3 py-1.5 bg-pos-secondary text-white rounded-lg touch-target hover:opacity-90">+ Agregar</button>
+          <button type="button" onClick={addRow} className="text-xs px-3 py-1.5 bg-pos-secondary text-pos-on-solid rounded-lg touch-target hover:opacity-90">+ Agregar</button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -624,7 +624,7 @@ function ComprobanteForm({ onSaved, onCancel }: { onSaved: () => void; onCancel:
       </div>
 
       <div className="flex items-center gap-2">
-        <button type="submit" disabled={saving} className="px-4 py-2 bg-pos-secondary text-white rounded-lg font-medium text-sm touch-target hover:opacity-90 disabled:opacity-50">
+        <button type="submit" disabled={saving} className="px-4 py-2 bg-pos-secondary text-pos-on-solid rounded-lg font-medium text-sm touch-target hover:opacity-90 disabled:opacity-50">
           {saving ? "Guardando…" : `Crear ${getTipoLabel(tipo)}`}
         </button>
         <button type="button" onClick={onCancel} className="px-4 py-2 border border-pos-muted/30 text-pos-text rounded-lg font-medium text-sm touch-target hover:bg-pos-background">Cancelar</button>
@@ -729,7 +729,7 @@ function ComprobanteDetail({ comprobante, onBack }: { comprobante: Comprobante; 
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <h3 className="text-sm font-semibold text-pos-text uppercase tracking-wide">Comprobante</h3>
         <div className="flex items-center gap-2">
-          <button onClick={handlePrint} className="text-xs px-3 py-1.5 bg-pos-secondary text-white rounded-lg touch-target hover:opacity-90">🖨️ Imprimir</button>
+          <button onClick={handlePrint} className="text-xs px-3 py-1.5 bg-pos-secondary text-pos-on-solid rounded-lg touch-target hover:opacity-90">🖨️ Imprimir</button>
           <button onClick={onBack} className="text-xs px-3 py-1.5 border border-pos-muted/30 text-pos-text rounded-lg touch-target hover:bg-pos-background">← Volver</button>
         </div>
       </div>

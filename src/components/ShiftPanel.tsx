@@ -152,7 +152,7 @@ export default function ShiftPanel({
 
           <button
             onClick={handleClose}
-            className="w-full px-4 py-2 bg-pos-danger text-white rounded-lg font-medium text-sm touch-target hover:opacity-90 transition-opacity"
+            className="w-full px-4 py-2 bg-pos-danger text-pos-on-solid rounded-lg font-medium text-sm touch-target hover:opacity-90 transition-opacity"
           >
             Cerrar Turno
           </button>
@@ -214,7 +214,7 @@ export default function ShiftPanel({
       <button
         onClick={handleOpen}
         disabled={!employee.trim()}
-        className="w-full px-4 py-2 bg-pos-success text-white rounded-lg font-medium text-sm touch-target hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full px-4 py-2 bg-pos-success text-pos-on-solid rounded-lg font-medium text-sm touch-target hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
       >
         Abrir Turno
       </button>

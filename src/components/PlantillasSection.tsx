@@ -272,7 +272,7 @@ function PlantillaEditor({
           <button
             onClick={handleSave}
             disabled={saving || !dirty}
-            className="px-4 py-1.5 text-xs font-medium rounded-lg bg-pos-secondary text-white hover:bg-pos-secondary/90 disabled:opacity-40 touch-target transition-colors"
+            className="px-4 py-1.5 text-xs font-medium rounded-lg bg-pos-secondary text-pos-on-solid hover:bg-pos-secondary/90 disabled:opacity-40 touch-target transition-colors"
           >
             {saving ? "Guardando…" : "Guardar"}
           </button>
@@ -334,7 +334,7 @@ function PlantillaEditor({
         {/* Right: preview */}
         <div className="flex-1 min-w-0">
           <p className="text-xs text-pos-muted mb-2">Vista previa (con datos de muestra):</p>
-          <div className="rounded-xl border border-pos-muted/10 bg-white overflow-hidden">
+          <div className="rounded-xl border border-pos-muted/10 bg-pos-surface overflow-hidden">
             <iframe
               ref={iframeRef}
               title="Vista previa de la plantilla"

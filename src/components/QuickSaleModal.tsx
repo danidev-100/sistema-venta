@@ -182,7 +182,7 @@ export default function QuickSaleModal({
           </button>
           <button
             onClick={handleSubmit}
-            className="flex-1 px-4 py-3 bg-pos-secondary text-white rounded-xl font-medium text-sm touch-target hover:opacity-90 transition-opacity"
+            className="flex-1 px-4 py-3 bg-pos-secondary text-pos-on-solid rounded-xl font-medium text-sm touch-target hover:opacity-90 transition-opacity"
           >
             Agregar y vender
           </button>

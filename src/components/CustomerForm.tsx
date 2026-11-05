@@ -244,7 +244,7 @@ export default function CustomerForm({
         <button
           type="submit"
           disabled={saving}
-          className="px-4 py-2 bg-pos-secondary text-white rounded-lg font-medium text-sm touch-target hover:opacity-90 disabled:opacity-50"
+          className="px-4 py-2 bg-pos-secondary text-pos-on-solid rounded-lg font-medium text-sm touch-target hover:opacity-90 disabled:opacity-50"
         >
           {saving ? "Guardando…" : editCustomer ? "Actualizar" : "Crear"}
         </button>

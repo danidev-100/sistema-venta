@@ -184,7 +184,7 @@ export default function CashMovementModal({
               onClick={() => setType("withdrawal")}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium rounded-lg touch-target transition-all ${
                 type === "withdrawal"
-                  ? "bg-pos-danger text-white shadow-sm"
+                  ? "bg-pos-danger text-pos-on-solid shadow-sm"
                   : "text-pos-muted hover:text-pos-text"
               }`}
             >
@@ -194,7 +194,7 @@ export default function CashMovementModal({
               onClick={() => setType("deposit")}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium rounded-lg touch-target transition-all ${
                 type === "deposit"
-                  ? "bg-pos-success text-white shadow-sm"
+                  ? "bg-pos-success text-pos-on-solid shadow-sm"
                   : "text-pos-muted hover:text-pos-text"
               }`}
             >
@@ -214,7 +214,7 @@ export default function CashMovementModal({
                   onClick={() => setMethod(m.value)}
                   className={`flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-medium touch-target transition-all ${
                     method === m.value
-                      ? "bg-pos-secondary text-white ring-2 ring-pos-secondary/30 scale-[1.02]"
+                      ? "bg-pos-secondary text-pos-on-solid ring-2 ring-pos-secondary/30 scale-[1.02]"
                       : "bg-pos-background/50 text-pos-muted border border-pos-muted/15 hover:border-pos-secondary/40 hover:text-pos-text"
                   }`}
                 >
@@ -299,7 +299,7 @@ export default function CashMovementModal({
           <button
             onClick={handleSubmit}
             disabled={!amount || exceedsLimit}
-            className={`flex-1 px-4 py-2.5 text-sm font-bold text-white rounded-xl touch-target transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+            className={`flex-1 px-4 py-2.5 text-sm font-bold text-pos-on-solid rounded-xl touch-target transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
               type === "withdrawal"
                 ? "bg-pos-danger hover:bg-pos-danger/90"
                 : "bg-pos-success hover:bg-pos-success/90"

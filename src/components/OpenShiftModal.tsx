@@ -84,7 +84,7 @@ export default function OpenShiftModal({
           <button
             onClick={handleOpen}
             disabled={saving}
-            className="flex-1 px-4 py-3 bg-pos-success text-white rounded-xl font-bold text-sm touch-target hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="flex-1 px-4 py-3 bg-pos-success text-pos-on-solid rounded-xl font-bold text-sm touch-target hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {saving ? "Abriendo…" : "Abrir Turno"}
           </button>

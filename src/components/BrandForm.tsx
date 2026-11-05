@@ -79,19 +79,19 @@ export default function BrandForm({
           onChange={(e) => setName(e.target.value)}
           placeholder="Nombre de la marca"
           required
-          className="flex-1 border border-pos-muted/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pos-secondary touch-target dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
+          className="flex-1 border border-pos-muted/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pos-secondary touch-target"
         />
         <button
           type="submit"
           disabled={saving}
-          className="px-4 py-2 bg-pos-secondary text-white rounded-lg font-medium text-sm touch-target hover:opacity-90 disabled:opacity-50"
+          className="px-4 py-2 bg-pos-secondary text-pos-on-solid rounded-lg font-medium text-sm touch-target hover:opacity-90 disabled:opacity-50"
         >
           {saving ? "Guardando..." : editBrand ? "Actualizar" : "Crear"}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 border border-pos-muted/30 text-pos-text rounded-lg font-medium text-sm touch-target hover:bg-pos-background dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+          className="px-4 py-2 border border-pos-muted/30 text-pos-text rounded-lg font-medium text-sm touch-target hover:bg-pos-background"
         >
           Cancelar
         </button>

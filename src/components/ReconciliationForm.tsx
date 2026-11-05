@@ -257,7 +257,7 @@ export default function ReconciliationForm({
             }
           }}
           disabled={declaredCash <= 0}
-          className="w-full px-4 py-2 bg-pos-secondary text-white rounded-lg font-medium text-sm touch-target hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full px-4 py-2 bg-pos-secondary text-pos-on-solid rounded-lg font-medium text-sm touch-target hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Arquear
         </button>

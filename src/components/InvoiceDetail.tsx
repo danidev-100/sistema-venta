@@ -49,13 +49,13 @@ export default function InvoiceDetail({
           <div className="flex gap-2">
             <button
               onClick={() => onPrint(invoice)}
-              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-pos-secondary text-white hover:bg-pos-secondary/90 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-pos-secondary text-pos-on-solid hover:bg-pos-secondary/90 transition-colors"
             >
               🖨 Imprimir
             </button>
             <button
               onClick={() => onExportPdf(invoice)}
-              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-pos-primary text-white hover:bg-pos-primary/90 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-pos-primary text-pos-on-solid hover:bg-pos-primary/90 transition-colors"
             >
               📄 Exportar PDF
             </button>

@@ -59,7 +59,7 @@ export default function ConfirmModal({
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-4 py-3 bg-pos-danger text-white rounded-xl font-bold text-sm touch-target hover:bg-pos-danger/90 active:scale-[0.98] transition-all"
+            className="flex-1 px-4 py-3 bg-pos-danger text-pos-on-solid rounded-xl font-bold text-sm touch-target hover:bg-pos-danger/90 active:scale-[0.98] transition-all"
           >
             {confirmText}
           </button>

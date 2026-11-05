@@ -119,7 +119,7 @@ export default function BillingPage() {
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-full">
       {/* ── Left panel: Invoice List ── */}
-      <aside className="w-full lg:w-80 flex-shrink-0 bg-pos-surface rounded-xl border border-pos-muted/10 p-3 overflow-y-auto flex flex-col max-h-48 lg:max-h-full dark:bg-gray-800 dark:border-gray-600/30">
+      <aside className="w-full lg:w-80 flex-shrink-0 bg-pos-surface rounded-xl border border-pos-muted/10 p-3 overflow-y-auto flex flex-col max-h-48 lg:max-h-full">
         <div className="flex items-center justify-between mb-3 gap-2">
           <h2 className="text-sm font-semibold text-pos-text uppercase tracking-wide">
             Facturas
@@ -143,7 +143,7 @@ export default function BillingPage() {
             )}
             <button
               onClick={handleGenerateInvoice}
-              className="px-2.5 py-1 text-xs font-medium rounded-lg bg-pos-secondary text-white hover:bg-pos-secondary/90 transition-colors"
+              className="px-2.5 py-1 text-xs font-medium rounded-lg bg-pos-secondary text-pos-on-solid hover:bg-pos-secondary/90 transition-colors"
             >
               + Generar
             </button>
@@ -157,7 +157,7 @@ export default function BillingPage() {
       </aside>
 
       {/* ── Right panel: Invoice Detail ── */}
-      <section className="flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-4 overflow-y-auto dark:bg-gray-800 dark:border-gray-600/30">
+      <section className="flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-4 overflow-y-auto">
         <h2 className="text-sm font-semibold text-pos-text uppercase tracking-wide mb-4">
           Detalle de Factura
         </h2>

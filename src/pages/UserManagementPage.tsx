@@ -309,7 +309,7 @@ export default function UserManagementPage() {
             )}
             <button
               onClick={openAddModal}
-              className="text-sm px-3 sm:px-4 py-1.5 bg-pos-secondary text-white rounded-lg touch-target hover:opacity-90 whitespace-nowrap"
+              className="text-sm px-3 sm:px-4 py-1.5 bg-pos-secondary text-pos-on-solid rounded-lg touch-target hover:opacity-90 whitespace-nowrap"
             >
               <span className="sm:hidden text-base leading-none" aria-hidden="true">+</span>
               <span className="hidden sm:inline">+ Agregar Usuario</span>
@@ -459,7 +459,7 @@ export default function UserManagementPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 text-sm bg-pos-secondary text-white rounded-lg touch-target hover:opacity-90 disabled:opacity-50"
+                className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 text-sm bg-pos-secondary text-pos-on-solid rounded-lg touch-target hover:opacity-90 disabled:opacity-50"
               >
                 {saving ? "Guardando..." : "Guardar"}
               </button>

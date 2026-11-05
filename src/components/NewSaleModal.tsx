@@ -38,7 +38,7 @@ export default function NewSaleModal({
           </button>
           <button
             onClick={onConfirm}
-            className="px-5 py-2.5 text-sm bg-pos-danger text-white rounded-xl font-medium touch-target hover:opacity-90 transition-opacity"
+            className="px-5 py-2.5 text-sm bg-pos-danger text-pos-on-solid rounded-xl font-medium touch-target hover:opacity-90 transition-opacity"
           >
             Nueva Venta
           </button>

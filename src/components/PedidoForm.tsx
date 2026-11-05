@@ -309,7 +309,7 @@ export default function PedidoForm({ onSaved, onCancel, editPedido }: PedidoForm
           <button
             type="button"
             onClick={addRow}
-            className="text-xs px-3 py-1.5 bg-pos-secondary text-white rounded-lg touch-target hover:opacity-90"
+            className="text-xs px-3 py-1.5 bg-pos-secondary text-pos-on-solid rounded-lg touch-target hover:opacity-90"
           >
             + Agregar producto
           </button>
@@ -361,7 +361,7 @@ export default function PedidoForm({ onSaved, onCancel, editPedido }: PedidoForm
         <button
           type="submit"
           disabled={saving}
-          className="px-4 py-2 bg-pos-secondary text-white rounded-lg font-medium text-sm touch-target hover:opacity-90 disabled:opacity-50"
+          className="px-4 py-2 bg-pos-secondary text-pos-on-solid rounded-lg font-medium text-sm touch-target hover:opacity-90 disabled:opacity-50"
         >
           {saving ? "Guardando…" : editPedido ? "Actualizar Pedido" : "Crear Pedido"}
         </button>

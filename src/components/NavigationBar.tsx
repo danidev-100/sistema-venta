@@ -348,7 +348,7 @@ export default function NavigationBar() {
       {/* Header block — brand mark + app name (static header, not a dropdown) */}
       <div className="px-4 pt-4 pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 shrink-0 rounded-[10px] bg-gradient-to-br from-pos-accent to-pos-accent-2 flex items-center justify-center text-[12px] font-bold text-white">
+          <div className="w-8 h-8 shrink-0 rounded-[10px] bg-gradient-to-br from-pos-accent to-pos-accent-2 flex items-center justify-center text-[12px] font-bold text-pos-on-solid">
             SV
           </div>
           <div className="min-w-0">
@@ -444,7 +444,7 @@ export default function NavigationBar() {
       {currentUser && (
         <div className="p-2.5">
           <div className="flex items-center gap-2.5 rounded-control bg-pos-background p-2.5">
-            <div className="w-[30px] h-[30px] shrink-0 rounded-full bg-pos-text text-white flex items-center justify-center text-[11px] font-bold">
+            <div className="w-[30px] h-[30px] shrink-0 rounded-full bg-pos-text text-pos-on-solid flex items-center justify-center text-[11px] font-bold">
               {initialsOf(currentUser.name)}
             </div>
             <div className="min-w-0 flex-1">
@@ -492,7 +492,7 @@ export default function NavigationBar() {
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
-        <div className="w-7 h-7 shrink-0 rounded-[10px] bg-gradient-to-br from-pos-accent to-pos-accent-2 flex items-center justify-center text-[11px] font-bold text-white">
+        <div className="w-7 h-7 shrink-0 rounded-[10px] bg-gradient-to-br from-pos-accent to-pos-accent-2 flex items-center justify-center text-[11px] font-bold text-pos-on-solid">
           SV
         </div>
         <h1 className="text-[13.5px] font-semibold tracking-wide">Sistema Ventas</h1>

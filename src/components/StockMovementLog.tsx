@@ -126,7 +126,7 @@ export default function StockMovementLog({
         <button
           type="submit"
           disabled={adjusting || !adjustValue.trim()}
-          className="px-3 py-1.5 bg-pos-accent text-white rounded-lg text-xs font-medium touch-target hover:opacity-90 disabled:opacity-50"
+          className="px-3 py-1.5 bg-pos-accent text-pos-on-solid rounded-lg text-xs font-medium touch-target hover:opacity-90 disabled:opacity-50"
         >
           Establecer
         </button>

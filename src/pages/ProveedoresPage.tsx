@@ -122,7 +122,7 @@ export default function ProveedoresPage() {
             )}
             <button
               onClick={() => setView({ kind: "create" })}
-              className="text-xs px-3 py-1.5 bg-pos-secondary text-white rounded-lg touch-target hover:opacity-90 whitespace-nowrap"
+              className="text-xs px-3 py-1.5 bg-pos-secondary text-pos-on-solid rounded-lg touch-target hover:opacity-90 whitespace-nowrap"
             >
               + Nuevo Proveedor
             </button>

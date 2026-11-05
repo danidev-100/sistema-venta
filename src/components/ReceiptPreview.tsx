@@ -165,7 +165,7 @@ export default function ReceiptPreview({
             </button>
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-3 bg-pos-secondary text-white rounded-xl font-bold text-sm touch-target hover:opacity-90 transition-opacity"
+              className="flex-1 px-4 py-3 bg-pos-secondary text-pos-on-solid rounded-xl font-bold text-sm touch-target hover:opacity-90 transition-opacity"
             >
               Nueva Venta
             </button>
