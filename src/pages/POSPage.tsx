@@ -238,6 +238,10 @@ export default function POSPage() {
   // Escáner con cámara (mobile)
   const [showScanner, setShowScanner] = useState(false);
 
+  // Phone-only pane switch (ignored from lg up, where both panes show side by side)
+  const [mobilePane, setMobilePane] = useState<"catalog" | "cart">("catalog");
+  const cartCount = useAppStore((s) => s.items.length);
+
   function handleCameraDetected(barcode: string) {
     setShowScanner(false);
     const prod = storeProducts.find((p) => p.barcode === barcode);
@@ -422,12 +426,53 @@ export default function POSPage() {
         </div>
       ) : (
         <>
+          {/* Phone-only pane switch: on a 640px-tall screen a split leaves no room
+              for cart rows, so each pane takes the full height instead. CSS-only
+              hiding keeps both panes mounted for desktop and for tests. */}
+          <div
+            role="group"
+            aria-label="Vista del punto de venta"
+            className="flex shrink-0 items-center gap-1 rounded-pill bg-pos-background p-1 lg:hidden"
+          >
+            <button
+              type="button"
+              aria-pressed={mobilePane === "catalog"}
+              onClick={() => setMobilePane("catalog")}
+              className={`flex-1 rounded-pill px-3 py-2 text-[13px] font-medium transition-colors ${
+                mobilePane === "catalog"
+                  ? "bg-pos-surface text-pos-text shadow-sm"
+                  : "text-pos-muted"
+              }`}
+            >
+              Catálogo
+            </button>
+            <button
+              type="button"
+              aria-pressed={mobilePane === "cart"}
+              onClick={() => setMobilePane("cart")}
+              className={`flex-1 rounded-pill px-3 py-2 text-[13px] font-medium transition-colors ${
+                mobilePane === "cart"
+                  ? "bg-pos-surface text-pos-text shadow-sm"
+                  : "text-pos-muted"
+              }`}
+            >
+              Venta actual{/* item count keeps the cart discoverable */}
+              {cartCount > 0 && (
+                <span className="ml-1.5 rounded-pill bg-pos-secondary/15 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-pos-secondary">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+          </div>
+
           {/* ── Catalogue + sale panel ── */}
           <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row lg:gap-[18px]">
             {/* ── Catalogue column ── */}
             <section
               aria-label="Catálogo"
-              className="flex min-h-0 flex-1 flex-col gap-3 max-lg:min-h-[42vh]"
+              className={`flex min-h-0 flex-1 flex-col gap-3 max-lg:min-h-0 ${
+                mobilePane === "cart" ? "max-lg:hidden" : ""
+              }`}
             >
               <PriceListStrip />
 
@@ -581,7 +626,9 @@ export default function POSPage() {
             {/* ── Sale panel ── */}
             <aside
               aria-label="Venta actual"
-              className={`flex min-h-0 flex-col overflow-hidden rounded-panel border border-pos-muted/10 bg-pos-surface shadow-[0_24px_48px_-34px_rgba(20,22,31,0.45)] max-lg:min-h-[46vh] lg:w-[440px] lg:shrink-0 ${
+              className={`flex min-h-0 flex-col overflow-hidden rounded-panel border border-pos-muted/10 bg-pos-surface shadow-[0_24px_48px_-34px_rgba(20,22,31,0.45)] max-lg:min-h-0 lg:w-[440px] lg:shrink-0 ${
+                mobilePane === "catalog" ? "max-lg:hidden" : ""
+              } ${
                 scanFlash ? "scan-flash" : ""
               }`}
             >

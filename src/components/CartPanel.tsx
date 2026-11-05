@@ -224,7 +224,7 @@ export default function CartPanel({
       {/* Items list */}
       <div className="mt-2 min-h-0 flex-1 space-y-1.5 overflow-y-auto px-4 pb-1">
         {isEmpty ? (
-          <div className="flex h-48 items-center justify-center">
+          <div className="flex min-h-[5rem] flex-1 items-center justify-center py-4">
             <p className="px-2 text-center text-sm italic text-pos-muted">
               Carrito vacío. Tocá un producto, buscá con F2 o escaneá un código de barras.
             </p>
