@@ -284,7 +284,6 @@ const stockMovementSchema = z.object({
   quantity: z.number().int().min(0).optional().default(0),
   delta: z.number().int("Delta debe ser un número entero"),
   reference_id: z.string().nullable().optional().default(null),
-  user_id: z.string().nullable().optional().default(null),
   store_id: z.string().min(1, "Tienda requerida"),
 });
 
@@ -295,13 +294,16 @@ router.post("/stock-movement", async (req: Request, res: Response) => {
       res.status(400).json({ error: parsed.error.errors[0].message });
       return;
     }
-    const { product_id, type, quantity, delta, reference_id, user_id, store_id } = parsed.data;
+    const { product_id, type, quantity, delta, reference_id, store_id } = parsed.data;
+    // La autoría del movimiento sale del token, nunca del body: el cliente no
+    // puede atribuirle un movimiento a otro usuario.
+    const userId = req.user!.userId;
     const db = getDb();
 
     const movement = await db.transaction(async (tx) => {
       const [inserted] = await tx
         .insert(schema.stockMovements)
-        .values({ product_id, type, quantity: quantity ?? 0, delta, reference_id, user_id: user_id ? Number(user_id) : null, store_id })
+        .values({ product_id, type, quantity: quantity ?? 0, delta, reference_id, user_id: userId, store_id })
         .returning();
 
       // El stock se actualiza SIEMPRE scoped a la tienda del movimiento:

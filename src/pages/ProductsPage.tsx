@@ -634,7 +634,7 @@ export default function ProductsPage() {
                                 onBlur={() => {
                                   const qty = parseInt(editingStockVal, 10);
                                   if (!isNaN(qty) && qty >= 0 && qty !== p.stock) {
-                                    adjustStock(p.id, qty, currentUser?.name);
+                                    adjustStock(p.id, qty, currentUser ? String(currentUser.id) : undefined);
                                   }
                                   setEditingStockId(null);
                                 }}
