@@ -542,19 +542,21 @@ export default function POSPage() {
                         }
                         className="flex min-h-[132px] flex-col rounded-card border border-pos-muted/10 bg-pos-surface p-3.5 text-left transition-all hover:-translate-y-0.5 hover:border-pos-secondary/35 hover:shadow-lg hover:shadow-pos-secondary/20 disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:translate-y-0 disabled:hover:border-pos-muted/10 disabled:hover:shadow-none"
                       >
-                        <div className="-mx-3.5 -mt-3.5 mb-2.5 aspect-[4/3] overflow-hidden rounded-t-card bg-pos-muted/10">
-                          <ProductImage
-                            src={product.image}
-                            imgClassName="h-full w-full object-cover"
-                            boxClassName="h-full w-full"
-                            iconClassName="w-6 h-6 text-pos-muted/25"
-                          />
+                        <div className="mb-2.5 flex items-start gap-2">
+                          <div className="h-11 w-11 shrink-0 overflow-hidden rounded-control bg-pos-muted/10">
+                            <ProductImage
+                              src={product.image}
+                              imgClassName="h-full w-full object-contain"
+                              boxClassName="h-full w-full"
+                              iconClassName="w-4 h-4 text-pos-muted/25"
+                            />
+                          </div>
+                          {categoryName && (
+                            <span className="mt-0.5 min-w-0 truncate self-start rounded-pill bg-pos-background px-2 py-0.5 text-[10.5px] font-semibold text-pos-muted">
+                              {categoryName}
+                            </span>
+                          )}
                         </div>
-                        {categoryName && (
-                          <span className="mb-2 self-start rounded-pill bg-pos-background px-2 py-0.5 text-[10.5px] font-semibold text-pos-muted">
-                            {categoryName}
-                          </span>
-                        )}
                         <span className="line-clamp-2 text-[13.5px] font-semibold leading-snug text-pos-text">
                           {product.name}
                         </span>
