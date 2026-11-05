@@ -625,7 +625,7 @@ export default function CartPanel({
       {/* ── Shift Close Confirmation Modal ── */}
       {showCloseModal && openShift && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-pos-surface rounded-panel shadow-2xl w-full max-w-sm p-6 text-center">
+          <div className="sheet bg-pos-surface rounded-panel shadow-2xl w-full max-w-sm p-6 text-center">
             <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-pos-danger/10 flex items-center justify-center">
               <svg className="w-6 h-6 text-pos-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" />

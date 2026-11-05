@@ -160,7 +160,7 @@ export default function BarcodeScannerModal({ onDetected, onClose }: BarcodeScan
       onClick={() => onCloseRef.current()}
     >
       <div
-        className="w-full max-w-sm bg-pos-surface rounded-2xl shadow-2xl border border-pos-muted/10 mx-4 overflow-hidden"
+        className="sheet w-full max-w-sm bg-pos-surface rounded-2xl shadow-2xl border border-pos-muted/10 mx-4 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

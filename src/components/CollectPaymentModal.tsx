@@ -52,7 +52,7 @@ export default function CollectPaymentModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-pos-surface rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 space-y-4">
+      <div className="sheet bg-pos-surface rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 space-y-4">
         <h2 className="text-lg font-bold text-pos-text">Cobrar a {customer.name}</h2>
 
         {error && (
