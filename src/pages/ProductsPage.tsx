@@ -308,7 +308,12 @@ export default function ProductsPage() {
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-full">
       {/* ── Product list / form ── */}
-      <section ref={sectionRef} className="flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-3 overflow-y-auto">
+      <section
+        ref={sectionRef}
+        className={`flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-3 overflow-y-auto${
+          centerView.kind === "list" ? "" : " sheet"
+        }`}
+      >
         {centerView.kind === "list" && (
           <>
             {/* Header */}
@@ -324,7 +329,7 @@ export default function ProductsPage() {
                   — {filteredProducts.length}
                 </span>
               </h2>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {filteredProducts.length > 0 && (
                   <>
                     <button
@@ -357,8 +362,8 @@ export default function ProductsPage() {
             </div>
 
             {/* Search + stock filter */}
-            <div className="flex items-center gap-2 mb-3">
-              <div className="relative flex-1">
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <div className="relative flex-1 min-w-0">
                 <input
                   type="text"
                   value={search}
@@ -420,7 +425,7 @@ export default function ProductsPage() {
 
             {/* Bulk actions */}
             {selectedProductIds.length > 0 && (
-              <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-pos-secondary/10 border border-pos-secondary/30 rounded-lg dark:bg-pos-secondary/15 dark:border-pos-secondary/30">
+              <div className="flex flex-wrap items-center gap-2 mb-3 px-3 py-2 bg-pos-secondary/10 border border-pos-secondary/30 rounded-lg dark:bg-pos-secondary/15 dark:border-pos-secondary/30">
                 <span className="text-xs font-medium text-pos-text mr-1">
                   {selectedProductIds.length} seleccionado{selectedProductIds.length !== 1 ? "s" : ""}
                 </span>
@@ -466,7 +471,7 @@ export default function ProductsPage() {
               </div>
             ) : (
                 <div className="overflow-x-auto">
-                <table className="w-full text-[13px]">
+                <table className="table-cards w-full text-[13px]">
                     <thead>
                     <tr className="text-pos-muted border-b border-pos-muted/20">
                       <th className="w-8 py-2 pr-1">
@@ -547,7 +552,7 @@ export default function ProductsPage() {
                               : ""
                           }`}
                         >
-                          <td className="w-8 py-2 pr-1" onClick={(e) => e.stopPropagation()}>
+                          <td data-plain className="w-8 py-2 pr-1" onClick={(e) => e.stopPropagation()}>
                             <input
                               type="checkbox"
                               checked={selectedProductIds.includes(p.id)}
@@ -561,10 +566,10 @@ export default function ProductsPage() {
                               className="cursor-pointer"
                             />
                           </td>
-                          <td className="py-2 pr-2 text-pos-muted/60 font-mono text-xs">
+                          <td data-label="ID" className="py-2 pr-2 text-pos-muted/60 font-mono text-xs">
                             {p.id}
                           </td>
-                          <td className="py-2 pr-2">
+                          <td data-plain className="py-2 pr-2">
                             <div className="w-8 h-8 bg-pos-muted/10 rounded-md flex items-center justify-center overflow-hidden">
                               <ProductImage
                                 src={p.image}
@@ -574,34 +579,37 @@ export default function ProductsPage() {
                               />
                             </div>
                           </td>
-                          <td className="py-2 pr-2 text-pos-muted font-mono text-xs">
+                          <td data-label="Código" className="py-2 pr-2 text-pos-muted font-mono text-xs">
                             {p.barcode ?? "—"}
                           </td>
-                          <td className="py-2 px-2 font-medium text-pos-text">
-                            <div>{p.name}</div>
-                            {perStoreLine.length > 1 && (
-                              <div
-                                className="text-[10px] text-pos-muted/60 font-normal mt-0.5 truncate max-w-[220px]"
-                                title={`${perStoreLine.map((s) => `${s.store_name}: ${s.stock}`).join(" · ")} · Total: ${stockTotal}`}
-                              >
-                                {perStoreLine.map((s) => `${s.store_name}: ${s.stock}`).join(" · ")}
-                              </div>
-                            )}
+                          <td data-head className="py-2 px-2 font-medium text-pos-text">
+                            <div className="min-w-0">
+                              <div>{p.name}</div>
+                              {perStoreLine.length > 1 && (
+                                <div
+                                  className="text-[10px] text-pos-muted/60 font-normal mt-0.5 truncate max-w-[220px]"
+                                  title={`${perStoreLine.map((s) => `${s.store_name}: ${s.stock}`).join(" · ")} · Total: ${stockTotal}`}
+                                >
+                                  {perStoreLine.map((s) => `${s.store_name}: ${s.stock}`).join(" · ")}
+                                </div>
+                              )}
+                            </div>
                           </td>
-                          <td className="py-2 px-2 text-center text-xs">
+                          <td data-label="Unidad" className="py-2 px-2 text-center text-xs">
                             <span className="inline-block px-1.5 py-0.5 rounded font-medium bg-pos-muted/10 text-pos-muted">
                               {p.saleUnit === "unit" ? "u" : p.saleUnit === "gram" ? "g" : "kg"}
                             </span>
                           </td>
-                          <td className="py-2 px-2 num">
+                          <td data-label="Precio" className="py-2 px-2 num">
                             {formatCurrency(p.price)}
                           </td>
                           {canViewCost && (
-                            <td className="py-2 px-2 num text-pos-muted">
+                            <td data-label="Costo" className="py-2 px-2 num text-pos-muted">
                               {formatCurrency(p.costPrice)}
                             </td>
                           )}
                           <td
+                            data-label="Stock"
                             className={`py-2 px-2 num font-bold ${
                               p.stock <= p.minStock && p.minStock > 0
                                 ? "text-pos-danger dark:text-red-400"
@@ -660,6 +668,7 @@ export default function ProductsPage() {
                             )}
                           </td>
                           <td
+                            data-label="Stock total"
                             className="py-2 px-2 num"
                             title={
                               perStoreLine.length > 1
@@ -669,13 +678,13 @@ export default function ProductsPage() {
                           >
                             {p.barcode ? (stockTotal ?? p.stock) : "—"}
                           </td>
-                          <td className="py-2 px-2 text-pos-muted text-xs truncate max-w-[100px]">
+                          <td data-label="Marca" className="py-2 px-2 text-pos-muted text-xs">
                             {brandName ?? "—"}
                           </td>
-                          <td className="py-2 px-2 text-pos-muted text-xs truncate max-w-[100px]">
+                          <td data-label="Categoría" className="py-2 px-2 text-pos-muted text-xs">
                             {catName ?? "—"}
                           </td>
-                          <td className="py-2 pl-2 text-right">
+                          <td data-plain className="py-2 pl-2 text-right">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();

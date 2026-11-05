@@ -145,7 +145,7 @@ export default function ImportProductsModal({
       onClick={closeWithAnim}
     >
       <div
-        className={`w-full max-w-2xl bg-pos-surface rounded-2xl shadow-2xl border border-pos-muted/10 mx-4 max-h-[90vh] flex flex-col transition-all duration-150 ${
+        className={`sheet w-full max-w-2xl bg-pos-surface rounded-2xl shadow-2xl border border-pos-muted/10 mx-4 max-h-[90vh] flex flex-col transition-all duration-150 ${
           animOut ? "opacity-0 scale-95" : "opacity-100 scale-100"
         }`}
         onClick={(e) => e.stopPropagation()}

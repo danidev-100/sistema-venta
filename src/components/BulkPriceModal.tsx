@@ -174,7 +174,7 @@ export default function BulkPriceModal({ onClose }: BulkPriceModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-10 bg-black/40 dark:bg-black/60">
-      <div className="bg-pos-surface rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[85vh] flex flex-col">
+      <div className="sheet bg-pos-surface rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[85vh] flex flex-col">
         {/* ── Header ── */}
         <div className="flex items-center justify-between p-6 pb-4 border-b border-pos-muted/20 shrink-0">
           <h2 className="text-lg font-bold text-pos-text">

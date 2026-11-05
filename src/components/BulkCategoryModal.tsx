@@ -56,13 +56,13 @@ export default function BulkCategoryModal({
       onClick={closeWithAnim}
     >
       <div
-        className={`w-full max-w-sm bg-pos-surface rounded-2xl shadow-2xl border border-pos-muted/10 mx-4 transition-all duration-150 ${
+        className={`sheet w-full max-w-sm bg-pos-surface rounded-2xl shadow-2xl border border-pos-muted/10 mx-4 transition-all duration-150 ${
           animOut ? "opacity-0 scale-95" : "opacity-100 scale-100"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ── */}
-        <div className="p-5 pb-4 border-b border-pos-muted/10 flex items-center justify-between">
+        <div className="p-5 pb-4 border-b border-pos-muted/10 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-pos-secondary/10 flex items-center justify-center text-lg">
               🏷️
@@ -125,7 +125,7 @@ export default function BulkCategoryModal({
         </div>
 
         {/* ── Footer ── */}
-        <div className="p-5 pt-4 border-t border-pos-muted/10 flex gap-3">
+        <div className="p-5 pt-4 border-t border-pos-muted/10 flex gap-3 shrink-0">
           <button
             onClick={closeWithAnim}
             className="flex-1 px-4 py-2.5 border border-pos-muted/20 text-pos-muted rounded-xl text-sm font-medium touch-target hover:bg-pos-background/50 hover:text-pos-text transition-colors"

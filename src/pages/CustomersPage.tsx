@@ -130,7 +130,7 @@ export default function CustomersPage() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-lg font-bold text-pos-text">Clientes</h1>
         {view.kind === "list" && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {filteredCustomers.length > 0 && (
               <>
                 <button
@@ -194,7 +194,7 @@ export default function CustomersPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="table-cards w-full text-sm">
                   <thead>
                     <tr className="text-pos-muted border-b border-pos-muted/20">
                       <th className="text-left py-2 pr-2 font-medium">Nombre</th>
@@ -228,24 +228,24 @@ export default function CustomersPage() {
                             : "hover:bg-pos-background/50"
                         }`}
                       >
-                        <td className="py-2 pr-2 font-medium text-pos-text">
+                        <td data-head className="py-2 pr-2 font-medium text-pos-text">
                           {c.name}
                         </td>
-                        <td className="py-2 px-2 text-pos-muted">
+                        <td data-label="Teléfono" className="py-2 px-2 text-pos-muted">
                           {c.phone || "—"}
                         </td>
-                        <td className="py-2 px-2 text-pos-muted">
+                        <td data-label="Email" className="py-2 px-2 text-pos-muted">
                           {c.email || "—"}
                         </td>
-                        <td className="py-2 px-2 text-pos-muted font-mono text-xs">
+                        <td data-label="CUIT" className="py-2 px-2 text-pos-muted font-mono text-xs">
                           {c.cuit || "—"}
                         </td>
-                        <td className={`py-2 px-2 text-right font-mono text-sm font-bold ${
+                        <td data-label="Saldo" className={`py-2 px-2 text-right font-mono text-sm font-bold ${
                           c.creditBalance > 0 ? "text-pos-danger" : "text-pos-muted"
                         }`}>
                           {c.creditBalance > 0 ? formatCurrency(c.creditBalance) : "—"}
                         </td>
-                        <td className="py-2 pl-2 text-right whitespace-nowrap">
+                        <td data-plain className="py-2 pl-2 text-right whitespace-nowrap">
                           <button
                             onClick={() => setView({ kind: "detail", customer: c })}
                             className="text-xs px-2 py-1 text-pos-secondary hover:bg-pos-secondary/10 rounded touch-target mr-1"
@@ -287,7 +287,7 @@ export default function CustomersPage() {
       )}
 
       {view.kind === "create" && (
-        <div className="flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
+        <div className="sheet flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
           <CustomerForm
             editCustomer={null}
             onSaved={handleSaved}
@@ -297,7 +297,7 @@ export default function CustomersPage() {
       )}
 
       {view.kind === "edit" && (
-        <div className="flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
+        <div className="sheet flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
           <CustomerForm
             editCustomer={view.customer}
             onSaved={handleSaved}
@@ -399,7 +399,7 @@ function CustomerDetail({ customer, onBack }: { customer: Customer; onBack: () =
           <p className="text-sm text-pos-muted italic text-center py-8">No hay movimientos registrados</p>
         ) : (
           <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="table-cards w-full text-sm">
             <thead>
               <tr className="text-pos-muted border-b border-pos-muted/20">
                 <th className="text-left py-2 pr-2 font-medium">Fecha</th>
@@ -412,17 +412,17 @@ function CustomerDetail({ customer, onBack }: { customer: Customer; onBack: () =
             <tbody>
               {rows.map((p) => (
                 <tr key={p.id} className="border-b border-pos-muted/10 transition-colors hover:bg-pos-background/50">
-                  <td className="py-2 pr-2 text-xs text-pos-muted font-mono whitespace-nowrap">{formatDate(p.date)}</td>
-                  <td className="py-2 px-2 text-pos-text">
+                  <td data-label="Fecha" className="py-2 pr-2 text-xs text-pos-muted font-mono whitespace-nowrap">{formatDate(p.date)}</td>
+                  <td data-head className="py-2 px-2 text-pos-text">
                     {p.notes || (p.amount > 0 ? "Venta a cuenta" : "Cobro")}
                   </td>
-                  <td className={`py-2 px-2 text-right font-mono font-bold ${p.amount > 0 ? "text-pos-danger" : "text-pos-success"}`}>
+                  <td data-label="Monto" className={`py-2 px-2 text-right font-mono font-bold ${p.amount > 0 ? "text-pos-danger" : "text-pos-success"}`}>
                     {p.amount > 0 ? `+${formatCurrency(p.amount)}` : formatCurrency(p.amount)}
                   </td>
-                  <td className={`py-2 px-2 text-right font-mono ${p.balanceAfter > 0 ? "text-pos-danger" : "text-pos-muted"}`}>
+                  <td data-label="Saldo" className={`py-2 px-2 text-right font-mono ${p.balanceAfter > 0 ? "text-pos-danger" : "text-pos-muted"}`}>
                     {formatCurrency(p.balanceAfter)}
                   </td>
-                  <td className="py-2 pl-2 text-right">
+                  <td data-plain className="py-2 pl-2 text-right">
                     <button
                       onClick={() => printCreditPayment(p, displayCustomer.name)}
                       title="Imprimir"
