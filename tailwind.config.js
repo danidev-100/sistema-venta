@@ -18,6 +18,7 @@ export default {
           text: "rgb(var(--color-pos-text) / <alpha-value>)",
           muted: "rgb(var(--color-pos-muted) / <alpha-value>)",
           ring: "rgb(var(--color-pos-ring) / <alpha-value>)",
+          "on-solid": "rgb(var(--color-pos-on-solid) / <alpha-value>)",
         },
       },
       borderRadius: {

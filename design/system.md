@@ -16,15 +16,16 @@ mapped to Tailwind utilities `pos-<name>`.
 | `--color-pos-primary` | `20 22 31` | `236 238 243` | Ink: primary text and active chip/segment background | `src/styles.css` |
 | `--color-pos-secondary` | `91 91 214` | `129 129 240` | Primary action (indigo), active states, links | `src/styles.css` |
 | `--color-pos-accent` | `91 91 214` | `129 129 240` | Gradient start of the single CTA | `src/styles.css` |
-| `--color-pos-accent-2` | `120 118 232` | `150 148 246` | Gradient end of the single CTA | `src/styles.css` |
-| `--color-pos-danger` | `225 29 72` | `244 63 94` | Delete, cancellation, negative amounts | `src/styles.css` |
-| `--color-pos-success` | `22 163 74` | `34 197 94` | Payment success, scan flash, stock OK | `src/styles.css` |
-| `--color-pos-warn` | `245 158 11` | `251 191 36` | Low stock, last units, attention states | `src/styles.css` |
+| `--color-pos-accent-2` | `106 104 218` | `150 148 246` | Gradient end of the single CTA | `src/styles.css` |
+| `--color-pos-danger` | `190 18 60` | `251 113 133` | Delete, cancellation, negative amounts | `src/styles.css` |
+| `--color-pos-success` | `24 124 60` | `34 197 94` | Payment success, scan flash, stock OK | `src/styles.css` |
+| `--color-pos-warn` | `146 64 14` | `251 191 36` | Low stock, last units, attention states | `src/styles.css` |
 | `--color-pos-background` | `245 246 250` | `17 20 28` | Page background | `src/styles.css` |
 | `--color-pos-surface` | `255 255 255` | `24 28 37` | Cards, panels, input backgrounds | `src/styles.css` |
 | `--color-pos-text` | `20 22 31` | `236 238 243` | Primary text | `src/styles.css` |
 | `--color-pos-muted` | `107 113 131` | `148 155 171` | Secondary text, borders at low alpha, icons | `src/styles.css` |
 | `--color-pos-ring` | `91 91 214` | `129 129 240` | Focus ring (`ring-pos-ring`) | `src/styles.css` |
+| `--color-pos-on-solid` | `255 255 255` | `17 20 28` | Text on a saturated fill (`bg-pos-secondary`, `-accent`, `-success`, `-danger`, `-primary`). Never hardcode `text-white` on these fills: in dark mode they are light, so the label has to flip to ink. | `src/styles.css` |
 | `--color-chart-grid` | `#e8eaf0` | `#2a2f3a` | Chart gridlines | `src/styles.css` |
 | `--color-chart-axis` | `#6b7183` | `#949bab` | Chart axis labels | `src/styles.css` |
 | `--color-chart-tooltip-bg` | `#ffffff` | `#181c25` | Chart tooltip background | `src/styles.css` |
@@ -32,7 +33,8 @@ mapped to Tailwind utilities `pos-<name>`.
 | `--color-chart-bar` | `#5b5bd6` | `#8181f0` | Chart bar/line series | `src/styles.css` |
 
 Borders are drawn as `pos-muted` at reduced alpha (observed in components: `/20`, `/30`).
-Dark-mode text and status tokens hold WCAG AA contrast against `17 20 28`.
+Text on saturated fills uses `text-pos-on-solid`, never `text-white`: it resolves to white in light mode and to ink in dark mode, where those fills are light.
+Every text/fill pair above holds WCAG AA (4.5:1) in both themes, including text over the `-10`/`-20` status tints.
 
 ## Typography
 
@@ -76,7 +78,8 @@ No other custom shadow tokens exist in the sources.
 - **Modals**: fixed overlay `bg-black/40`, panel `bg-pos-surface rounded-panel shadow-2xl max-w-sm p-6`; numeric entry uses a `w-32 text-2xl font-bold font-mono` field.
 - **Cards**: `bg-pos-surface`, `rounded-card`, `border border-pos-muted/20`; entrance animation `.card-enter` (8px rise + 0.98 scale, 0.35s, staggered 0.04s) — must respect `prefers-reduced-motion`.
 - **Filters and search**: `rounded-pill`; the active chip flips to `bg-pos-primary text-white` (ink), inactive stays on `bg-pos-surface` with `text-pos-muted`.
-- **Sale panel**: `rounded-panel`, 396px wide, `bg-pos-surface` with a soft shadow; totals read primary text on surface, muted labels for subtotal and discount.
+- **Sale panel**: `rounded-panel`, 440px wide (`lg:w-[440px]`), `bg-pos-surface` with a soft shadow; totals read primary text on surface, muted labels for subtotal and discount.
+- **Product grid**: 2 columns on small screens, `sm:grid-cols-3`, `lg:grid-cols-4`, `2xl:grid-cols-5`, `gap-3`, card `min-h-[132px]` — narrow cards keep the sale panel as the widest, calmest block.
 - **Status copy**: OK = `text-pos-success`, last units = `text-pos-warn`, destructive/negative = `text-pos-danger`.
 - **Scan feedback**: `.scan-flash` green pulse (0.5s) confirms a barcode add.
 - **POS mode**: `.no-select` on chrome; never text-selectable UI.
