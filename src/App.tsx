@@ -5,7 +5,8 @@ import { useAuthStore } from "@/store/auth";
 import { usePermission } from "@/hooks/usePermission";
 import { StoreProvider, useActiveStore } from "@/store/context";
 import AdminRoute from "@/components/AdminRoute";
-import NavigationBar from "@/components/NavigationBar";
+import NavigationBar, { PAGE_LABELS } from "@/components/NavigationBar";
+import ThemeToggle from "@/components/ThemeToggle";
 
 // Pages
 import DashboardPage from "@/pages/DashboardPage";
@@ -119,6 +120,7 @@ export default function App() {
   const isAuthenticated = currentUser !== null;
   const PageComponent = PAGE_COMPONENTS[page];
   const needsAdminGate = ADMIN_PAGES.includes(page);
+  const pageTitle = PAGE_LABELS[page] ?? "";
 
   return (
     <StoreProvider>
@@ -126,15 +128,26 @@ export default function App() {
         <div className="flex flex-col h-screen w-screen overflow-hidden lg:flex-row">
           <SalesLoader />
           <NavigationBar />
-          <main className="flex-1 min-h-0 overflow-auto p-4">
-            {needsAdminGate ? (
-              <AdminRoute>
+          <div className="flex flex-col flex-1 min-w-0 min-h-0">
+            {/* Topbar — current page title + theme toggle */}
+            <header className="h-16 shrink-0 flex items-center gap-3 px-6 bg-pos-surface border-b border-pos-muted/15">
+              <h1 className="text-[15px] font-semibold text-pos-text truncate">{pageTitle}</h1>
+              {/* ThemeToggle compact styles its own button for the old dark
+                  sidebar; these variants re-tone it for the light topbar. */}
+              <div className="ml-auto flex items-center [&>button]:text-pos-muted [&>button:hover]:bg-pos-background [&>button:hover]:text-pos-text">
+                <ThemeToggle compact />
+              </div>
+            </header>
+            <main className="flex-1 min-h-0 overflow-auto p-4">
+              {needsAdminGate ? (
+                <AdminRoute>
+                  <PageComponent />
+                </AdminRoute>
+              ) : (
                 <PageComponent />
-              </AdminRoute>
-            ) : (
-              <PageComponent />
-            )}
-          </main>
+              )}
+            </main>
+          </div>
         </div>
       ) : (
         <LoginPage />
