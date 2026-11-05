@@ -93,3 +93,15 @@ No other custom shadow tokens exist in the sources.
 
 - No external URLs, CDNs, remote fonts, images, or scripts → DM Sans and JetBrains Mono degrade to `system-ui` / `ui-monospace`.
 - WCAG AA contrast, visible focus styles, semantic landmarks.
+
+## Responsive rules
+
+Breakpoints: base 360 px (smallest target, nothing may overflow below it), `sm` 640 tablet, `lg` 1024 desktop (where the sidebar appears). No screen may require more than 1024 px.
+
+- **Shell height**: `.app-shell` = `100vh`, upgraded to `100dvh` under `@supports` so mobile browser chrome never pushes the header off-screen.
+- **One header per breakpoint**: `App` renders the only top bar — hamburger (`MobileMenuButton`, `lg:hidden`), page title, theme toggle. `NavigationBar` owns the drawer state and accepts optional `mobileOpen`/`onMobileOpenChange`; never add a second mobile bar.
+- **Page container**: `main` scrolls vertically only (`overflow-y-auto overflow-x-hidden`), padding `p-3 sm:p-4`. A page must never scroll sideways; only a desktop table wrapper may.
+- **Dense tables → cards below `lg`**: put `table-cards` on the `<table>` and `data-label="…"` on each value cell; `data-plain` on control/thumbnail cells and `data-head` on the row title. The transformation is CSS-only, so a datum is never rendered twice. Never ship two views of the same table in the DOM.
+- **Modals**: add `sheet` to the panel so below `sm` it becomes a full-screen, internally scrolling sheet. Action buttons stay inside the sheet viewport.
+- **Toolbars and filters**: `flex flex-wrap` with `gap-2`; primary search grows (`w-full sm:max-w-sm`) instead of forcing a fixed width. Grids start at one column and add columns at `sm`/`lg`.
+- **Charts**: wrap `ResponsiveContainer` in a `min-w-0` parent and stack chart pairs below `lg`, so recharts measures a narrow width instead of overflowing.

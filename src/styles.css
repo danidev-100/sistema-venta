@@ -178,3 +178,112 @@ body,
 .scan-flash {
   animation: scan-flash 0.5s ease-out;
 }
+
+/* ──────────────────────────────────────────────
+ * Responsive primitives
+ * ────────────────────────────────────────────── */
+
+/*
+ * Dense tables → stacked cards below lg (1024px).
+ *
+ * One DOM only: the same <table> turns into a card list through CSS, so no
+ * datum is rendered twice (duplicate text would break role/text queries and
+ * force tests to guess "the first match").
+ *
+ * Contract: put `table-cards` on the <table> and `data-label="<Label>"` on
+ * every <td> that should read as label/value. Cells that hold a control, a
+ * thumbnail or the row's primary title use `data-plain` instead: they take the
+ * full width, unlabelled and left-aligned.
+ */
+@media (max-width: 1023px) {
+  .table-cards,
+  .table-cards tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .table-cards thead {
+    display: none;
+  }
+
+  .table-cards tbody tr {
+    display: block;
+    margin-bottom: 0.5rem;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid rgb(var(--color-pos-muted) / 0.18);
+    border-radius: 14px;
+    background-color: rgb(var(--color-pos-surface));
+  }
+
+  .table-cards tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .table-cards tbody td {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: none;
+    padding: 0.125rem 0;
+    text-align: right;
+  }
+
+  .table-cards tbody td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-align: left;
+    text-transform: uppercase;
+    color: rgb(var(--color-pos-muted));
+  }
+
+  /* Unlabelled cells: full width, left aligned, vertically centered */
+  .table-cards tbody td[data-plain] {
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+    padding: 0.2rem 0;
+  }
+
+  .table-cards tbody td[data-plain]::before {
+    content: none;
+  }
+
+  /* The primary title inside a card reads as the card head */
+  .table-cards tbody td[data-head] {
+    font-size: 13.5px;
+    font-weight: 600;
+    padding-top: 0;
+  }
+
+  /* Hide the desktop scroll wrapper's leftovers inside card mode */
+  .table-cards tbody tr > td[hidden] {
+    display: none;
+  }
+}
+
+/*
+ * Modals become full-screen sheets below sm (640px): the panel fills the
+ * viewport, scrolls internally and drops its radius. The overlay keeps
+ * centering it, so no layout math is needed per modal.
+ */
+@media (max-width: 639px) {
+  .sheet {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    height: 100%;
+    margin: 0;
+    overflow-y: auto;
+    border-radius: 0;
+    overscroll-behavior: contain;
+  }
+}
