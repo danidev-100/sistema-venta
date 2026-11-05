@@ -8,6 +8,7 @@ import ReconciliationForm from "@/components/ReconciliationForm";
 import ClosureReport from "@/components/ClosureReport";
 import ShiftDetailModal from "@/components/ShiftDetailModal";
 import { exportTableToPdf, exportToExcel, type ExportColumn } from "@/lib/export-utils";
+import { salesInShift, shiftPaymentTotals } from "@/lib/shift-sales";
 import { formatCurrency } from "@/lib/format";
 
 // ──────────────────────────────────────────────
@@ -64,39 +65,16 @@ export default function CashClosingPage() {
 
   const shiftExportData = useMemo(() => {
     return storeShifts.map((shift) => {
-      const shiftSales = completedSales.filter((s) => {
-        const t = new Date(s.date).getTime();
-        const open = new Date(shift.openTime).getTime();
-        const close = shift.closeTime
-          ? new Date(shift.closeTime).getTime()
-          : Date.now();
-        return t >= open && t <= close;
-      });
-      const cashTotal = shiftSales.reduce((sum, s) => {
-        if (s.paymentMethod === "cash") return sum + s.total;
-        if (s.paymentMethod === "mixed") return sum + (s.cashAmount ?? 0);
-        return sum;
-      }, 0);
-      const cardTotal = shiftSales.reduce((sum, s) => {
-        if (s.paymentMethod === "card") return sum + s.total;
-        if (s.paymentMethod === "mixed") return sum + (s.cardAmount ?? 0);
-        return sum;
-      }, 0);
-      const mercadopagoTotal = shiftSales.reduce((sum, s) => {
-        if (s.paymentMethod === "mercadopago") return sum + s.total;
-        if (s.paymentMethod === "mixed") return sum + (s.mercadopagoAmount ?? 0);
-        return sum;
-      }, 0);
-      const total = Math.round((cashTotal + cardTotal + mercadopagoTotal) * 100) / 100;
+      const totals = shiftPaymentTotals(salesInShift(completedSales, shift));
       return {
         cajero: shift.employee,
         turno: new Date(shift.openTime).toLocaleDateString(),
         apertura: formatCurrency(shift.openingBalance),
-        ventas: shiftSales.length,
-        efectivo: formatCurrency(cashTotal),
-        tarjeta: formatCurrency(cardTotal),
-        mercadopago: formatCurrency(mercadopagoTotal),
-        total: formatCurrency(total),
+        ventas: totals.count,
+        efectivo: formatCurrency(totals.cash),
+        tarjeta: formatCurrency(totals.card),
+        mercadopago: formatCurrency(totals.mercadopago),
+        total: formatCurrency(totals.total),
         estado: shift.status === "open" ? "Abierto" : "Cerrado",
       };
     });
@@ -172,30 +150,7 @@ export default function CashClosingPage() {
                 </thead>
                 <tbody>
                   {storeShifts.map((shift) => {
-                    const shiftSales = completedSales.filter((s) => {
-                      const t = new Date(s.date).getTime();
-                      const open = new Date(shift.openTime).getTime();
-                      const close = shift.closeTime
-                        ? new Date(shift.closeTime).getTime()
-                        : Date.now();
-                      return t >= open && t <= close;
-                    });
-                    const cashTotal = shiftSales.reduce((sum, s) => {
-                      if (s.paymentMethod === "cash") return sum + s.total;
-                      if (s.paymentMethod === "mixed") return sum + (s.cashAmount ?? 0);
-                      return sum;
-                    }, 0);
-                    const cardTotal = shiftSales.reduce((sum, s) => {
-                      if (s.paymentMethod === "card") return sum + s.total;
-                      if (s.paymentMethod === "mixed") return sum + (s.cardAmount ?? 0);
-                      return sum;
-                    }, 0);
-                    const mercadopagoTotal = shiftSales.reduce((sum, s) => {
-                      if (s.paymentMethod === "mercadopago") return sum + s.total;
-                      if (s.paymentMethod === "mixed") return sum + (s.mercadopagoAmount ?? 0);
-                      return sum;
-                    }, 0);
-                    const total = Math.round((cashTotal + cardTotal + mercadopagoTotal) * 100) / 100;
+                    const totals = shiftPaymentTotals(salesInShift(completedSales, shift));
 
                     return (
                       <tr
@@ -211,11 +166,11 @@ export default function CashClosingPage() {
                         <td className="py-2 px-2 num text-pos-muted" data-label="Apertura">
                           {formatCurrency(shift.openingBalance)}
                         </td>
-                        <td className="py-2 px-2 num" data-label="Ventas">{shiftSales.length}</td>
-                        <td className="py-2 px-2 num" data-label="Efectivo">{formatCurrency(cashTotal)}</td>
-                        <td className="py-2 px-2 num" data-label="Tarjeta">{formatCurrency(cardTotal)}</td>
-                        <td className="py-2 px-2 num" data-label="M. Pago">{formatCurrency(mercadopagoTotal)}</td>
-                        <td className="py-2 px-2 num font-bold" data-label="Total">{formatCurrency(total)}</td>
+                        <td className="py-2 px-2 num" data-label="Ventas">{totals.count}</td>
+                        <td className="py-2 px-2 num" data-label="Efectivo">{formatCurrency(totals.cash)}</td>
+                        <td className="py-2 px-2 num" data-label="Tarjeta">{formatCurrency(totals.card)}</td>
+                        <td className="py-2 px-2 num" data-label="M. Pago">{formatCurrency(totals.mercadopago)}</td>
+                        <td className="py-2 px-2 num font-bold" data-label="Total">{formatCurrency(totals.total)}</td>
                         <td className="py-2 pl-2 text-center" data-label="Estado">
                           {shift.status === "open" ? (
                             <span className="text-pos-success font-medium">● Abierto</span>
@@ -424,32 +379,8 @@ function ShiftQuickStats({
   shift: Shift;
   completedSales: CompletedSale[];
 }) {
-  const openTime = new Date(shift.openTime).getTime();
-  const closeTime = shift.closeTime
-    ? new Date(shift.closeTime).getTime()
-    : Date.now();
-
-  const shiftSales = completedSales.filter((s) => {
-    const t = new Date(s.date).getTime();
-    return t >= openTime && t <= closeTime;
-  });
-
-  const cashTotal = shiftSales.reduce((sum, s) => {
-    if (s.paymentMethod === "cash") return sum + s.total;
-    if (s.paymentMethod === "mixed") return sum + (s.cashAmount ?? 0);
-    return sum;
-  }, 0);
-  const cardTotal = shiftSales.reduce((sum, s) => {
-    if (s.paymentMethod === "card") return sum + s.total;
-    if (s.paymentMethod === "mixed") return sum + (s.cardAmount ?? 0);
-    return sum;
-  }, 0);
-  const mercadopagoTotal = shiftSales.reduce((sum, s) => {
-    if (s.paymentMethod === "mercadopago") return sum + s.total;
-    if (s.paymentMethod === "mixed") return sum + (s.mercadopagoAmount ?? 0);
-    return sum;
-  }, 0);
-  const totalSales = Math.round((cashTotal + cardTotal + mercadopagoTotal) * 100) / 100;
+  const shiftSales = salesInShift(completedSales, shift);
+  const totals = shiftPaymentTotals(shiftSales);
   const itemCount = shiftSales.reduce(
     (sum, s) => sum + s.items.reduce((q, i) => q + i.quantity, 0),
     0,
@@ -476,26 +407,26 @@ function ShiftQuickStats({
         <div className="flex items-center justify-between">
           <span className="text-xs text-pos-muted">Efectivo</span>
           <span className="text-sm font-mono">
-            {formatCurrency(cashTotal)}
+            {formatCurrency(totals.cash)}
           </span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-xs text-pos-muted">Tarjeta</span>
           <span className="text-sm font-mono">
-            {formatCurrency(cardTotal)}
+            {formatCurrency(totals.card)}
           </span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-xs text-pos-muted">Mercado Pago</span>
           <span className="text-sm font-mono">
-            {formatCurrency(mercadopagoTotal)}
+            {formatCurrency(totals.mercadopago)}
           </span>
         </div>
         <hr className="border-pos-muted/20" />
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold">Total Ventas</span>
           <span className="text-sm font-mono font-bold text-pos-text">
-            {formatCurrency(totalSales)}
+            {formatCurrency(totals.total)}
           </span>
         </div>
       </div>

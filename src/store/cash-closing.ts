@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { CompletedSale } from "@/store";
 import { api } from "@/lib/api";
+import { salesInShift, shiftPaymentTotals, shiftProducts } from "@/lib/shift-sales";
 
 // ──────────────────────────────────────────────
 // Types
@@ -54,25 +55,20 @@ export type ShiftSummary = {
 // Helpers
 // ──────────────────────────────────────────────
 
-/** Compute expected cash — sum of cash-method sales + mixed cash portions within a time window. */
+/**
+ * Compute expected cash — sum of cash-method sales + mixed cash portions within
+ * a time window. The association and the cash split come from
+ * `@/lib/shift-sales`; `closeTime: null` (open shift) keeps an unbounded window,
+ * so the reference time is `Infinity` instead of the helper's `Date.now()`.
+ */
 export function computeExpectedCash(
   sales: CompletedSale[],
   openTime: string,
   closeTime: string | null,
 ): number {
-  const open = new Date(openTime).getTime();
-  const close = closeTime ? new Date(closeTime).getTime() : Infinity;
-
-  return sales
-    .filter((s) => {
-      const t = new Date(s.date).getTime();
-      return t >= open && t <= close;
-    })
-    .reduce((sum, s) => {
-      if (s.paymentMethod === "cash") return sum + s.total;
-      if (s.paymentMethod === "mixed") return sum + (s.cashAmount ?? 0);
-      return sum;
-    }, 0);
+  return shiftPaymentTotals(
+    salesInShift(sales, { openTime, closeTime }, Infinity),
+  ).cash;
 }
 
 /** Compute variance: declared - expected. */
@@ -324,35 +320,10 @@ export const useCashClosingStore = create<CashClosingStore>((set, get) => ({
     const shift = get().shifts.find((s) => s.id === shiftId);
     if (!shift) return null;
 
-    const open = new Date(shift.openTime).getTime();
-    const close = shift.closeTime
-      ? new Date(shift.closeTime).getTime()
-      : Infinity;
-
-    const shiftSales = completedSales.filter((s) => {
-      const t = new Date(s.date).getTime();
-      return t >= open && t <= close;
-    });
-
-    const cashTotal = shiftSales.reduce((sum, s) => {
-      if (s.paymentMethod === "cash") return sum + s.total;
-      if (s.paymentMethod === "mixed") return sum + (s.cashAmount ?? 0);
-      return sum;
-    }, 0);
-
-    const cardTotal = shiftSales.reduce((sum, s) => {
-      if (s.paymentMethod === "card") return sum + s.total;
-      if (s.paymentMethod === "mixed") return sum + (s.cardAmount ?? 0);
-      return sum;
-    }, 0);
-
-    const mercadopagoTotal = shiftSales.reduce((sum, s) => {
-      if (s.paymentMethod === "mercadopago") return sum + s.total;
-      if (s.paymentMethod === "mixed") return sum + (s.mercadopagoAmount ?? 0);
-      return sum;
-    }, 0);
-
-    const totalSales = Math.round((cashTotal + cardTotal + mercadopagoTotal) * 100) / 100;
+    // Open shifts keep the unbounded window they always had (referenceTime =
+    // Infinity), so a sale dated after "now" still belongs to the shift.
+    const shiftSales = salesInShift(completedSales, shift, Infinity);
+    const totals = shiftPaymentTotals(shiftSales);
 
     // Cash movements
     const movements = get().cashMovements.filter((m) => m.shiftId === shiftId);
@@ -363,35 +334,19 @@ export const useCashClosingStore = create<CashClosingStore>((set, get) => ({
       .filter((m) => m.type === "deposit")
       .reduce((sum, m) => sum + m.amount, 0);
 
-    // Build product aggregation
-    const productMap = new Map<string, { quantity: number; total: number }>();
-    for (const sale of shiftSales) {
-      for (const item of sale.items) {
-        const existing = productMap.get(item.productName);
-        if (existing) {
-          existing.quantity += item.quantity;
-          existing.total += item.subtotal;
-        } else {
-          productMap.set(item.productName, {
-            quantity: item.quantity,
-            total: item.subtotal,
-          });
-        }
-      }
-    }
-
-    const topProducts = [...productMap.entries()]
-      .map(([name, data]) => ({ name, ...data }))
+    // Product aggregation comes from the helper; the report keeps ranking the
+    // top 10 by units sold, which is its own presentation choice.
+    const topProducts = shiftProducts(shiftSales)
       .sort((a, b) => b.quantity - a.quantity)
       .slice(0, 10);
 
     return {
       shift,
-      totalSales,
-      cashTotal: Math.round(cashTotal * 100) / 100,
-      cardTotal: Math.round(cardTotal * 100) / 100,
-      mercadopagoTotal: Math.round(mercadopagoTotal * 100) / 100,
-      transactionCount: shiftSales.length,
+      totalSales: totals.total,
+      cashTotal: totals.cash,
+      cardTotal: totals.card,
+      mercadopagoTotal: totals.mercadopago,
+      transactionCount: totals.count,
       itemCount: shiftSales.reduce((sum, s) => sum + s.items.reduce((q, i) => q + i.quantity, 0), 0),
       topProducts,
       withdrawalsTotal,
