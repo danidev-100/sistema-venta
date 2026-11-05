@@ -84,6 +84,7 @@ No other custom shadow tokens exist in the sources.
 - **Product card**: header row = 44 px square thumbnail (`h-11 w-11`, `rounded-control`, `bg-pos-muted/10`, `<img>` with `object-contain`) next to the category pill, then name (`line-clamp-2`), price in mono, stock status. Never a full-bleed `object-cover` image: on narrow cards the crop dominated the card and sliced the photo.
 - **Cart row**: `grid-cols-[1.25rem_1.75rem_minmax(0,1fr)_auto_1.5rem]` — index, thumbnail, name, quantity stepper, remove on line 1 (the stepper sits beside the name, not below it); unit price left and line subtotal right on line 2. Weight products (`saleUnit !== "unit"`) keep their six gram buttons on their own full-width line below, because they do not fit beside the name.
 - **Status copy**: OK = `text-pos-success`, last units = `text-pos-warn`, destructive/negative = `text-pos-danger`.
+- **Dense tables**: the table element carries the body size (`text-[13px]`), secondary columns drop to `text-xs` per cell. Never leave the size to inheritance and never use a class Tailwind does not generate (a `text-xm` typo silently renders the 16px root size).
 - **Scan feedback**: `.scan-flash` green pulse (0.5s) confirms a barcode add.
 - **POS mode**: `.no-select` on chrome; never text-selectable UI.
 - **Motion budget**: `0.15s` shell theme transitions, `0.35s` card entrance, `0.5s` scan flash. Nothing longer.

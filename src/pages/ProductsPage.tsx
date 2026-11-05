@@ -466,7 +466,7 @@ export default function ProductsPage() {
               </div>
             ) : (
                 <div className="overflow-x-auto">
-                <table className="w-full text-xm">
+                <table className="w-full text-[13px]">
                     <thead>
                     <tr className="text-pos-muted border-b border-pos-muted/20">
                       <th className="w-8 py-2 pr-1">
