@@ -239,7 +239,7 @@ export default function CheckoutModal({
                   }}
                   className={`text-xs px-2.5 py-1.5 rounded-lg font-medium touch-target transition-all ${
                     selectedComprobanteTipo === t
-                      ? "bg-pos-secondary text-white"
+                      ? "bg-pos-secondary text-pos-on-solid"
                       : "border border-pos-muted/20 text-pos-muted hover:border-pos-secondary hover:text-pos-text"
                   }`}
                 >
@@ -377,7 +377,7 @@ export default function CheckoutModal({
                     onClick={() => setSelectedPriceListId(active ? null : list.id)}
                     className={`text-xs px-2.5 py-1.5 rounded-lg font-medium touch-target transition-all ${
                       active
-                        ? "bg-pos-secondary text-white"
+                        ? "bg-pos-secondary text-pos-on-solid"
                         : "border border-pos-muted/20 text-pos-muted hover:border-pos-secondary hover:text-pos-secondary"
                     }`}
                   >
@@ -423,12 +423,12 @@ export default function CheckoutModal({
                 </button>
                 <button
                   onClick={() => handlePaymentSelect("mercadopago")}
-                  className="flex flex-col items-center justify-center py-4 px-1 border-2 border-pos-muted/20 rounded-xl touch-target hover:border-[#00a1e0] hover:bg-[#e5f6ff] transition-all"
+                  className="flex flex-col items-center justify-center py-4 px-1 border-2 border-pos-muted/20 rounded-xl touch-target hover:border-[#00a1e0] hover:bg-[#00a1e0]/10 transition-all"
                 >
                   <svg className="w-7 h-7 mb-1" viewBox="0 0 24 24" fill="none">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.9 6.5c.2 0 .4.08.55.22.15.15.22.34.22.55v4.46c0 .22-.08.4-.22.55-.15.15-.34.22-.55.22h-1.1c-.22 0-.4-.08-.55-.22-.15-.15-.22-.34-.22-.55v-1.8L12.9 14.5c-.15.15-.34.22-.55.22h-.7c-.22 0-.4-.08-.55-.22L9.2 12.38v1.8c0 .22-.08.4-.22.55-.15.15-.34.22-.55.22h-1.1c-.22 0-.4-.08-.55-.22-.15-.15-.22-.34-.22-.55V9.27c0-.22.08-.4.22-.55.15-.15.34-.22.55-.22h.92c.22 0 .4.08.55.22L12 12.15l2.22-2.88c.15-.15.34-.22.55-.22h1.13z" fill="#00a1e0"/>
                   </svg>
-                  <span className="text-xs font-semibold text-[#00a1e0]">
+                  <span className="text-xs font-semibold text-[#0071a3] dark:text-[#67c8ef]">
                     Mercado Pago
                   </span>
                 </button>
@@ -593,16 +593,16 @@ export default function CheckoutModal({
 
           {/* Mercado Pago indicator */}
           {paymentMethod === "mercadopago" && (
-            <div className="bg-[#e5f6ff] border border-[#00a1e0]/30 rounded-xl px-4 py-3 text-center">
+            <div className="bg-[#00a1e0]/10 border border-[#00a1e0]/30 rounded-xl px-4 py-3 text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.9 6.5c.2 0 .4.08.55.22.15.15.22.34.22.55v4.46c0 .22-.08.4-.22.55-.15.15-.34.22-.55.22h-1.1c-.22 0-.4-.08-.55-.22-.15-.15-.22-.34-.22-.55v-1.8L12.9 14.5c-.15.15-.34.22-.55.22h-.7c-.22 0-.4-.08-.55-.22L9.2 12.38v1.8c0 .22-.08.4-.22.55-.15.15-.34.22-.55.22h-1.1c-.22 0-.4-.08-.55-.22-.15-.15-.22-.34-.22-.55V9.27c0-.22.08-.4.22-.55.15-.15.34-.22.55-.22h.92c.22 0 .4.08.55.22L12 12.15l2.22-2.88c.15-.15.34-.22.55-.22h1.13z" fill="#00a1e0"/>
                 </svg>
-                <p className="text-sm font-semibold text-[#00a1e0]">
+                <p className="text-sm font-semibold text-[#0071a3] dark:text-[#67c8ef]">
                   Mercado Pago
                 </p>
               </div>
-              <p className="text-xs text-[#0090c8]">
+              <p className="text-xs text-[#0071a3] dark:text-[#67c8ef]">
                 Mostrá el código QR al cliente para que escanee con la app
               </p>
             </div>
@@ -619,7 +619,7 @@ export default function CheckoutModal({
             <button
               onClick={handleConfirm}
               disabled={busy || !paymentMethod}
-              className="flex-1 px-4 py-3 bg-pos-accent text-white rounded-xl font-bold text-sm touch-target hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-3 bg-pos-accent text-pos-on-solid rounded-xl font-bold text-sm touch-target hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {busy
                 ? "Procesando…"

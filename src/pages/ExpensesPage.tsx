@@ -373,7 +373,7 @@ function TabButton({
       onClick={onClick}
       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
         active
-          ? "bg-pos-secondary text-white shadow-sm"
+          ? "bg-pos-secondary text-pos-on-solid shadow-sm"
           : "text-pos-muted hover:text-pos-text hover:bg-pos-background/50"
       }`}
     >
@@ -419,7 +419,7 @@ function RegisterTab({
       <div className="flex items-center gap-2 flex-wrap">
         <button
           onClick={onAdd}
-          className="px-4 py-2 bg-pos-secondary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+          className="px-4 py-2 bg-pos-secondary text-pos-on-solid rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
         >
           + Nuevo Gasto
         </button>
@@ -735,8 +735,8 @@ function SummaryTab({
                 <Tooltip
                   formatter={(value: number) => [formatCurrency(value), "Total"]}
                   contentStyle={{
-                    backgroundColor: "var(--color-surface, #1f2937)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    backgroundColor: "var(--color-chart-tooltip-bg)",
+                    border: "1px solid var(--color-chart-tooltip-border)",
                     borderRadius: "8px",
                     fontSize: "12px",
                   }}
@@ -893,7 +893,7 @@ function ExpenseModal({
           <button
             onClick={onSave}
             disabled={!isValid}
-            className="px-4 py-2 bg-pos-secondary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-pos-secondary text-pos-on-solid rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {editingId !== null ? "Guardar Cambios" : "Guardar"}
           </button>
