@@ -275,7 +275,7 @@ export default function CartPanel({
               {/* Quantity / Weight controls */}
               {item.saleUnit === "unit" ? (
                 /* ── Unit controls: inline, beside the product name ── */
-                <div className="col-start-4 row-start-1 flex shrink-0 items-center justify-self-end gap-1">
+                <div className="col-start-4 row-start-1 mr-2 flex shrink-0 items-center justify-self-end gap-1">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -286,7 +286,7 @@ export default function CartPanel({
                         return next;
                       });
                     }}
-                    className="w-7 h-7 flex items-center justify-center bg-pos-background border border-pos-muted/20 rounded-control text-pos-text font-bold text-base touch-target hover:bg-pos-muted/10 transition-colors"
+                    className="h-8 w-8 shrink-0 flex items-center justify-center bg-pos-background border border-pos-muted/20 rounded-control text-pos-text font-bold text-sm transition-colors hover:bg-pos-muted/10"
                     aria-label={`Disminuir cantidad de ${item.productName}`}
                   >
                     −
@@ -359,7 +359,7 @@ export default function CartPanel({
                         });
                       }
                     }}
-                    className="w-10 text-center text-xs font-bold font-mono text-pos-text bg-pos-background border border-pos-muted/20 rounded-control px-0.5 py-1 focus:outline-none focus:ring-2 focus:ring-pos-secondary [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="h-8 w-9 text-center text-xs font-bold font-mono text-pos-text bg-pos-background border border-pos-muted/20 rounded-control px-0.5 focus:outline-none focus:ring-2 focus:ring-pos-secondary [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     aria-label={`Cantidad de ${item.productName}`}
                   />
                   <button
@@ -372,7 +372,7 @@ export default function CartPanel({
                         return next;
                       });
                     }}
-                    className="w-7 h-7 flex items-center justify-center bg-pos-background border border-pos-muted/20 rounded-control text-pos-text font-bold text-base touch-target hover:bg-pos-muted/10 transition-colors"
+                    className="h-8 w-8 shrink-0 flex items-center justify-center bg-pos-background border border-pos-muted/20 rounded-control text-pos-text font-bold text-sm transition-colors hover:bg-pos-muted/10"
                     aria-label={`Aumentar cantidad de ${item.productName}`}
                   >
                     +
@@ -539,7 +539,7 @@ export default function CartPanel({
                   e.stopPropagation();
                   removeItem(item.productId);
                 }}
-                className="col-start-5 row-start-1 justify-self-end w-6 h-6 flex items-center justify-center text-pos-muted/60 hover:text-pos-danger touch-target rounded-control hover:bg-pos-danger/10 transition-colors"
+                className="col-start-5 row-start-1 justify-self-end h-7 w-7 flex items-center justify-center text-pos-muted/60 hover:text-pos-danger rounded-control hover:bg-pos-danger/10 transition-colors"
                 aria-label={`Eliminar ${item.productName} del carrito`}
               >
                 ✕

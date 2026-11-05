@@ -74,6 +74,7 @@ No other custom shadow tokens exist in the sources.
 ## Component rules
 
 - **Buttons**: `rounded-control`, `text-sm font-medium`, `touch-target`. Primary (single CTA per view) = `bg-pos-secondary text-white`, or the indigo gradient `bg-gradient-to-r from-pos-accent to-pos-accent-2`; secondary = `border border-pos-muted/30 text-pos-text hover:bg-pos-background`; destructive = `bg-pos-danger text-white`; disabled = `opacity-40`.
+  - Exception — **compact in-row controls**: inside a cart row the quantity stepper (32 px) and the remove ✕ (28 px) drop `touch-target`. `.touch-target` enforces `min-width/min-height: 44px`, which made the stepper 44 px wide and its hit box overlap the ✕, so visible size and hit area shrank together; both stay above the 24 px WCAG 2.5.8 AA minimum and are separated by 14 px.
 - **Inputs**: `bg-pos-surface border border-pos-muted/20 rounded-control px-4 py-3.5 text-sm`; focus = `ring-2 ring-pos-ring`; in dark mode inputs take `bg-pos-background` and `text-pos-text` (`src/styles.css`).
 - **Modals**: fixed overlay `bg-black/40`, panel `bg-pos-surface rounded-panel shadow-2xl max-w-sm p-6`; numeric entry uses a `w-32 text-2xl font-bold font-mono` field.
 - **Cards**: `bg-pos-surface`, `rounded-card`, `border border-pos-muted/20`; entrance animation `.card-enter` (8px rise + 0.98 scale, 0.35s, staggered 0.04s) — must respect `prefers-reduced-motion`.
