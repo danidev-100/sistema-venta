@@ -11,38 +11,44 @@
 
 /* ── Light mode (default) ── */
 :root {
-  --color-pos-primary: 30 58 95;
-  --color-pos-secondary: 74 144 217;
-  --color-pos-accent: 245 166 35;
-  --color-pos-danger: 211 47 47;
-  --color-pos-success: 56 142 60;
-  --color-pos-background: 245 247 250;
+  --color-pos-primary: 20 22 31;
+  --color-pos-secondary: 91 91 214;
+  --color-pos-accent: 91 91 214;
+  --color-pos-accent-2: 120 118 232;
+  --color-pos-danger: 225 29 72;
+  --color-pos-success: 22 163 74;
+  --color-pos-warn: 245 158 11;
+  --color-pos-background: 245 246 250;
   --color-pos-surface: 255 255 255;
-  --color-pos-text: 26 26 46;
-  --color-pos-muted: 107 114 128;
-  --color-chart-grid: #e5e7eb;
-  --color-chart-axis: #6b7280;
+  --color-pos-text: 20 22 31;
+  --color-pos-muted: 107 113 131;
+  --color-pos-ring: 91 91 214;
+  --color-chart-grid: #e8eaf0;
+  --color-chart-axis: #6b7183;
   --color-chart-tooltip-bg: #ffffff;
-  --color-chart-tooltip-border: #e5e7eb;
-  --color-chart-bar: #4a90d9;
+  --color-chart-tooltip-border: #e8eaf0;
+  --color-chart-bar: #5b5bd6;
 }
 
 /* ── Dark mode ── */
 .dark {
-  --color-pos-primary: 15 31 51;
-  --color-pos-secondary: 91 160 232;
-  --color-pos-accent: 212 146 30;
-  --color-pos-danger: 239 83 80;
-  --color-pos-success: 76 175 80;
-  --color-pos-background: 17 24 39;
-  --color-pos-surface: 31 41 55;
-  --color-pos-text: 243 244 246;
-  --color-pos-muted: 156 163 175;
-  --color-chart-grid: #374151;
-  --color-chart-axis: #9ca3af;
-  --color-chart-tooltip-bg: #1f2937;
-  --color-chart-tooltip-border: #374151;
-  --color-chart-bar: #60a5fa;
+  --color-pos-primary: 236 238 243;
+  --color-pos-secondary: 129 129 240;
+  --color-pos-accent: 129 129 240;
+  --color-pos-accent-2: 150 148 246;
+  --color-pos-danger: 244 63 94;
+  --color-pos-success: 34 197 94;
+  --color-pos-warn: 251 191 36;
+  --color-pos-background: 17 20 28;
+  --color-pos-surface: 24 28 37;
+  --color-pos-text: 236 238 243;
+  --color-pos-muted: 148 155 171;
+  --color-pos-ring: 129 129 240;
+  --color-chart-grid: #2a2f3a;
+  --color-chart-axis: #949bab;
+  --color-chart-tooltip-bg: #181c25;
+  --color-chart-tooltip-border: #2a2f3a;
+  --color-chart-bar: #8181f0;
 }
 
 /* ── Dark mode form inputs ── */
