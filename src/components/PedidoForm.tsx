@@ -304,7 +304,7 @@ export default function PedidoForm({ onSaved, onCancel, editPedido }: PedidoForm
 
       {/* Items table */}
       <div className="bg-pos-background/30 rounded-lg p-3">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <label className="text-sm font-medium text-pos-text">Productos</label>
           <button
             type="button"
@@ -315,7 +315,7 @@ export default function PedidoForm({ onSaved, onCancel, editPedido }: PedidoForm
           </button>
         </div>
 
-        <div className="min-w-0">
+        <div className="min-w-0 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-pos-muted border-b border-pos-muted/20">
@@ -350,7 +350,7 @@ export default function PedidoForm({ onSaved, onCancel, editPedido }: PedidoForm
       {/* Hidden input to make form work with Enter */}
       <input type="submit" className="hidden" />
 
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <button
           type="button"
           onClick={onCancel}

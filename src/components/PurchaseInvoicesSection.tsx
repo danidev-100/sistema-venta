@@ -363,34 +363,36 @@ export default function PurchaseInvoicesSection() {
                 </div>
 
                 {expandedId === inv.id && inv.items.length > 0 && (
-                  <table className="w-full mt-3 text-xs">
-                    <thead>
-                      <tr className="text-pos-muted/60 border-b border-pos-muted/10">
-                        <th className="text-left font-medium py-1 pr-2">Producto</th>
-                        <th className="text-right font-medium py-1 px-2">Cant</th>
-                        <th className="text-right font-medium py-1 px-2">Costo unit.</th>
-                        <th className="text-right font-medium py-1 px-2">Precio venta</th>
-                        <th className="text-right font-medium py-1 pl-2">Subtotal</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {inv.items.map((item) => (
-                        <tr key={item.id} className="border-b border-pos-muted/5 last:border-0">
-                          <td className="py-1 pr-2 text-pos-muted">{item.productName}</td>
-                          <td className="py-1 px-2 text-right font-mono text-pos-muted">{item.quantity}</td>
-                          <td className="py-1 px-2 text-right font-mono text-pos-muted">
-                            ${item.unitPrice.toFixed(2)}
-                          </td>
-                          <td className="py-1 px-2 text-right font-mono text-pos-muted">
-                            ${item.salePrice.toFixed(2)}
-                          </td>
-                          <td className="py-1 pl-2 text-right font-mono text-pos-muted">
-                            ${item.subtotal.toFixed(2)}
-                          </td>
+                  <div className="overflow-x-auto">
+                    <table className="w-full mt-3 text-xs">
+                      <thead>
+                        <tr className="text-pos-muted/60 border-b border-pos-muted/10">
+                          <th className="text-left font-medium py-1 pr-2">Producto</th>
+                          <th className="text-right font-medium py-1 px-2">Cant</th>
+                          <th className="text-right font-medium py-1 px-2">Costo unit.</th>
+                          <th className="text-right font-medium py-1 px-2">Precio venta</th>
+                          <th className="text-right font-medium py-1 pl-2">Subtotal</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {inv.items.map((item) => (
+                          <tr key={item.id} className="border-b border-pos-muted/5 last:border-0">
+                            <td className="py-1 pr-2 text-pos-muted">{item.productName}</td>
+                            <td className="py-1 px-2 text-right font-mono text-pos-muted">{item.quantity}</td>
+                            <td className="py-1 px-2 text-right font-mono text-pos-muted">
+                              ${item.unitPrice.toFixed(2)}
+                            </td>
+                            <td className="py-1 px-2 text-right font-mono text-pos-muted">
+                              ${item.salePrice.toFixed(2)}
+                            </td>
+                            <td className="py-1 pl-2 text-right font-mono text-pos-muted">
+                              ${item.subtotal.toFixed(2)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
             ))}
@@ -434,7 +436,7 @@ function SuccessModal({
       onClick={closeWithAnim}
     >
       <div
-        className={`w-full max-w-sm bg-pos-surface rounded-2xl shadow-2xl border border-pos-muted/10 mx-4 p-6 text-center space-y-5 transition-all duration-150 ${
+        className={`sheet w-full max-w-sm bg-pos-surface rounded-2xl shadow-2xl border border-pos-muted/10 mx-4 p-6 text-center space-y-5 transition-all duration-150 ${
           animOut ? "opacity-0 scale-95" : "opacity-100 scale-100"
         }`}
         onClick={(e) => e.stopPropagation()}

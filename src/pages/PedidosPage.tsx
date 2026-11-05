@@ -147,7 +147,7 @@ export default function PedidosPage() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-lg font-bold text-pos-text">Pedidos</h1>
         {view.kind === "list" && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {filteredPedidos.length > 0 && (
               <>
                 <button
@@ -181,7 +181,7 @@ export default function PedidosPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por proveedor, N° de pedido o estado…"
-            className="w-full border border-pos-muted/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pos-secondary touch-target"
+            className="w-full sm:max-w-sm border border-pos-muted/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pos-secondary touch-target"
           />
 
           {/* Status filter chips */}
@@ -221,7 +221,7 @@ export default function PedidosPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="table-cards w-full text-sm">
                   <thead>
                     <tr className="text-pos-muted border-b border-pos-muted/20">
                       <th className="text-left py-2 pr-1 font-medium w-14">N°</th>
@@ -239,12 +239,16 @@ export default function PedidosPage() {
                         className="border-b border-pos-muted/10 transition-colors hover:bg-pos-background/50 cursor-pointer"
                         onClick={() => handleViewDetail(p)}
                       >
-                        <td className="py-2 pr-1 font-mono text-xs text-pos-muted">#{p.id}</td>
-                        <td className="py-2 px-1 font-medium text-pos-text">{p.proveedor_name}</td>
-                        <td className="py-2 px-1 text-pos-muted">
+                        <td className="py-2 pr-1 font-mono text-xs text-pos-muted" data-label="N°">
+                          #{p.id}
+                        </td>
+                        <td className="py-2 px-1 font-medium text-pos-text" data-plain data-head>
+                          {p.proveedor_name}
+                        </td>
+                        <td className="py-2 px-1 text-pos-muted" data-label="Fecha">
                           {new Date(p.date).toLocaleDateString("es-AR")}
                         </td>
-                        <td className="py-2 px-1">
+                        <td className="py-2 px-1" data-label="Estado">
                           <span className="flex items-center gap-1">
                             <span
                               className={`inline-block text-xs font-medium px-1.5 py-0.5 rounded-full ${STATUS_COLORS[p.status]}`}
@@ -258,10 +262,10 @@ export default function PedidosPage() {
                             )}
                           </span>
                         </td>
-                        <td className="py-2 px-1 text-right font-mono text-pos-text">
+                        <td className="py-2 px-1 text-right font-mono text-pos-text" data-label="Total">
                           {formatCurrency(p.total)}
                         </td>
-                        <td className="py-2 pl-1 text-right whitespace-nowrap">
+                        <td className="py-2 pl-1 text-right whitespace-nowrap" data-plain>
                           <select
                             value={p.status}
                             onChange={(e) => handleUpdateStatus(p, e.target.value as PedidoStatus)}
@@ -297,7 +301,7 @@ export default function PedidosPage() {
       )}
 
       {(view.kind === "create" || view.kind === "edit") && (
-        <div className="flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-4 overflow-y-auto">
+        <div className="sheet flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-4 overflow-y-auto">
           <PedidoForm
             key={view.kind === "edit" ? view.pedido.id : "create"}
             editPedido={view.kind === "edit" ? view.pedido : undefined}
@@ -428,7 +432,7 @@ function DetailView({ pedido: initialPedido, onBack, onEdit }: { pedido: Pedido;
         <h3 className="text-sm font-semibold text-pos-text uppercase tracking-wide">
           Pedido #{pedido.id}
         </h3>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {!isLocked && (
             <button
               onClick={() => onEdit(pedido)}

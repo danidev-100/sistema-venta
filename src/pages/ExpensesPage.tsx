@@ -291,7 +291,7 @@ export default function ExpensesPage() {
   return (
     <div className="flex flex-col gap-4 h-full overflow-y-auto">
       {/* ── Tab bar ── */}
-      <div className="flex gap-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-1 self-start">
+      <div className="flex flex-wrap gap-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-1 self-start">
         <TabButton
           active={activeTab === "register"}
           onClick={() => setActiveTab("register")}
@@ -498,7 +498,7 @@ function RegisterTab({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="table-cards w-full text-sm">
               <thead>
                 <tr className="text-pos-muted border-b border-pos-muted/20">
                   <th className="text-left py-2 pr-2 font-medium">Fecha</th>
@@ -517,24 +517,24 @@ function RegisterTab({
                       key={exp.id}
                       className="border-b border-pos-muted/10 hover:bg-pos-background/50"
                     >
-                      <td className="py-2 pr-2 text-pos-muted font-mono text-xs">
+                      <td className="py-2 pr-2 text-pos-muted font-mono text-xs" data-label="Fecha">
                         {d}/{m}
                       </td>
-                      <td className="py-2 px-2">
+                      <td className="py-2 px-2" data-label="Categoría">
                         <span className="text-xs bg-pos-muted/10 text-pos-muted px-1.5 py-0.5 rounded-full">
                           {CATEGORY_LABELS[exp.category]}
                         </span>
                       </td>
-                      <td className="py-2 px-2 text-pos-text">
+                      <td className="py-2 px-2 text-pos-text" data-plain data-head>
                         {exp.description}
                       </td>
-                      <td className="py-2 px-2 text-right font-mono font-medium">
+                      <td className="py-2 px-2 text-right font-mono font-medium" data-label="Monto">
                         {formatCurrency(exp.amount)}
                       </td>
-                      <td className="py-2 px-2 text-xs text-pos-muted">
+                      <td className="py-2 px-2 text-xs text-pos-muted" data-label="Pago">
                         {paymentLabel(exp.paymentMethod)}
                       </td>
-                      <td className="py-2 pl-2 text-center">
+                      <td className="py-2 pl-2 text-center" data-plain>
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => onEdit(exp)}
@@ -693,7 +693,7 @@ function SummaryTab({
           {(["cash", "card"] as PaymentMethod[]).map((method) => (
             <div
               key={method}
-              className="flex items-center justify-between py-1"
+              className="flex flex-wrap items-center justify-between gap-2 py-1"
             >
               <span className="text-sm text-pos-text">
                 {paymentLabel(method)}
@@ -777,7 +777,7 @@ function ExpenseModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-pos-surface rounded-xl border border-pos-muted/10 p-6 w-full max-w-md mx-4 shadow-xl">
+      <div className="sheet bg-pos-surface rounded-xl border border-pos-muted/10 p-6 w-full max-w-md mx-4 shadow-xl">
         <h2 className="text-base font-semibold text-pos-text mb-4">
           {editingId !== null ? "Editar Gasto" : "Nuevo Gasto"}
         </h2>
@@ -883,7 +883,7 @@ function ExpenseModal({
         )}
 
         {/* Actions */}
-        <div className="flex justify-end gap-2 mt-6">
+        <div className="flex flex-wrap justify-end gap-2 mt-6">
           <button
             onClick={onClose}
             className="px-4 py-2 text-sm text-pos-muted hover:text-pos-text transition-colors"
