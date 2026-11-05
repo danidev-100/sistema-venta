@@ -6,6 +6,7 @@ import { useCashClosingStore, type Shift } from "@/store/cash-closing";
 import ShiftPanel from "@/components/ShiftPanel";
 import ReconciliationForm from "@/components/ReconciliationForm";
 import ClosureReport from "@/components/ClosureReport";
+import ShiftDetailModal from "@/components/ShiftDetailModal";
 import { exportTableToPdf, exportToExcel, type ExportColumn } from "@/lib/export-utils";
 import { formatCurrency } from "@/lib/format";
 
@@ -22,6 +23,8 @@ export default function CashClosingPage() {
   const getShiftsByStore = useCashClosingStore((s) => s.getShiftsByStore);
 
   const [selectedShiftId, setSelectedShiftId] = useState<number | null>(null);
+  // Shift whose detail modal is open (clicking a row shows it)
+  const [detailShiftId, setDetailShiftId] = useState<number | null>(null);
 
   const currentUser = useAuthStore((s) => s.currentUser);
   const hasPermission = useAuthStore((s) => s.hasPermission);
@@ -115,7 +118,10 @@ export default function CashClosingPage() {
           shifts={storeShifts}
           currentShift={currentShift}
           selectedId={selectedShiftId}
-          onSelect={setSelectedShiftId}
+          onSelect={(id) => {
+            setSelectedShiftId(id);
+            setDetailShiftId(id);
+          }}
         />
       </aside>
 
@@ -192,7 +198,12 @@ export default function CashClosingPage() {
                     const total = Math.round((cashTotal + cardTotal + mercadopagoTotal) * 100) / 100;
 
                     return (
-                      <tr key={shift.id} className="border-b border-pos-muted/10 hover:bg-pos-background/50">
+                      <tr
+                        key={shift.id}
+                        onClick={() => setDetailShiftId(shift.id)}
+                        title="Ver detalle del turno"
+                        className="cursor-pointer border-b border-pos-muted/10 hover:bg-pos-background/50"
+                      >
                         <td className="py-2 pr-2 font-medium text-pos-text" data-head>{shift.employee}</td>
                         <td className="py-2 px-2 text-pos-muted" data-label="Turno">
                           {new Date(shift.openTime).toLocaleDateString()}
@@ -278,6 +289,19 @@ export default function CashClosingPage() {
           />
         </aside>
       )}
+
+      {/* Shift detail — opened from the history row or the closure table row */}
+      {detailShiftId != null && (() => {
+        const detailShift = storeShifts.find((s) => s.id === detailShiftId);
+        if (!detailShift) return null;
+        return (
+          <ShiftDetailModal
+            shift={detailShift}
+            sales={completedSales}
+            onClose={() => setDetailShiftId(null)}
+          />
+        );
+      })()}
     </div>
   );
 }
