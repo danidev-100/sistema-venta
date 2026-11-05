@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type ReactNode } from "react";
+import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { useAppStore, useAuthStore, type Page } from "@/store";
 import { useExpensesStore } from "@/store/expenses";
 import { useComprobantesStore } from "@/store/comprobantes";
@@ -289,7 +289,40 @@ function initialsOf(name: string): string {
 // Sidebar component
 // ──────────────────────────────────────────────
 
-export default function NavigationBar() {
+/** Hamburger for the single app header on mobile — opens the drawer owned by NavigationBar. */
+export function MobileMenuButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="-ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-control text-pos-muted transition-colors hover:bg-pos-background hover:text-pos-text lg:hidden"
+      title="Abrir menú"
+      aria-label="Abrir menú"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="w-6 h-6"
+      >
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      </svg>
+    </button>
+  );
+}
+
+export interface NavigationBarProps {
+  /** Drawer state when the parent owns it (App renders the hamburger in its header). */
+  mobileOpen?: boolean;
+  onMobileOpenChange?: (open: boolean) => void;
+}
+
+export default function NavigationBar({ mobileOpen: controlledMobileOpen, onMobileOpenChange }: NavigationBarProps = {}) {
   const page = useAppStore((s) => s.page);
   const setPage = useAppStore((s) => s.setPage);
   const sidebarOpen = useAppStore((s) => s.sidebarOpen);
@@ -298,7 +331,15 @@ export default function NavigationBar() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const logout = useAuthStore((s) => s.logout);
   const [configOpen, setConfigOpen] = useState(true); // open by default in sidebar
-  const [mobileOpen, setMobileOpen] = useState(false); // mobile drawer
+  const [internalMobileOpen, setInternalMobileOpen] = useState(false); // mobile drawer (uncontrolled fallback)
+  const mobileOpen = controlledMobileOpen ?? internalMobileOpen;
+  const setMobileOpen = useCallback(
+    (open: boolean) => {
+      if (onMobileOpenChange) onMobileOpenChange(open);
+      else setInternalMobileOpen(open);
+    },
+    [onMobileOpenChange],
+  );
   const [clock, setClock] = useState(new Date());
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -470,33 +511,7 @@ export default function NavigationBar() {
 
   return (
     <>
-      {/* Mobile top bar — visible only below lg */}
-      <header className="lg:hidden flex items-center gap-3 px-3 h-14 shrink-0 bg-pos-surface border-b border-pos-muted/15 text-pos-text z-30">
-        <button
-          onClick={() => setMobileOpen(true)}
-          className="flex items-center justify-center w-10 h-10 rounded-control text-pos-muted hover:bg-pos-background hover:text-pos-text transition-colors touch-target"
-          title="Abrir menú"
-          aria-label="Abrir menú"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="w-6 h-6"
-          >
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
-        </button>
-        <div className="w-7 h-7 shrink-0 rounded-[10px] bg-gradient-to-br from-pos-accent to-pos-accent-2 flex items-center justify-center text-[11px] font-bold text-pos-on-solid">
-          SV
-        </div>
-        <h1 className="text-[13.5px] font-semibold tracking-wide">Sistema Ventas</h1>
-      </header>
+      {/* Hamburger lives in the app header (see MobileMenuButton) so mobile has a single bar */}
 
       {/* Desktop sidebar — identical behavior to before, hidden below lg */}
       <aside

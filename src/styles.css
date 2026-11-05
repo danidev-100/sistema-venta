@@ -158,6 +158,17 @@ body,
   min-width: 44px;
 }
 
+/* App shell height: 100vh on old browsers, real viewport on mobile ones
+   (dvh excludes the browser chrome, so the header never hides off-screen) */
+.app-shell {
+  height: 100vh;
+}
+@supports (height: 100dvh) {
+  .app-shell {
+    height: 100dvh;
+  }
+}
+
 /* ── Barcode scan green flash ── */
 @keyframes scan-flash {
   0% { background-color: transparent; }

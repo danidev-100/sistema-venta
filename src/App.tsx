@@ -1,11 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAppStore, type Page } from "@/store";
 import { useAdminStore } from "@/store/admin";
 import { useAuthStore } from "@/store/auth";
 import { usePermission } from "@/hooks/usePermission";
 import { StoreProvider, useActiveStore } from "@/store/context";
 import AdminRoute from "@/components/AdminRoute";
-import NavigationBar, { PAGE_LABELS } from "@/components/NavigationBar";
+import NavigationBar, { MobileMenuButton, PAGE_LABELS } from "@/components/NavigationBar";
 import ThemeToggle from "@/components/ThemeToggle";
 
 // Pages
@@ -74,6 +74,7 @@ export default function App() {
   const theme = useAdminStore((s) => s.theme);
   const currentUser = useAuthStore((s) => s.currentUser);
   const hasAccess = usePermission(page);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // F4 toggles the sidebar (collapse/expand) in every view
   useEffect(() => {
@@ -125,20 +126,23 @@ export default function App() {
   return (
     <StoreProvider>
       {isAuthenticated ? (
-        <div className="flex flex-col h-screen w-screen overflow-hidden lg:flex-row">
+        <div className="app-shell flex flex-col w-full overflow-hidden lg:flex-row">
           <SalesLoader />
-          <NavigationBar />
+          <NavigationBar mobileOpen={mobileNavOpen} onMobileOpenChange={setMobileNavOpen} />
           <div className="flex flex-col flex-1 min-w-0 min-h-0">
-            {/* Topbar — current page title + theme toggle */}
-            <header className="h-16 shrink-0 flex items-center gap-3 px-6 bg-pos-surface border-b border-pos-muted/15">
-              <h1 className="text-[15px] font-semibold text-pos-text truncate">{pageTitle}</h1>
+            {/* Topbar — single bar on every breakpoint: menu (mobile), page title, theme toggle */}
+            <header className="h-14 lg:h-16 shrink-0 flex items-center gap-2 lg:gap-3 px-3 lg:px-6 bg-pos-surface border-b border-pos-muted/15">
+              <MobileMenuButton onClick={() => setMobileNavOpen(true)} />
+              <h1 className="min-w-0 flex-1 truncate text-[14px] font-semibold text-pos-text lg:flex-none lg:text-[15px]">
+                {pageTitle}
+              </h1>
               {/* ThemeToggle compact styles its own button for the old dark
                   sidebar; these variants re-tone it for the light topbar. */}
-              <div className="ml-auto flex items-center [&>button]:text-pos-muted [&>button:hover]:bg-pos-background [&>button:hover]:text-pos-text">
+              <div className="ml-auto flex shrink-0 items-center [&>button]:text-pos-muted [&>button:hover]:bg-pos-background [&>button:hover]:text-pos-text">
                 <ThemeToggle compact />
               </div>
             </header>
-            <main className="flex-1 min-h-0 overflow-auto p-4">
+            <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 sm:p-4">
               {needsAdminGate ? (
                 <AdminRoute>
                   <PageComponent />
