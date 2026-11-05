@@ -287,7 +287,7 @@ export default function CustomersPage() {
       )}
 
       {view.kind === "create" && (
-        <div className="sheet flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
+        <div className="min-w-0 flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
           <CustomerForm
             editCustomer={null}
             onSaved={handleSaved}
@@ -297,7 +297,7 @@ export default function CustomersPage() {
       )}
 
       {view.kind === "edit" && (
-        <div className="sheet flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
+        <div className="min-w-0 flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
           <CustomerForm
             editCustomer={view.customer}
             onSaved={handleSaved}

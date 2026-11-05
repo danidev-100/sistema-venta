@@ -301,7 +301,7 @@ export default function PedidosPage() {
       )}
 
       {(view.kind === "create" || view.kind === "edit") && (
-        <div className="sheet flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-4 overflow-y-auto">
+        <div className="min-w-0 flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-4 overflow-y-auto">
           <PedidoForm
             key={view.kind === "edit" ? view.pedido.id : "create"}
             editPedido={view.kind === "edit" ? view.pedido : undefined}

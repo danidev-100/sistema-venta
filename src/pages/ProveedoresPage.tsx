@@ -226,13 +226,13 @@ export default function ProveedoresPage() {
       )}
 
       {view.kind === "create" && (
-        <div className="sheet flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
+        <div className="min-w-0 flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
           <ProveedorForm editProveedor={null} onSaved={handleSaved} onCancel={handleCancel} />
         </div>
       )}
 
       {view.kind === "edit" && (
-        <div className="sheet flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
+        <div className="min-w-0 flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-4">
           <ProveedorForm editProveedor={view.proveedor} onSaved={handleSaved} onCancel={handleCancel} />
         </div>
       )}

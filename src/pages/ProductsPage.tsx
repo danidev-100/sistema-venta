@@ -310,9 +310,7 @@ export default function ProductsPage() {
       {/* ── Product list / form ── */}
       <section
         ref={sectionRef}
-        className={`flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-3 overflow-y-auto${
-          centerView.kind === "list" ? "" : " sheet"
-        }`}
+        className="flex-1 bg-pos-surface rounded-xl border border-pos-muted/10 p-3 overflow-y-auto"
       >
         {centerView.kind === "list" && (
           <>
