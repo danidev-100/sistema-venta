@@ -236,8 +236,9 @@ describe("UserManagementPage", () => {
 
     await renderPageAndWaitAdmin();
 
-    // Two "Editar" buttons exist (desktop table + mobile card) — click the first
-    await userEvent.click(screen.getAllByLabelText(/editar admin/i)[0]);
+    // One DOM only (table-cards): there is exactly one "Editar" per user,
+    // so a singular query also guards the single-copy contract.
+    await userEvent.click(screen.getByLabelText(/editar admin/i));
 
     const nameInput = screen.getByDisplayValue("admin");
     await userEvent.clear(nameInput);
@@ -262,11 +263,11 @@ describe("UserManagementPage", () => {
 
     await renderPageAndWaitAdmin();
 
-    // Click edit on "limited" user — pick first between desktop table + mobile card
+    // Exactly one edit control per user (single DOM, table-cards)
     await waitFor(() => {
-      expect(screen.getAllByLabelText(/editar limited/i).length).toBeGreaterThan(0);
+      expect(screen.getByLabelText(/editar limited/i)).toBeInTheDocument();
     });
-    await userEvent.click(screen.getAllByLabelText(/editar limited/i)[0]);
+    await userEvent.click(screen.getByLabelText(/editar limited/i));
 
     // Uncheck POS / Ventas
     const ventasCheckbox = screen.getByLabelText("POS / Ventas");

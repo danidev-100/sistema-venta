@@ -148,7 +148,7 @@ export default function CashMovementModal({
       onClick={closeWithAnim}
     >
       <div
-        className={`w-full max-w-sm bg-pos-surface rounded-2xl shadow-2xl border border-pos-muted/10 mx-4 overflow-hidden transition-all duration-150 ${
+        className={`sheet w-full max-w-sm bg-pos-surface rounded-2xl shadow-2xl border border-pos-muted/10 mx-4 overflow-hidden transition-all duration-150 ${
           animOut
             ? "opacity-0 scale-95"
             : "opacity-100 scale-100"

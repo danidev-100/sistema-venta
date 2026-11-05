@@ -83,7 +83,7 @@ export default function ShiftPanel({
         </h3>
 
         <div className="bg-pos-success/10 border border-pos-success/30 rounded-xl p-4 space-y-2">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-sm font-medium text-pos-success">● Abierto</span>
             <span className="text-xs text-pos-muted">
               Desde las {openTime.toLocaleTimeString()}

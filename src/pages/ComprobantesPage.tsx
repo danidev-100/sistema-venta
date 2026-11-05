@@ -193,7 +193,7 @@ export default function ComprobantesPage() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-lg font-bold text-pos-text">Comprobantes</h1>
         {view.kind === "list" && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {filtered.length > 0 && (
               <>
                 <button onClick={exportExcel} className="text-xs px-3 py-1.5 border border-pos-muted/30 text-pos-text rounded-lg touch-target hover:bg-pos-background/50 whitespace-nowrap">Excel</button>
@@ -278,7 +278,7 @@ export default function ComprobantesPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm table-cards">
                   <thead>
                     <tr className="text-pos-muted border-b border-pos-muted/20">
                       <th className="text-left py-2 pr-2 font-medium">N°</th>
@@ -293,20 +293,20 @@ export default function ComprobantesPage() {
                   <tbody>
                     {filtered.map((c) => (
                       <tr key={c.id} className="border-b border-pos-muted/10 transition-colors hover:bg-pos-background/50 cursor-pointer" onClick={() => setView({ kind: "detail", comprobante: c })}>
-                        <td className="py-2 pr-2 font-mono text-xs text-pos-muted">
+                        <td className="py-2 pr-2 font-mono text-xs text-pos-muted" data-label="N°">
                           <span className="block">{c.numero}</span>
                           <AfipStatusBadge comprobante={c} />
                         </td>
-                        <td className="py-2 px-2">
+                        <td className="py-2 px-2" data-label="Tipo">
                           <span className={`inline-block text-xs font-medium px-1.5 py-0.5 rounded-full ${TIPO_COLORS[c.tipo]}`}>
                             {getTipoLabel(c.tipo)}
                           </span>
                         </td>
-                        <td className="py-2 px-2 text-pos-text">{c.cliente_nombre}</td>
-                        <td className="py-2 px-2 text-pos-muted text-xs">{c.createdBy}</td>
-                        <td className="py-2 px-2 text-pos-muted">{new Date(c.fecha).toLocaleDateString("es-AR")}</td>
-                        <td className="py-2 px-2 text-right font-mono text-pos-text">{formatCurrency(c.total)}</td>
-                        <td className="py-2 pl-2 text-right">
+                        <td className="py-2 px-2 text-pos-text" data-head>{c.cliente_nombre}</td>
+                        <td className="py-2 px-2 text-pos-muted text-xs" data-label="Cajero">{c.createdBy}</td>
+                        <td className="py-2 px-2 text-pos-muted" data-label="Fecha">{new Date(c.fecha).toLocaleDateString("es-AR")}</td>
+                        <td className="py-2 px-2 text-right font-mono text-pos-text" data-label="Total">{formatCurrency(c.total)}</td>
+                        <td className="py-2 pl-2 text-right" data-plain>
                           <button onClick={(e) => { e.stopPropagation(); setView({ kind: "detail", comprobante: c }); }} className="text-xs px-2 py-1 text-pos-secondary hover:bg-pos-secondary/10 rounded touch-target">Ver</button>
                         </td>
                       </tr>
@@ -579,12 +579,12 @@ function ComprobanteForm({ onSaved, onCancel }: { onSaved: () => void; onCancel:
 
       {/* Items */}
       <div className="bg-pos-background/30 rounded-lg p-3">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <label className="text-sm font-medium text-pos-text">Productos</label>
           <button type="button" onClick={addRow} className="text-xs px-3 py-1.5 bg-pos-secondary text-pos-on-solid rounded-lg touch-target hover:opacity-90">+ Agregar</button>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm table-cards">
             <thead>
               <tr className="text-pos-muted border-b border-pos-muted/20">
                 <th className="text-left py-1 pr-1 font-medium w-1/3">Producto</th>
@@ -623,7 +623,7 @@ function ComprobanteForm({ onSaved, onCancel }: { onSaved: () => void; onCancel:
         <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Opcional" className="w-full border border-pos-muted/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pos-secondary touch-target" />
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <button type="submit" disabled={saving} className="px-4 py-2 bg-pos-secondary text-pos-on-solid rounded-lg font-medium text-sm touch-target hover:opacity-90 disabled:opacity-50">
           {saving ? "Guardando…" : `Crear ${getTipoLabel(tipo)}`}
         </button>
@@ -667,7 +667,7 @@ function ProductSearchRow({
 
   return (
     <tr className="border-b border-pos-muted/10">
-      <td className="py-1 pr-1 relative">
+      <td className="py-1 pr-1 relative" data-plain data-head>
         <input ref={inputRef} type="text" value={row.product_id ? search : search} onChange={(e) => { setSearch(e.target.value); setShowDropdown(true); if (row.product_id) onChange(row.key, "product_id", null); }}
           onFocus={() => setShowDropdown(true)} onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
           onKeyDown={handleKeyDown}
@@ -686,18 +686,18 @@ function ProductSearchRow({
           </div>
         )}
       </td>
-      <td className="py-1 px-1">
+      <td className="py-1 px-1" data-plain>
         <input type="number" inputMode="decimal" min="0" step="0.5" value={row.quantity}
           onChange={(e) => onChange(row.key, "quantity", Math.max(0, Number(e.target.value)))}
           className="w-full border border-pos-muted/30 rounded px-2 py-1 text-sm text-right focus:outline-none focus:ring-1 focus:ring-pos-secondary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
       </td>
-      <td className="py-1 px-1">
+      <td className="py-1 px-1" data-plain>
         <input type="number" inputMode="decimal" min="0" step="0.01" value={row.unit_price}
           onChange={(e) => onChange(row.key, "unit_price", Math.max(0, Number(e.target.value)))}
           className="w-full border border-pos-muted/30 rounded px-2 py-1 text-sm text-right focus:outline-none focus:ring-1 focus:ring-pos-secondary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
       </td>
-      <td className="py-1 px-1 text-right font-mono text-xs text-pos-text">{formatCurrency(row.subtotal)}</td>
-      <td className="py-1 pl-1">
+      <td className="py-1 px-1 text-right font-mono text-xs text-pos-text" data-label="Subtotal">{formatCurrency(row.subtotal)}</td>
+      <td className="py-1 pl-1" data-plain>
         <button type="button" onClick={onRemove} disabled={!canRemove}
           className="text-xs px-1.5 py-1 text-pos-danger hover:bg-pos-danger/10 rounded touch-target disabled:opacity-30">✕</button>
       </td>
@@ -726,9 +726,9 @@ function ComprobanteDetail({ comprobante, onBack }: { comprobante: Comprobante; 
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-pos-text uppercase tracking-wide">Comprobante</h3>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button onClick={handlePrint} className="text-xs px-3 py-1.5 bg-pos-secondary text-pos-on-solid rounded-lg touch-target hover:opacity-90">🖨️ Imprimir</button>
           <button onClick={onBack} className="text-xs px-3 py-1.5 border border-pos-muted/30 text-pos-text rounded-lg touch-target hover:bg-pos-background">← Volver</button>
         </div>
@@ -756,7 +756,7 @@ function ComprobanteDetail({ comprobante, onBack }: { comprobante: Comprobante; 
         </div>
 
         <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-cards">
           <thead><tr className="text-pos-muted border-b border-pos-muted/20">
             <th className="text-left py-1 pr-2 font-medium">Producto</th>
             <th className="text-right py-1 px-2 font-medium">Cant</th>
@@ -766,10 +766,10 @@ function ComprobanteDetail({ comprobante, onBack }: { comprobante: Comprobante; 
           <tbody>
             {comprobante.items.map((item) => (
               <tr key={item.id} className="border-b border-pos-muted/10">
-                <td className="py-1 pr-2 text-pos-text">{item.product_name}</td>
-                <td className="py-1 px-2 text-right font-mono">{item.quantity}</td>
-                <td className="py-1 px-2 text-right font-mono">{formatCurrency(item.unit_price)}</td>
-                <td className="py-1 pl-2 text-right font-mono">{formatCurrency(item.subtotal)}</td>
+                <td className="py-1 pr-2 text-pos-text" data-head>{item.product_name}</td>
+                <td className="py-1 px-2 text-right font-mono" data-label="Cant">{item.quantity}</td>
+                <td className="py-1 px-2 text-right font-mono" data-label="P.Unit">{formatCurrency(item.unit_price)}</td>
+                <td className="py-1 pl-2 text-right font-mono" data-label="Subtotal">{formatCurrency(item.subtotal)}</td>
               </tr>
             ))}
           </tbody>

@@ -128,12 +128,12 @@ export default function CashClosingPage() {
         {/* ── Admin: Cashier Summary — oculto si hay selección ── */}
         {isAdmin && !selectedShift && storeShifts.length > 0 && (
           <div className="mb-6 bg-pos-background/30 rounded-xl border border-pos-muted/10 p-4">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
               <h3 className="text-xs font-semibold text-pos-text uppercase tracking-wide">
                 Resumen de Cajeros
               </h3>
               {storeShifts.length > 0 && (
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <button
                     onClick={exportShiftsExcel}
                     className="text-xs px-2 py-1 border border-pos-muted/30 text-pos-text rounded hover:bg-pos-background/50 transition-colors"
@@ -150,7 +150,7 @@ export default function CashClosingPage() {
               )}
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
+              <table className="w-full text-xs table-cards">
                 <thead>
                   <tr className="text-pos-muted border-b border-pos-muted/20">
                     <th className="text-left py-1.5 pr-2 font-medium">Cajero</th>
@@ -193,19 +193,19 @@ export default function CashClosingPage() {
 
                     return (
                       <tr key={shift.id} className="border-b border-pos-muted/10 hover:bg-pos-background/50">
-                        <td className="py-2 pr-2 font-medium text-pos-text">{shift.employee}</td>
-                        <td className="py-2 px-2 text-pos-muted">
+                        <td className="py-2 pr-2 font-medium text-pos-text" data-head>{shift.employee}</td>
+                        <td className="py-2 px-2 text-pos-muted" data-label="Turno">
                           {new Date(shift.openTime).toLocaleDateString()}
                         </td>
-                        <td className="py-2 px-2 num text-pos-muted">
+                        <td className="py-2 px-2 num text-pos-muted" data-label="Apertura">
                           {formatCurrency(shift.openingBalance)}
                         </td>
-                        <td className="py-2 px-2 num">{shiftSales.length}</td>
-                        <td className="py-2 px-2 num">{formatCurrency(cashTotal)}</td>
-                        <td className="py-2 px-2 num">{formatCurrency(cardTotal)}</td>
-                        <td className="py-2 px-2 num">{formatCurrency(mercadopagoTotal)}</td>
-                        <td className="py-2 px-2 num font-bold">{formatCurrency(total)}</td>
-                        <td className="py-2 pl-2 text-center">
+                        <td className="py-2 px-2 num" data-label="Ventas">{shiftSales.length}</td>
+                        <td className="py-2 px-2 num" data-label="Efectivo">{formatCurrency(cashTotal)}</td>
+                        <td className="py-2 px-2 num" data-label="Tarjeta">{formatCurrency(cardTotal)}</td>
+                        <td className="py-2 px-2 num" data-label="M. Pago">{formatCurrency(mercadopagoTotal)}</td>
+                        <td className="py-2 px-2 num font-bold" data-label="Total">{formatCurrency(total)}</td>
+                        <td className="py-2 pl-2 text-center" data-label="Estado">
                           {shift.status === "open" ? (
                             <span className="text-pos-success font-medium">● Abierto</span>
                           ) : (
@@ -317,7 +317,7 @@ function ShiftList({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <h3 className="text-xs font-semibold text-pos-text uppercase tracking-wide">
           Historial de Turnos
         </h3>

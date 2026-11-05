@@ -1096,7 +1096,7 @@ function CombosSection() {
                     </div>
                     {combo.items.length > 0 && (
                       <div className="overflow-x-auto mt-2">
-                      <table className="w-full text-xs">
+                      <table className="w-full text-xs table-cards">
                         <thead>
                           <tr className="text-pos-muted/60 border-b border-pos-muted/10">
                             <th className="text-left font-medium py-1 pr-2">Producto</th>
@@ -1110,9 +1110,9 @@ function CombosSection() {
                             const lineTotal = (prod?.price ?? 0) * item.quantity;
                             return (
                               <tr key={item.productId} className="border-b border-pos-muted/5 last:border-0">
-                                <td className="py-1 pr-2 text-pos-muted">{prod?.name ?? `#${item.productId}`}</td>
-                                <td className="py-1 px-2 text-right font-mono text-pos-muted">{item.quantity}</td>
-                                <td className="py-1 pl-2 text-right font-mono text-pos-muted">${lineTotal.toFixed(2)}</td>
+                                <td className="py-1 pr-2 text-pos-muted" data-head>{prod?.name ?? `#${item.productId}`}</td>
+                                <td className="py-1 px-2 text-right font-mono text-pos-muted" data-label="Cant">{item.quantity}</td>
+                                <td className="py-1 pl-2 text-right font-mono text-pos-muted" data-label="Subtotal">${lineTotal.toFixed(2)}</td>
                               </tr>
                             );
                           })}
@@ -1496,7 +1496,7 @@ function PriceListsSection() {
 
         {/* List name + actions */}
         <div className="rounded-xl border border-pos-muted/10 bg-pos-surface p-4 mb-4">
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex flex-wrap items-center gap-3 mb-3">
             <div className={`w-10 h-10 rounded-xl ${ACCENT.bg} flex items-center justify-center shrink-0`}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={`w-5 h-5 ${ACCENT.text}`}>
                 <path d="M9 5H2v7l6.29 6.29a1 1 0 0 0 1.42 0l5.58-5.58a1 1 0 0 0 0-1.42L9 5z" />
@@ -1529,7 +1529,7 @@ function PriceListsSection() {
           </div>
 
           {/* Stats + bulk actions */}
-          <div className="flex items-center justify-between text-xs text-pos-muted pt-2 border-t border-pos-muted/10">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-pos-muted pt-2 border-t border-pos-muted/10">
             <span>
               <span className="font-medium text-pos-text">{storeProducts.length}</span> productos
               {overrideCount > 0 && (
@@ -1538,7 +1538,7 @@ function PriceListsSection() {
                 </span>
               )}
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={handleBulkPercentage}
                 disabled={isLoadingItems}
@@ -1596,7 +1596,7 @@ function PriceListsSection() {
               )}
             </div>
             <div className="overflow-x-auto rounded-xl border border-pos-muted/10">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-cards">
               <thead>
                 <tr className="bg-pos-background/50 text-pos-muted text-xs uppercase tracking-wider">
                   <th className="text-left font-medium px-3 py-2.5">ID</th>
@@ -1619,15 +1619,15 @@ function PriceListsSection() {
 
                   return (
                     <tr key={product.id} className={`border-t border-pos-muted/5 hover:bg-pos-background/30 transition-colors ${hasOverride ? "bg-pos-secondary/[0.03]" : ""}`}>
-                      <td className="px-3 py-2 text-pos-muted font-mono text-xs">{product.id}</td>
-                      <td className="px-3 py-2 max-w-[220px]">
+                      <td className="px-3 py-2 text-pos-muted font-mono text-xs" data-label="ID">{product.id}</td>
+                      <td className="px-3 py-2 max-w-[220px]" data-head>
                         <p className="text-pos-text font-medium truncate">{product.name}</p>
                         {product.barcode && (
                           <p className="text-[10px] text-pos-muted/50 font-mono truncate">{product.barcode}</p>
                         )}
                       </td>
-                      <td className="px-3 py-2 text-right font-mono text-pos-muted text-xs">${product.price.toFixed(2)}</td>
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2 text-right font-mono text-pos-muted text-xs" data-label="Precio base">${product.price.toFixed(2)}</td>
+                      <td className="px-3 py-2" data-plain>
                         <div className="flex items-center justify-end gap-1">
                           <span className="text-[10px] text-pos-muted/40">$</span>
                           <input
@@ -1644,7 +1644,7 @@ function PriceListsSection() {
                           />
                         </div>
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2" data-plain>
                         <div className="flex items-center justify-end gap-1">
                           <input
                             type="text"
@@ -1661,7 +1661,7 @@ function PriceListsSection() {
                           <span className="text-[10px] text-pos-muted/40">%</span>
                         </div>
                       </td>
-                      <td className="px-3 py-2 text-right">
+                      <td className="px-3 py-2 text-right" data-label="Efectivo">
                         <span className={`font-mono text-xs font-bold ${hasOverride ? "text-pos-secondary" : "text-pos-muted"}`}>
                           ${effective.toFixed(2)}
                         </span>
@@ -1687,7 +1687,7 @@ function PriceListsSection() {
             onClick={() => setShowBulkPct(false)}
           >
             <div
-              className="bg-pos-surface rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 space-y-5"
+              className="sheet bg-pos-surface rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 space-y-5"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Icon */}
@@ -1783,7 +1783,7 @@ function PriceListsSection() {
             onClick={() => setConfirmAction(null)}
           >
             <div
-              className="bg-pos-surface rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 space-y-5"
+              className="sheet bg-pos-surface rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 space-y-5"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Warning icon */}

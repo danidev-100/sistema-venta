@@ -42,7 +42,7 @@ export default function OpenShiftModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-pos-surface rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 space-y-4">
+      <div className="sheet bg-pos-surface rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 space-y-4">
         <h2 className="text-lg font-bold text-pos-text text-center">
           Apertura de Caja
         </h2>
@@ -73,7 +73,7 @@ export default function OpenShiftModal({
           />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={onClose}
             disabled={saving}
