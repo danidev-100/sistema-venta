@@ -113,6 +113,14 @@ export default function CartPanel({
     setShowCloseModal(true);
   }
 
+  function handleClearCart() {
+    if (isEmpty) return;
+    if (window.confirm("¿Vaciar el carrito? Se quitarán todos los productos cargados.")) {
+      useAppStore.getState().clearCart();
+      setEditingQty({});
+    }
+  }
+
   function confirmCloseShift() {
     if (!openShift) return;
     closeShift(openShift.id);
@@ -121,37 +129,46 @@ export default function CartPanel({
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header — cashier name + clock */}
-      <div className="flex items-start justify-between mb-2">
-        <div>
-          <h2 className="text-sm font-semibold text-pos-text uppercase tracking-wide">
-            Cajero: <span className="font-mono normal-case">{cashierName}</span>
-          </h2>
-          {count > 0 && (
-            <p className="text-xs text-pos-muted mt-0.5">
-              {items.length} {items.length === 1 ? "producto" : "productos"}
-            </p>
-          )}
-        </div>
-        <div className="text-right shrink-0">
-          <p className="text-sm font-mono font-bold text-pos-text tabular-nums">
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/* Header — title, item count, clear */}
+      <div className="flex shrink-0 items-center gap-2 border-b border-pos-muted/10 px-4 pb-3 pt-4">
+        <h2 className="text-[14.5px] font-semibold text-pos-text">Venta actual</h2>
+        <span className="rounded-pill bg-pos-secondary/10 px-2 py-0.5 text-[11px] font-semibold text-pos-secondary">
+          {count} {count === 1 ? "producto" : "productos"}
+        </span>
+        <button
+          type="button"
+          onClick={handleClearCart}
+          disabled={isEmpty}
+          className="ml-auto rounded-control px-2 py-1.5 text-xs font-medium text-pos-muted transition-colors touch-target hover:bg-pos-danger/10 hover:text-pos-danger disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-pos-muted"
+        >
+          Vaciar
+        </button>
+      </div>
+
+      {/* Cashier + clock */}
+      <div className="flex shrink-0 items-start justify-between gap-2 px-4 pt-3">
+        <h3 className="min-w-0 truncate text-sm font-semibold text-pos-text">
+          Cajero: <span className="font-mono font-normal">{cashierName}</span>
+        </h3>
+        <div className="shrink-0 text-right">
+          <p className="font-mono text-sm font-bold tabular-nums text-pos-text">
             {clock.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
           </p>
-          <p className="text-[10px] text-pos-muted tabular-nums">
+          <p className="text-[10px] tabular-nums text-pos-muted">
             {clock.toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}
           </p>
         </div>
       </div>
 
       {/* Shift status bar */}
-      <div className="flex items-center justify-between mb-3 px-2 py-1.5 bg-pos-background/50 rounded-lg text-xs">
+      <div className="mx-4 mt-2.5 flex shrink-0 items-center justify-between rounded-control bg-pos-background px-2.5 py-1.5 text-xs">
         {hasOpenShift ? (
           <>
             <div className="flex items-center gap-2">
-              <span className="text-pos-success font-medium">● Abierto</span>
+              <span className="font-medium text-pos-success">● Abierto</span>
               {openShift!.openingBalance > 0 && (
-                <span className="text-pos-muted font-mono">
+                <span className="font-mono text-pos-muted">
                   Apert.: {formatCurrency(openShift!.openingBalance)}
                 </span>
               )}
@@ -159,13 +176,13 @@ export default function CartPanel({
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setShowMovementModal(true)}
-                className="text-pos-accent hover:text-pos-accent/80 touch-target px-2 py-0.5 rounded text-xs font-medium"
+                className="rounded-control px-2 py-0.5 text-xs font-medium text-pos-secondary touch-target hover:bg-pos-secondary/10"
               >
                 Retirar
               </button>
               <button
                 onClick={handleCloseShift}
-                className="text-pos-danger hover:text-pos-danger/80 touch-target px-2 py-0.5 rounded"
+                className="rounded-control px-2 py-0.5 text-pos-danger touch-target hover:bg-pos-danger/10"
               >
                 Cerrar
               </button>
@@ -177,7 +194,7 @@ export default function CartPanel({
             {onOpenShift && (
               <button
                 onClick={onOpenShift}
-                className="text-pos-secondary hover:text-pos-secondary/80 touch-target px-2 py-0.5 rounded font-medium"
+                className="rounded-control px-2 py-0.5 font-medium text-pos-secondary touch-target hover:bg-pos-secondary/10"
               >
                 Abrir Turno
               </button>
@@ -187,8 +204,8 @@ export default function CartPanel({
       </div>
 
       {/* Selected customer */}
-      <div className="flex items-center justify-between mb-3 text-sm bg-pos-background/50 rounded-lg px-3 py-2">
-        <span className="text-pos-muted">
+      <div className="mx-4 mt-2 flex shrink-0 items-center justify-between rounded-control bg-pos-background px-3 py-2 text-sm">
+        <span className="min-w-0 truncate text-pos-muted">
           Cliente:{" "}
           <span className="font-medium text-pos-text">
             {selectedCustomer?.name ?? "Consumidor Final"}
@@ -197,7 +214,7 @@ export default function CartPanel({
         {onSelectCustomer && (
           <button
             onClick={onSelectCustomer}
-            className="text-pos-secondary text-xs font-medium touch-target px-2 py-1 rounded hover:bg-pos-secondary/10 transition-colors"
+            className="shrink-0 rounded-control px-2 py-1 text-xs font-medium text-pos-secondary touch-target transition-colors hover:bg-pos-secondary/10"
           >
             Cambiar
           </button>
@@ -205,11 +222,11 @@ export default function CartPanel({
       </div>
 
       {/* Items list */}
-      <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+      <div className="mt-2 min-h-0 flex-1 space-y-1.5 overflow-y-auto px-4 pb-1">
         {isEmpty ? (
-          <div className="flex items-center justify-center h-48">
-            <p className="text-sm text-pos-muted italic">
-              Carrito vacío. Buscá productos con F2 o escaneá un código de barras.
+          <div className="flex h-48 items-center justify-center">
+            <p className="px-2 text-center text-sm italic text-pos-muted">
+              Carrito vacío. Tocá un producto, buscá con F2 o escaneá un código de barras.
             </p>
           </div>
         ) : (
@@ -217,10 +234,10 @@ export default function CartPanel({
             <div
               key={item.productId}
               onClick={() => selectCartItem(item.productId)}
-              className={`flex flex-wrap items-center gap-x-2 gap-y-1.5 px-3 py-2 rounded-lg border cursor-pointer transition-colors lg:flex-nowrap lg:gap-2 ${
+              className={`flex flex-wrap items-center gap-x-2 gap-y-1.5 rounded-control border px-2.5 py-2 cursor-pointer transition-colors lg:flex-nowrap lg:gap-2 ${
                 selectedCartItemId === item.productId
                   ? "border-pos-secondary ring-1 ring-pos-secondary/30"
-                  : "border-pos-muted/10 hover:border-pos-muted/30"
+                  : "border-pos-muted/10 hover:border-pos-muted/25"
               }`}
             >
               {/* Item index */}
@@ -229,7 +246,7 @@ export default function CartPanel({
               </span>
 
               {/* Thumbnail */}
-              <div className="order-2 shrink-0 w-7 h-7 rounded-md overflow-hidden bg-pos-muted/10">
+              <div className="order-2 shrink-0 w-7 h-7 rounded-control overflow-hidden bg-pos-muted/10">
                 <ProductImage
                   src={products.find((p) => p.id === item.productId)?.image}
                   imgClassName="w-full h-full object-cover"
@@ -267,7 +284,7 @@ export default function CartPanel({
                         return next;
                       });
                     }}
-                    className="w-7 h-7 flex items-center justify-center bg-pos-background border border-pos-muted/20 rounded-md text-pos-text font-bold text-base touch-target hover:bg-pos-muted/10 transition-colors"
+                    className="w-7 h-7 flex items-center justify-center bg-pos-background border border-pos-muted/20 rounded-control text-pos-text font-bold text-base touch-target hover:bg-pos-muted/10 transition-colors"
                     aria-label={`Disminuir cantidad de ${item.productName}`}
                   >
                     −
@@ -340,7 +357,7 @@ export default function CartPanel({
                         });
                       }
                     }}
-                    className="w-10 text-center text-xs font-bold font-mono text-pos-text bg-pos-background border border-pos-muted/20 rounded-md px-0.5 py-1 focus:outline-none focus:ring-2 focus:ring-pos-secondary [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="w-10 text-center text-xs font-bold font-mono text-pos-text bg-pos-background border border-pos-muted/20 rounded-control px-0.5 py-1 focus:outline-none focus:ring-2 focus:ring-pos-secondary [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     aria-label={`Cantidad de ${item.productName}`}
                   />
                   <button
@@ -353,7 +370,7 @@ export default function CartPanel({
                         return next;
                       });
                     }}
-                    className="w-7 h-7 flex items-center justify-center bg-pos-background border border-pos-muted/20 rounded-md text-pos-text font-bold text-base touch-target hover:bg-pos-muted/10 transition-colors"
+                    className="w-7 h-7 flex items-center justify-center bg-pos-background border border-pos-muted/20 rounded-control text-pos-text font-bold text-base touch-target hover:bg-pos-muted/10 transition-colors"
                     aria-label={`Aumentar cantidad de ${item.productName}`}
                   >
                     +
@@ -372,7 +389,7 @@ export default function CartPanel({
                         return next;
                       });
                     }}
-                    className="w-7 h-7 flex items-center justify-center bg-pos-background border border-pos-muted/20 rounded-md text-pos-text font-bold text-xs touch-target hover:bg-pos-muted/10 transition-colors"
+                    className="w-7 h-7 flex items-center justify-center bg-pos-background border border-pos-muted/20 rounded-control text-pos-text font-bold text-xs touch-target hover:bg-pos-muted/10 transition-colors"
                     aria-label={`Disminuir 100g de ${item.productName}`}
                     title="-100g"
                   >
@@ -388,7 +405,7 @@ export default function CartPanel({
                         return next;
                       });
                     }}
-                    className="w-7 h-7 flex items-center justify-center bg-pos-background border border-pos-muted/20 rounded-md text-pos-text font-bold text-sm touch-target hover:bg-pos-muted/10 transition-colors"
+                    className="w-7 h-7 flex items-center justify-center bg-pos-background border border-pos-muted/20 rounded-control text-pos-text font-bold text-sm touch-target hover:bg-pos-muted/10 transition-colors"
                     aria-label={`Disminuir 10g de ${item.productName}`}
                     title="-10g"
                   >
@@ -462,7 +479,7 @@ export default function CartPanel({
                         });
                       }
                     }}
-                    className="w-14 text-center text-xs font-bold font-mono text-pos-text bg-pos-background border border-pos-muted/20 rounded-md px-0.5 py-1 focus:outline-none focus:ring-2 focus:ring-pos-secondary [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="w-14 text-center text-xs font-bold font-mono text-pos-text bg-pos-background border border-pos-muted/20 rounded-control px-0.5 py-1 focus:outline-none focus:ring-2 focus:ring-pos-secondary [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     aria-label={`Peso en kg de ${item.productName}`}
                   />
                   <span className="text-[10px] text-pos-muted font-mono w-5">
@@ -478,7 +495,7 @@ export default function CartPanel({
                         return next;
                       });
                     }}
-                    className="w-7 h-7 flex items-center justify-center bg-pos-background border border-pos-muted/20 rounded-md text-pos-text font-bold text-sm touch-target hover:bg-pos-muted/10 transition-colors"
+                    className="w-7 h-7 flex items-center justify-center bg-pos-background border border-pos-muted/20 rounded-control text-pos-text font-bold text-sm touch-target hover:bg-pos-muted/10 transition-colors"
                     aria-label={`Aumentar 10g de ${item.productName}`}
                     title="+10g"
                   >
@@ -494,7 +511,7 @@ export default function CartPanel({
                         return next;
                       });
                     }}
-                    className="w-7 h-7 flex items-center justify-center bg-pos-background border border-pos-muted/20 rounded-md text-pos-text font-bold text-xs touch-target hover:bg-pos-muted/10 transition-colors"
+                    className="w-7 h-7 flex items-center justify-center bg-pos-background border border-pos-muted/20 rounded-control text-pos-text font-bold text-xs touch-target hover:bg-pos-muted/10 transition-colors"
                     aria-label={`Aumentar 100g de ${item.productName}`}
                     title="+100g"
                   >
@@ -516,7 +533,7 @@ export default function CartPanel({
                   e.stopPropagation();
                   removeItem(item.productId);
                 }}
-                className="order-4 lg:order-8 shrink-0 w-6 h-6 flex items-center justify-center text-pos-muted/40 hover:text-pos-danger touch-target rounded-md hover:bg-pos-danger/10 transition-colors"
+                className="order-4 lg:order-8 shrink-0 w-6 h-6 flex items-center justify-center text-pos-muted/40 hover:text-pos-danger touch-target rounded-control hover:bg-pos-danger/10 transition-colors"
                 aria-label={`Eliminar ${item.productName} del carrito`}
               >
                 ✕
@@ -527,18 +544,20 @@ export default function CartPanel({
 
       {/* Totals + checkout */}
       {!isEmpty && (
-        <div className="mt-3 pt-3 border-t border-pos-muted/20 space-y-3">
+        <div className="mt-3 shrink-0 space-y-1.5 border-t border-pos-muted/10 px-4 pb-4 pt-3">
           {/* Subtotal line */}
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               <span className="text-pos-muted">Subtotal</span>
               {activePriceList && (
-                <span className="inline-flex items-center gap-1 rounded-md bg-pos-secondary/10 px-2 py-0.5 text-[10px] font-medium text-pos-secondary dark:bg-pos-secondary/20">
+                <span className="inline-flex items-center gap-1 rounded-pill bg-pos-secondary/10 px-2 py-0.5 text-[10px] font-medium text-pos-secondary">
                   {activePriceList.name}
                 </span>
               )}
             </div>
-            <span className="font-mono font-medium">{formatCurrency(rawSubtotal)}</span>
+            <span className="font-mono font-medium tabular-nums text-pos-text">
+              {formatCurrency(rawSubtotal)}
+            </span>
           </div>
 
           {/* Combo savings */}
@@ -549,7 +568,7 @@ export default function CartPanel({
                   <span className="text-pos-secondary font-medium">
                     {c.times > 1 ? `${c.times}x ` : ""}Combo: {c.name}
                   </span>
-                  <span className="text-pos-secondary font-mono">−{formatCurrency(c.totalSavings)}</span>
+                  <span className="text-pos-secondary font-mono tabular-nums">−{formatCurrency(c.totalSavings)}</span>
                 </div>
               ))}
             </div>
@@ -563,7 +582,7 @@ export default function CartPanel({
                   <span className="text-pos-secondary font-medium">
                     {b.times > 1 ? `${b.times}x ` : ""}Bulto: {b.name}
                   </span>
-                  <span className="text-pos-secondary font-mono">−{formatCurrency(b.totalSavings)}</span>
+                  <span className="text-pos-secondary font-mono tabular-nums">−{formatCurrency(b.totalSavings)}</span>
                 </div>
               ))}
             </div>
@@ -573,14 +592,16 @@ export default function CartPanel({
           {ivaInfo.alicuota > 0 && (
             <div className="flex items-center justify-between text-sm">
               <span className="text-pos-muted">IVA {ivaInfo.alicuota}%</span>
-              <span className="font-mono font-medium">{formatCurrency(ivaInfo.iva)}</span>
+              <span className="font-mono font-medium tabular-nums text-pos-text">
+                {formatCurrency(ivaInfo.iva)}
+              </span>
             </div>
           )}
 
           {/* Total */}
-          <div className="flex items-center justify-between text-base font-bold">
-            <span className="text-pos-text">Total</span>
-            <span className="font-mono text-pos-secondary text-lg">
+          <div className="flex items-baseline justify-between pt-1">
+            <span className="text-sm font-semibold text-pos-text">Total</span>
+            <span className="font-mono text-[22px] font-bold tracking-tight tabular-nums text-pos-text">
               {formatCurrency(total)}
             </span>
           </div>
@@ -588,7 +609,7 @@ export default function CartPanel({
           {/* Checkout button */}
           <button
             onClick={onCheckout}
-            className="w-full py-3 bg-pos-accent text-white rounded-xl font-bold text-base touch-target hover:opacity-90 transition-opacity active:scale-[0.98]"
+            className="mt-2 w-full rounded-[15px] bg-gradient-to-br from-pos-accent to-pos-accent-2 py-3 text-base font-bold text-white touch-target transition hover:brightness-105 active:scale-[0.995]"
           >
             Cobrar — {formatCurrency(total)}
           </button>
@@ -598,7 +619,7 @@ export default function CartPanel({
       {/* ── Shift Close Confirmation Modal ── */}
       {showCloseModal && openShift && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-pos-surface rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
+          <div className="bg-pos-surface rounded-panel shadow-2xl w-full max-w-sm p-6 text-center">
             <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-pos-danger/10 flex items-center justify-center">
               <svg className="w-6 h-6 text-pos-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" />
@@ -616,13 +637,13 @@ export default function CartPanel({
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => setShowCloseModal(false)}
-                className="px-5 py-2.5 text-sm text-pos-text border border-pos-muted/30 rounded-xl touch-target hover:bg-pos-background/50"
+                className="px-5 py-2.5 text-sm text-pos-text border border-pos-muted/30 rounded-control touch-target hover:bg-pos-background/50"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmCloseShift}
-                className="px-5 py-2.5 text-sm bg-pos-danger text-white rounded-xl font-medium touch-target hover:opacity-90"
+                className="px-5 py-2.5 text-sm bg-pos-danger text-white rounded-control font-medium touch-target hover:opacity-90"
               >
                 Cerrar Turno
               </button>
