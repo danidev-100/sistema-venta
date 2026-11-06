@@ -188,6 +188,9 @@ router.get("/:id", async (req: Request, res: Response) => {
 });
 
 router.post("/", async (req: Request, res: Response) => {
+  // La clave de idempotencia se valida dentro del try pero el catch la necesita
+  // para resolver una colisión de dos cobros simultáneos.
+  let idempotencyKeyValue: string | null = null;
   try {
     const {
       storeId,
@@ -207,6 +210,7 @@ router.post("/", async (req: Request, res: Response) => {
       createdBy,
       shiftId,
       priceListId,
+      idempotencyKey,
     } = req.body;
 
     if (!storeId || !Array.isArray(items) || items.length === 0 || !paymentMethod) {
@@ -263,6 +267,34 @@ router.post("/", async (req: Request, res: Response) => {
     ];
 
     const db = getDb();
+
+    idempotencyKeyValue =
+      typeof idempotencyKey === "string" && idempotencyKey.trim()
+        ? idempotencyKey.trim()
+        : null;
+
+    // Si esta clave ya cobró, devolvemos esa venta: un doble toque o un
+    // reintento después de un timeout no puede cobrar dos veces.
+    if (idempotencyKeyValue) {
+      const [already] = await db
+        .select()
+        .from(schema.sales)
+        .where(
+          and(
+            eq(schema.sales.store_id, storeId),
+            eq(schema.sales.idempotency_key, idempotencyKeyValue),
+          ),
+        )
+        .limit(1);
+      if (already) {
+        const existingItems = await db
+          .select()
+          .from(schema.saleItems)
+          .where(eq(schema.saleItems.sale_id, already.id));
+        res.status(200).json({ ...already, items: existingItems });
+        return;
+      }
+    }
 
     const [productRows, comboRows, bultoRows, priceListRows, companyRows] = await Promise.all([
       productIds.length > 0
@@ -359,6 +391,7 @@ router.post("/", async (req: Request, res: Response) => {
         .insert(schema.sales)
         .values({
           store_id: storeId,
+          idempotency_key: idempotencyKeyValue,
           total: expected.total,
           subtotal: expected.subtotal,
           iva: expected.iva,
@@ -475,6 +508,29 @@ router.post("/", async (req: Request, res: Response) => {
 
     res.status(201).json({ ...sale, items: saleItems });
   } catch (err) {
+    // Dos cobros con la misma clave llegaron a la vez: el índice único dejó
+    // pasar uno solo, así que devolvemos la venta que ganó.
+    if ((err as { code?: string } | null)?.code === "23505" && idempotencyKeyValue) {
+      try {
+        const db = getDb();
+        const [winner] = await db
+          .select()
+          .from(schema.sales)
+          .where(
+            and(
+              eq(schema.sales.store_id, req.body?.storeId),
+              eq(schema.sales.idempotency_key, idempotencyKeyValue),
+            ),
+          )
+          .limit(1);
+        if (winner) {
+          res.status(200).json(winner);
+          return;
+        }
+      } catch (recoverErr) {
+        console.error("[sales] idempotency recovery error:", recoverErr);
+      }
+    }
     if (err instanceof HttpError) {
       res.status(err.status).json({ error: err.message });
       return;

@@ -172,6 +172,9 @@ export const sales = pgTable(
     // tiene que quedar firmada.
     refunded_by: text("refunded_by"),
     refunded_at: timestamp("refunded_at"),
+    // Clave del intento de cobro: un reintento con la misma clave devuelve la
+    // venta ya creada en vez de duplicarla. Nula en ventas históricas.
+    idempotency_key: text("idempotency_key"),
     shift_id: integer("shift_id"),
     invoice_id: integer("invoice_id"),
     created_by: text("created_by").notNull().default("—"),
@@ -185,6 +188,10 @@ export const sales = pgTable(
     storeIdx: index("idx_sales_store").on(table.store_id),
     shiftIdx: index("idx_sales_shift").on(table.shift_id),
     createdAtIdx: index("idx_sales_created").on(table.created_at),
+    idempotencyIdx: uniqueIndex("idx_sales_idempotency").on(
+      table.store_id,
+      table.idempotency_key,
+    ),
   }),
 );
 

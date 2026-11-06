@@ -137,6 +137,8 @@ export type AppStore = {
 
   // ── Cart selection (keyboard shortcuts) ──
   selectedCartItemId: number | null;
+  /** Clave del cobro en curso: repetir el intento no duplica la venta. */
+  pendingCheckoutKey: string | null;
   selectCartItem: (productId: number) => void;
   clearSelectedCartItem: () => void;
 
@@ -177,6 +179,16 @@ export type AppStore = {
 // ──────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────
+
+/**
+ * Clave de idempotencia por intento de cobro. Si el runtime no tiene
+ * crypto.randomUUID, cae a tiempo + azar (suficiente para deduplicar).
+ */
+function newCheckoutKey(): string {
+  const uuid = globalThis.crypto?.randomUUID?.();
+  if (uuid) return uuid;
+  return `chk-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 function calcSubtotal(qty: number, price: number): number {
   return Math.round(qty * price * 100) / 100;
@@ -290,6 +302,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   completedSales: [],
   selectedCustomer: null,
   selectedCartItemId: null,
+  pendingCheckoutKey: null,
   globalDiscountPercent: 0,
   selectedComprobanteTipo: null,
   selectedPriceListId: null,
@@ -441,6 +454,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
       throw new Error("Cannot checkout with an empty cart");
     }
 
+    // Idempotencia: la clave se genera una vez por intento y se reusa si el
+    // cobro se reintenta, así un doble toque o un timeout no cobra dos veces.
+    const idempotencyKey = get().pendingCheckoutKey ?? newCheckoutKey();
+    if (get().pendingCheckoutKey !== idempotencyKey) {
+      set({ pendingCheckoutKey: idempotencyKey });
+    }
+
     const resolvedModo: "afip" | "interno" = modo === "afip" ? "afip" : "interno";
     const resolvedStoreId = storeId ?? "store_1";
 
@@ -494,6 +514,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
     // ── Persist sale via API ──
     const created = await api.post<any>("/sales", {
+      idempotencyKey,
       items: items.map((i) => ({ ...i })),
       createdBy: currentUserName,
       total,
@@ -512,6 +533,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
       priceListId: get().selectedPriceListId,
       shiftId: openShift?.id ?? null,
     });
+
+    // La venta ya está en la base: el próximo cobro estrena clave.
+    set({ pendingCheckoutKey: null });
 
     // ── Normalize snake_case API response to the frontend CompletedSale shape ──
     const sale: CompletedSale = {
