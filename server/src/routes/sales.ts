@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { eq, and, desc, sql, inArray } from "drizzle-orm";
 import { getDb } from "../db.js";
 import { computeSaleTotals, type ComboRef } from "../domain/sale-totals.js";
+import { requireRole } from "../middleware/auth.js";
 import * as schema from "../../../db/cloud-schema.js";
 
 const router = Router();
@@ -66,7 +67,7 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
-router.post("/:id/refund", async (req: Request, res: Response) => {
+router.post("/:id/refund", requireRole("admin"), async (req: Request, res: Response) => {
   try {
     const db = getDb();
     const id = parseInt(req.params.id as string, 10);
@@ -135,7 +136,12 @@ router.post("/:id/refund", async (req: Request, res: Response) => {
 
       const [updated] = await tx
         .update(schema.sales)
-        .set({ status: "refunded", updated_at: new Date() })
+        .set({
+          status: "refunded",
+          refunded_by: req.user?.username ?? "—",
+          refunded_at: new Date(),
+          updated_at: new Date(),
+        })
         .where(eq(schema.sales.id, id))
         .returning();
 
@@ -280,6 +286,21 @@ router.post("/", async (req: Request, res: Response) => {
         : Promise.resolve([]),
       db.select().from(schema.company).where(eq(schema.company.store_id, storeId)).limit(1),
     ]);
+
+    // Los ítems tienen que pertenecer a la tienda de la venta: si un id no está
+    // en el catálogo de esta sucursal se estaría vendiendo stock ajeno, y además
+    // su precio no se puede revalidar contra la base.
+    const foundProductIds = new Set(productRows.map((row) => row.id));
+    const foreignItem = requestItems.find(
+      (item) =>
+        item.productId != null && item.productId > 0 && !foundProductIds.has(item.productId),
+    );
+    if (foreignItem) {
+      res.status(409).json({
+        error: `El producto ${foreignItem.productId} no pertenece a esta tienda`,
+      });
+      return;
+    }
 
     const comboItemRows =
       comboRows.length > 0

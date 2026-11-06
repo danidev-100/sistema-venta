@@ -168,6 +168,10 @@ export const sales = pgTable(
     mercadopago_amount: doublePrecision("mercadopago_amount"),
     change: doublePrecision("change"),
     status: text("status").notNull().default("completed"),
+    // Quién anuló la venta y cuándo: una devolución mueve plata y stock, así que
+    // tiene que quedar firmada.
+    refunded_by: text("refunded_by"),
+    refunded_at: timestamp("refunded_at"),
     shift_id: integer("shift_id"),
     invoice_id: integer("invoice_id"),
     created_by: text("created_by").notNull().default("—"),
