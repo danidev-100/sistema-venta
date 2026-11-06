@@ -6,14 +6,29 @@ import * as schema from "../../../db/cloud-schema.js";
 import { decideStoreAccess } from "../domain/store-access.js";
 import { shouldRefreshSession } from "../domain/session.js";
 
-const JWT_SECRET: string = (() => {
+// El secreto se resuelve la primera vez que se usa y no al importar el módulo.
+// Con el process.exit() en el import, cualquier test que importara una ruta con
+// este middleware moría sin poder reportar nada. El fail-fast queda en el
+// arranque del servidor (assertJwtConfigured).
+let jwtSecret: string | null = null;
+
+export function getJwtSecret(): string {
+  if (jwtSecret) return jwtSecret;
   const secret = process.env.JWT_SECRET;
   if (!secret) {
+    throw new Error("JWT_SECRET no está configurado");
+  }
+  jwtSecret = secret;
+  return secret;
+}
+
+/** Corta el arranque del servidor si falta el secreto, con un mensaje claro. */
+export function assertJwtConfigured(): void {
+  if (!process.env.JWT_SECRET) {
     console.error("[auth] JWT_SECRET no está configurado — el servidor no arrancará");
     process.exit(1);
   }
-  return secret;
-})();
+}
 
 export interface AuthPayload {
   userId: number;
@@ -31,7 +46,7 @@ declare global {
 }
 
 export function generateToken(payload: AuthPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "24h" });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: "24h" });
 }
 
 export function authMiddleware(req: Request, res: Response, next: NextFunction): void {
@@ -43,7 +58,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
 
   try {
     const token = header.slice(7);
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload & { exp?: number };
+    const decoded = jwt.verify(token, getJwtSecret()) as AuthPayload & { exp?: number };
     req.user = decoded;
 
     // Sesión deslizante: si al token le queda poco, se entrega uno nuevo para
