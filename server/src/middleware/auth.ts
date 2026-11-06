@@ -1,5 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { and, eq } from "drizzle-orm";
+import { getDb } from "../db.js";
+import * as schema from "../../../db/cloud-schema.js";
+import { decideStoreAccess } from "../domain/store-access.js";
 
 const JWT_SECRET: string = (() => {
   const secret = process.env.JWT_SECRET;
@@ -60,22 +64,78 @@ export function requireRole(...roles: string[]) {
   };
 }
 
-export function requireStoreAccess(req: Request, res: Response, next: NextFunction) {
-  if (req.user?.role === "admin") {
-    return next();
+export async function requireStoreAccess(req: Request, res: Response, next: NextFunction) {
+  try {
+    const user = req.user;
+    if (!user) {
+      res.status(401).json({ error: "No autenticado" });
+      return;
+    }
+
+    const requestedStoreId =
+      (req.query.storeId as string) || req.body?.storeId || req.body?.store_id || null;
+
+    // Sólo se consulta la base para lo que la decisión realmente necesita.
+    let openShifts: string[] = [];
+    let hasShiftHistory = false;
+    let storeIsActive: boolean | undefined;
+
+    if (user.role !== "admin") {
+      const db = getDb();
+
+      const open = await db
+        .select({ store_id: schema.shifts.store_id })
+        .from(schema.shifts)
+        .where(
+          and(eq(schema.shifts.user_id, user.userId), eq(schema.shifts.status, "open")),
+        );
+      openShifts = open.map((row) => row.store_id);
+
+      if (openShifts.length === 0) {
+        const previous = await db
+          .select({ id: schema.shifts.id })
+          .from(schema.shifts)
+          .where(eq(schema.shifts.user_id, user.userId))
+          .limit(1);
+        hasShiftHistory = previous.length > 0;
+      }
+
+      const openingShift = req.method === "POST" && req.path === "/shifts";
+      if (openingShift) {
+        if (!requestedStoreId) {
+          res.status(400).json({ error: "Sucursal requerida" });
+          return;
+        }
+        const [store] = await db
+          .select({ active: schema.stores.active })
+          .from(schema.stores)
+          .where(eq(schema.stores.id, requestedStoreId))
+          .limit(1);
+        storeIsActive = !!store?.active;
+      }
+    }
+
+    const decision = decideStoreAccess({
+      role: user.role,
+      method: req.method,
+      pathname: `${req.baseUrl}${req.path}`,
+      requestedStoreId,
+      openShifts,
+      hasShiftHistory,
+      storeIsActive,
+    });
+
+    if (!decision.allow) {
+      res.status(decision.status).json({ error: decision.error });
+      return;
+    }
+
+    // La sucursal resuelta queda disponible para las rutas: así dejan de
+    // depender del storeId que manda el cliente.
+    (req as Request & { storeId?: string | null }).storeId = decision.store;
+    next();
+  } catch (err) {
+    console.error("[auth] requireStoreAccess error:", err);
+    res.status(500).json({ error: "Error interno del servidor" });
   }
-
-  if (!req.user?.storeId) {
-    res.status(403).json({ error: "Token sin tienda — acceso denegado" });
-    return;
-  }
-
-  const requestedStoreId = req.query.storeId as string || req.body.storeId || req.body.store_id;
-
-  if (requestedStoreId && requestedStoreId !== req.user.storeId) {
-    res.status(403).json({ error: "No tenés acceso a esta tienda" });
-    return;
-  }
-
-  next();
 }

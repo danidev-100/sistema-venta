@@ -220,6 +220,9 @@ export const shifts = pgTable(
   {
     id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
     employee: text("employee").notNull(),
+    // Quién abrió el turno. Es la fuente de la sucursal activa del usuario:
+    // el token no lleva storeId, se deriva del turno abierto.
+    user_id: integer("user_id"),
     open_time: timestamp("open_time").notNull().defaultNow(),
     close_time: timestamp("close_time"),
     status: text("status", { enum: ["open", "closed"] }).notNull().default("open"),
@@ -239,6 +242,7 @@ export const shifts = pgTable(
   },
   (table) => ({
     storeIdx: index("idx_shifts_store").on(table.store_id),
+    userIdx: index("idx_shifts_user").on(table.user_id, table.status),
   }),
 );
 

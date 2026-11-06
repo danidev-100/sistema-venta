@@ -29,17 +29,38 @@ router.get("/shifts", async (req: Request, res: Response) => {
 
 router.post("/shifts", async (req: Request, res: Response) => {
   try {
-    const { storeId, employee, openingBalance } = req.body;
-    if (!storeId || !employee) {
-      res.status(400).json({ error: "storeId y employee requeridos" });
+    const { storeId, openingBalance } = req.body;
+    if (!storeId) {
+      res.status(400).json({ error: "storeId requerido" });
       return;
     }
+    const user = req.user!;
     const openingBalanceNum = Math.max(0, Number(openingBalance) || 0);
     const db = getDb();
+
+    // Un turno abierto por usuario: la sucursal activa se deriva de él, así que
+    // dos turnos abiertos dejan la sesión ambigua.
+    const [openShift] = await db
+      .select({ store_id: schema.shifts.store_id })
+      .from(schema.shifts)
+      .where(
+        and(eq(schema.shifts.user_id, user.userId), eq(schema.shifts.status, "open")),
+      )
+      .limit(1);
+
+    if (openShift) {
+      res.status(409).json({
+        error: `Ya tenés un turno abierto en ${openShift.store_id}. Cerralo antes de abrir otro`,
+      });
+      return;
+    }
+
     const [shift] = await db
       .insert(schema.shifts)
       .values({
-        employee,
+        // El empleado sale del token, no del body: es lo que ata el turno al usuario.
+        employee: user.username,
+        user_id: user.userId,
         store_id: storeId,
         opening_balance: openingBalanceNum,
       })
