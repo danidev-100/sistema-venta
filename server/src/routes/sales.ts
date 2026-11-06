@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { eq, and, desc, sql, inArray } from "drizzle-orm";
 import { getDb } from "../db.js";
+import { computeSaleTotals, type ComboRef } from "../domain/sale-totals.js";
 import * as schema from "../../../db/cloud-schema.js";
 
 const router = Router();
@@ -9,6 +10,27 @@ class HttpError extends Error {
   constructor(public status: number, message: string) {
     super(message);
   }
+}
+
+/**
+ * Un importe del body que no es número es un 400, nunca un 0 silencioso
+ * (auditoría P1-4): si el POS manda basura, la venta no existe.
+ */
+function requireNumber(value: unknown, field: string): number {
+  if (value === null || value === undefined || value === "") {
+    throw new HttpError(400, `El campo '${field}' debe ser un número`);
+  }
+  const parsed = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(parsed)) {
+    throw new HttpError(400, `El campo '${field}' debe ser un número`);
+  }
+  return parsed;
+}
+
+/** Id de producto opcional: la venta libre viaja con id nulo o negativo. */
+function optionalNumber(value: unknown, field: string): number | null {
+  if (value === null || value === undefined) return null;
+  return requireNumber(value, field);
 }
 
 router.get("/", async (req: Request, res: Response) => {
@@ -178,44 +200,166 @@ router.post("/", async (req: Request, res: Response) => {
       customerName,
       createdBy,
       shiftId,
+      priceListId,
     } = req.body;
 
-    if (!storeId || !items?.length || !paymentMethod) {
+    if (!storeId || !Array.isArray(items) || items.length === 0 || !paymentMethod) {
       res.status(400).json({ error: "storeId, items y paymentMethod requeridos" });
       return;
     }
 
+    // ── Autoridad del precio (auditoría P0-1) ──
+    // Los importes se recalculan desde la base antes de abrir la transacción:
+    // si no coinciden con lo que dijo el cliente no se escribe nada.
+    const claimed = {
+      total: requireNumber(total, "total"),
+      subtotal: requireNumber(subtotal, "subtotal"),
+      iva: requireNumber(iva, "iva"),
+      discountAmount: requireNumber(discountAmount, "discountAmount"),
+      discountPercent:
+        discountPercent == null ? 0 : requireNumber(discountPercent, "discountPercent"),
+    };
+
+    const requestItems = items.map((raw: any, index: number) => ({
+      productId: optionalNumber(raw?.productId, `items[${index}].productId`),
+      productName: (raw?.productName as string | undefined) ?? "",
+      quantity: requireNumber(raw?.quantity, `items[${index}].quantity`),
+      unitPrice: requireNumber(raw?.unitPrice, `items[${index}].unitPrice`),
+      subtotal:
+        raw?.subtotal == null
+          ? undefined
+          : requireNumber(raw.subtotal, `items[${index}].subtotal`),
+      discountPercent:
+        raw?.discountPercent == null
+          ? 0
+          : requireNumber(raw.discountPercent, `items[${index}].discountPercent`),
+      saleUnit: (raw?.saleUnit as string | undefined) ?? "unit",
+    }));
+
+    const listId = optionalNumber(priceListId, "priceListId");
+
+    // Los importes del cobro se validan antes de abrir la transacción: nunca se
+    // guarda un 0 que el cliente no mandó. `amount_paid` conserva el fallback
+    // histórico al total cuando el método de pago no manda monto.
+    const paidAmount = optionalNumber(amountPaid, "amountPaid");
+    const cash = optionalNumber(cashAmount, "cashAmount");
+    const card = optionalNumber(cardAmount, "cardAmount");
+    const mercadopago = optionalNumber(mercadopagoAmount, "mercadopagoAmount");
+    const changeAmount = optionalNumber(change, "change");
+    const shift = optionalNumber(shiftId, "shiftId");
+
+    const productIds = [
+      ...new Set(
+        requestItems
+          .map((item) => item.productId)
+          .filter((id): id is number => id != null && id > 0),
+      ),
+    ];
+
     const db = getDb();
 
-    const sale = await db.transaction(async (tx) => {
-      const safe = (x: any) => Number(x) || 0;
+    const [productRows, comboRows, bultoRows, priceListRows, companyRows] = await Promise.all([
+      productIds.length > 0
+        ? db
+            .select()
+            .from(schema.products)
+            .where(
+              and(
+                eq(schema.products.store_id, storeId),
+                inArray(schema.products.id, productIds),
+              ),
+            )
+        : Promise.resolve([]),
+      db.select().from(schema.combos).where(eq(schema.combos.store_id, storeId)),
+      db.select().from(schema.bultos).where(eq(schema.bultos.store_id, storeId)),
+      listId != null
+        ? db
+            .select()
+            .from(schema.priceListItems)
+            .where(eq(schema.priceListItems.price_list_id, listId))
+        : Promise.resolve([]),
+      db.select().from(schema.company).where(eq(schema.company.store_id, storeId)).limit(1),
+    ]);
 
+    const comboItemRows =
+      comboRows.length > 0
+        ? await db
+            .select()
+            .from(schema.comboItems)
+            .where(inArray(schema.comboItems.combo_id, comboRows.map((combo) => combo.id)))
+        : [];
+
+    const combos: ComboRef[] = comboRows.map((combo) => ({
+      id: combo.id,
+      comboPrice: combo.combo_price,
+      items: comboItemRows
+        .filter((row) => row.combo_id === combo.id)
+        .map((row) => ({ productId: row.product_id, quantity: row.quantity })),
+    }));
+
+    const company = companyRows[0];
+
+    const expected = computeSaleTotals({
+      items: requestItems,
+      products: productRows.map((product) => ({ id: product.id, price: product.price })),
+      priceListItems: priceListRows.map((row) => ({
+        productId: row.product_id,
+        price: row.price,
+        percentage: row.percentage,
+      })),
+      combos,
+      bultos: bultoRows.map((bulto) => ({
+        id: bulto.id,
+        productId: bulto.product_id ?? 0,
+        quantity: bulto.quantity,
+        bultoPrice: bulto.bulto_price,
+      })),
+      iva: {
+        alicuota: company?.iva_alicuota ?? 0,
+        incluido: company?.iva_incluido === 1,
+      },
+      claimed,
+    });
+
+    if (expected.mismatches.length > 0) {
+      res.status(409).json({
+        error: "Los totales de la venta no coinciden con los ítems y los precios de la base",
+        expected: {
+          total: expected.total,
+          subtotal: expected.subtotal,
+          iva: expected.iva,
+        },
+      });
+      return;
+    }
+
+    const sale = await db.transaction(async (tx) => {
       const [s] = await tx
         .insert(schema.sales)
         .values({
           store_id: storeId,
-          total: safe(total),
-          subtotal: safe(subtotal),
-          iva: safe(iva),
-          discount_percent: safe(discountPercent),
-          discount_amount: safe(discountAmount),
+          total: expected.total,
+          subtotal: expected.subtotal,
+          iva: expected.iva,
+          discount_percent: expected.discountPercent,
+          discount_amount: expected.discountAmount,
           payment_method: paymentMethod,
-          amount_paid: safe(amountPaid) || safe(total),
-          cash_amount: cashAmount != null ? safe(cashAmount) : null,
-          card_amount: cardAmount != null ? safe(cardAmount) : null,
-          mercadopago_amount: mercadopagoAmount != null ? safe(mercadopagoAmount) : null,
-          change: change != null ? safe(change) : null,
+          amount_paid: paidAmount || expected.total,
+          cash_amount: cash,
+          card_amount: card,
+          mercadopago_amount: mercadopago,
+          change: changeAmount,
           customer_name: customerName || null,
           created_by: createdBy || (req as any).user?.username || "—",
           // Links the sale to its cash register shift; null for older clients.
-          shift_id: shiftId != null ? safe(shiftId) : null,
+          shift_id: shift,
         })
         .returning();
 
-      for (const item of items) {
+      for (const item of requestItems) {
         await tx.insert(schema.saleItems).values({
           sale_id: s.id,
-          product_id: item.productId,
+          product_id: item.productId as number,
           product_name: item.productName,
           quantity: item.quantity,
           unit_price: item.unitPrice,
@@ -226,8 +370,8 @@ router.post("/", async (req: Request, res: Response) => {
         // Descontar stock server-side, scoped a la tienda de la venta.
         // Ítems custom (combo/bulto/venta libre) se detectan por productId
         // nulo o negativo: no validan ni descuentan stock.
-        if (item.productId != null && Number(item.productId) > 0) {
-          const qty = safe(item.quantity);
+        if (item.productId != null && item.productId > 0) {
+          const qty = item.quantity;
 
           const [product] = await tx
             .select()
@@ -286,12 +430,12 @@ router.post("/", async (req: Request, res: Response) => {
         if (customer) {
           await tx
             .update(schema.customers)
-            .set({ credit_balance: sql`credit_balance + ${safe(total)}` })
+            .set({ credit_balance: sql`credit_balance + ${expected.total}` })
             .where(eq(schema.customers.id, customer.id));
 
           await tx.insert(schema.creditPayments).values({
             customer_id: customer.id,
-            amount: safe(total),
+            amount: expected.total,
             sale_id: s.id,
             store_id: storeId,
             date: new Date(),
