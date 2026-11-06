@@ -90,6 +90,13 @@ app.use("/api/users", authMiddleware, requireStoreAccess, usersRoutes);
 app.use("/api/stores", authMiddleware, storesRoutes);
 app.use("/api/backup", backupRoutes);
 
+// Cualquier /api/* que llegue hasta acá no existe. Sin esto el fallback del SPA
+// le contesta 200 con index.html y del lado del cliente un endpoint mal escrito
+// aparece como un error de JSON en vez de un 404.
+app.use("/api", (_req, res) => {
+  res.status(404).json({ error: "Endpoint inexistente" });
+});
+
 // ── Serve frontend (only in non-Vercel environments) ──
 // On Vercel, static files are served by the CDN, not by Express.
 if (!process.env.VERCEL) {
