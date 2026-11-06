@@ -46,6 +46,9 @@ app.use(cors({
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
+  // El token renovado viaja en la respuesta; sin exponerlo el navegador lo
+  // esconde y la sesión no se desliza.
+  exposedHeaders: ["X-Refreshed-Token"],
 }));
 
 // ── Body parser ──

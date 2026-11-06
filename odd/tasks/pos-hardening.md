@@ -21,14 +21,14 @@ S7. `pnpm test` y `pnpm build` deben seguir verdes, y el POS debe seguir operand
 
 ## Tasks
 
-- T1 · `shifts.user_id` (migración aditiva + backfill por nombre) y `POST /cash/shifts` toma el usuario del token, no del body. `S2 S5`
-- T2 · `resolveUserStore(userId)` + `requireStoreAccess` reescrito: turno abierto → último turno → ventana acotada sin turno; 409 si hay más de un turno abierto. `S2 S4`
+- T1 · `shifts.user_id` (migración aditiva + backfill por nombre) y `POST /cash/shifts` toma el usuario del token, no del body. `S2 S5` — commit `cd87ab5`
+- T2 · `resolveUserStore(userId)` + `requireStoreAccess` reescrito: turno abierto → último turno → ventana acotada sin turno; 409 si hay más de un turno abierto. `S2 S4` — commit `cd87ab5` (módulo puro `server/src/domain/store-access.ts`, 11 tests)
 - T3 · `POST /sales` recalcula totales desde la DB (módulo puro `sale-totals` con tests) y rechaza 409 si el body difiere. `S3 S4 S6`
 - T4 · Devoluciones: rol requerido y autor registrado. `S4`
-- T5 · `404` explícito para `/api/*` desconocidas, antes del fallback del SPA. `S4`
+- T5 · `404` explícito para `/api/*` desconocidas, antes del fallback del SPA. `S4` — commit `f5076af` (+ `scripts/smoke-api.mjs`)
 - T6 · Idempotencia en el cobro (`idempotencyKey` + índice único). `S4`
 - T7 · Los ítems de una venta deben pertenecer a la tienda de la venta. `S4`
-- T8 · Sesión deslizante: no morir a las 24 h en medio del turno. `S4`
+- T8 · Sesión deslizante: no morir a las 24 h en medio del turno. `S4` — módulo `server/src/domain/session.ts` con 6 tests, cabecera `X-Refreshed-Token` expuesta por CORS y leída por `src/lib/api.ts`; verificado con un token de 1 h (renueva) y uno de 23 h (no renueva)
 - T9 · Verificación: tests, build, y smoke en vivo con admin y con cajero. `S6 S7`
 
 ## Log

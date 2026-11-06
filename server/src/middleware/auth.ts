@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { getDb } from "../db.js";
 import * as schema from "../../../db/cloud-schema.js";
 import { decideStoreAccess } from "../domain/store-access.js";
+import { shouldRefreshSession } from "../domain/session.js";
 
 const JWT_SECRET: string = (() => {
   const secret = process.env.JWT_SECRET;
@@ -42,8 +43,16 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
 
   try {
     const token = header.slice(7);
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload;
+    const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload & { exp?: number };
     req.user = decoded;
+
+    // Sesión deslizante: si al token le queda poco, se entrega uno nuevo para
+    // que un turno largo no muera con un 401 en medio de una venta.
+    if (shouldRefreshSession(decoded.exp, Date.now())) {
+      const { userId, username, role, storeId } = decoded;
+      res.setHeader("X-Refreshed-Token", generateToken({ userId, username, role, storeId }));
+    }
+
     next();
   } catch {
     res.status(401).json({ error: "Token inválido o expirado" });

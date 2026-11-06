@@ -54,6 +54,11 @@ async function request<T>(
     body: body != null ? JSON.stringify(body) : undefined,
   });
 
+  // Sesión deslizante: cuando al token le queda poco, el servidor manda uno
+  // nuevo en la respuesta y acá se guarda, así un turno largo no se corta.
+  const refreshedToken = res.headers.get("X-Refreshed-Token");
+  if (refreshedToken) setToken(refreshedToken);
+
   if (!res.ok) {
     let message = `HTTP ${res.status}`;
     try {
