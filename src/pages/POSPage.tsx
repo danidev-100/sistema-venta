@@ -22,6 +22,30 @@ import { useBarcodeScan } from "@/hooks/useBarcodeScan";
 import { formatCurrency } from "@/lib/format";
 
 // ──────────────────────────────────────────────
+// Cart-aware stock
+// ──────────────────────────────────────────────
+
+/** Units of `productId` already held by the open sale. */
+function cartQuantityOf(productId: number): number {
+  return useAppStore
+    .getState()
+    .items.reduce((sum, i) => (i.productId === productId ? sum + i.quantity : sum), 0);
+}
+
+/**
+ * Stock on hand minus what the current sale already holds: the number the
+ * catalog has to show so it drops with every click. Products sold by weight
+ * keep their raw stock, because their quantity comes from the weight modal.
+ */
+function remainingStock(
+  product: { stock: number; saleUnit: "unit" | "gram" | "kilogram" },
+  inCart: number,
+): number {
+  if (product.saleUnit !== "unit") return product.stock;
+  return Math.max(0, product.stock - inCart);
+}
+
+// ──────────────────────────────────────────────
 // Component
 // ──────────────────────────────────────────────
 
@@ -110,10 +134,20 @@ export default function POSPage() {
       }
     }, [dismissNotification]),
     onIncreaseQty: useCallback(() => {
-      const { selectedCartItemId, items, updateQuantity } = useAppStore.getState();
+      const { selectedCartItemId, items, updateQuantity, showNotification } =
+        useAppStore.getState();
       if (selectedCartItemId == null) return;
       const item = items.find((i) => i.productId === selectedCartItemId);
-      if (item) updateQuantity(selectedCartItemId, item.quantity + 1);
+      if (!item) return;
+      const prod = useProductsStore
+        .getState()
+        .products.find((p) => p.id === selectedCartItemId);
+      // Never let the keyboard shortcut push the cart past the stock on hand.
+      if (prod && prod.saleUnit === "unit" && item.quantity + 1 > prod.stock) {
+        showNotification(`Sin stock de ${item.productName}`);
+        return;
+      }
+      updateQuantity(selectedCartItemId, item.quantity + 1);
     }, []),
     onDecreaseQty: useCallback(() => {
       const { selectedCartItemId, items, updateQuantity } = useAppStore.getState();
@@ -204,9 +238,18 @@ export default function POSPage() {
       const prod = useProductsStore.getState().products.find(
         (p) => p.id === id,
       );
-      if (prod && prod.stock <= 0) {
-        setNoStockProduct(name);
-        return;
+      if (prod) {
+        const inCart = cartQuantityOf(prod.id);
+        const available =
+          prod.saleUnit === "unit" ? prod.stock - inCart : prod.stock;
+        if (available <= 0) {
+          if (prod.stock <= 0) setNoStockProduct(name);
+          else {
+            showNotification(`Sin stock de ${name}: ya hay ${inCart} en el carrito`);
+            setTimeout(() => dismissNotification(), 3000);
+          }
+          return;
+        }
       }
       // Weight products: show weight input modal
       if (prod && prod.saleUnit !== "unit") {
@@ -241,6 +284,16 @@ export default function POSPage() {
   // Phone-only pane switch (ignored from lg up, where both panes show side by side)
   const [mobilePane, setMobilePane] = useState<"catalog" | "cart">("catalog");
   const cartCount = useAppStore((s) => s.items.length);
+  // Subscribed to the items themselves, not just their count: the catalog card
+  // must re-render when a quantity changes, not only when an item is added.
+  const cartItems = useAppStore((s) => s.items);
+  const cartQtyByProduct = useMemo(() => {
+    const qty = new Map<number, number>();
+    for (const item of cartItems) {
+      qty.set(item.productId, (qty.get(item.productId) ?? 0) + item.quantity);
+    }
+    return qty;
+  }, [cartItems]);
 
   function handleCameraDetected(barcode: string) {
     setShowScanner(false);
@@ -288,9 +341,20 @@ export default function POSPage() {
       const prod = useProductsStore.getState().products.find(
         (p) => p.id === product.id,
       );
-      if (prod && prod.stock <= 0) {
-        setNoStockProduct(product.name);
-        return;
+      if (prod) {
+        const inCart = cartQuantityOf(prod.id);
+        const available =
+          prod.saleUnit === "unit" ? prod.stock - inCart : prod.stock;
+        if (available <= 0) {
+          if (prod.stock <= 0) setNoStockProduct(product.name);
+          else {
+            showNotification(
+              `Sin stock de ${product.name}: ya hay ${inCart} en el carrito`,
+            );
+            setTimeout(() => dismissNotification(), 3000);
+          }
+          return;
+        }
       }
       // Weight products: show weight input modal
       if (prod && prod.saleUnit !== "unit") {
@@ -561,17 +625,21 @@ export default function POSPage() {
                         ? categoryNameById.get(product.category_id)
                         : undefined;
                     const price = catalogPrice(product);
-                    const outOfStock = product.stock <= 0;
+                    const remaining = remainingStock(
+                      product,
+                      cartQtyByProduct.get(product.id) ?? 0,
+                    );
+                    const outOfStock = remaining <= 0;
                     const stockClass = outOfStock
                       ? "text-pos-danger"
-                      : product.stock <= 5
+                      : remaining <= 5
                         ? "text-pos-warn"
                         : "text-pos-success";
                     const stockLabel = outOfStock
                       ? "Sin stock"
-                      : product.stock <= 5
-                        ? `Últimas ${product.stock}`
-                        : `Stock ${product.stock}`;
+                      : remaining <= 5
+                        ? `Últimas ${remaining}`
+                        : `Stock ${remaining}`;
 
                     return (
                       <button
