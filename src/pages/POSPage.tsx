@@ -603,7 +603,7 @@ export default function POSPage() {
                             </span>
                           )}
                         </div>
-                        <span className="line-clamp-3 break-words text-[12.5px] font-semibold leading-snug text-pos-text sm:text-[13.5px]">
+                        <span className="break-words text-[12.5px] font-semibold leading-snug text-pos-text sm:text-[13.5px]">
                           {product.name}
                         </span>
                         <span className="mt-auto pt-2 font-mono text-[14.5px] font-semibold tabular-nums text-pos-text">
