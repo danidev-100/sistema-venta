@@ -554,7 +554,7 @@ export default function POSPage() {
                   </p>
                 </div>
               ) : (
-                <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-3 overflow-y-auto pb-1 pr-1 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+                <div className="grid min-h-0 flex-1 content-start gap-3 overflow-y-auto pb-1 pr-1 grid-cols-[repeat(auto-fill,minmax(140px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))]">
                   {visibleCatalog.map((product) => {
                     const categoryName =
                       product.category_id != null
