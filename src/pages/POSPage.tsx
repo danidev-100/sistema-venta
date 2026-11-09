@@ -585,6 +585,7 @@ export default function POSPage() {
                             price,
                           })
                         }
+                        title={product.name}
                         className="flex min-h-[132px] flex-col rounded-card border border-pos-muted/10 bg-pos-surface p-3.5 text-left transition-all hover:-translate-y-0.5 hover:border-pos-secondary/35 hover:shadow-lg hover:shadow-pos-secondary/20 disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:translate-y-0 disabled:hover:border-pos-muted/10 disabled:hover:shadow-none"
                       >
                         <div className="mb-2.5 flex items-start gap-2">
@@ -602,7 +603,7 @@ export default function POSPage() {
                             </span>
                           )}
                         </div>
-                        <span className="line-clamp-2 text-[13.5px] font-semibold leading-snug text-pos-text">
+                        <span className="line-clamp-3 break-words text-[12.5px] font-semibold leading-snug text-pos-text sm:text-[13.5px]">
                           {product.name}
                         </span>
                         <span className="mt-auto pt-2 font-mono text-[14.5px] font-semibold tabular-nums text-pos-text">
